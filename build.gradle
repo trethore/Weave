@@ -23,7 +23,6 @@ loom {
 
 	mods {
 		"weave-ui" {
-			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
 	}
