@@ -15,15 +15,11 @@
 	"icon": "assets/weave-ui/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
-			"tytoo.weave.Weave"
-		],
 		"client": [
 			"tytoo.weave.WeaveClient"
 		]
 	},
 	"mixins": [
-		"weave-ui.mixins.json",
 		{
 			"config": "weave-ui.client.mixins.json",
 			"environment": "client"
