@@ -13,7 +13,7 @@ public class Panel extends Component<Panel> {
     public void draw(DrawContext context) {
         Render2DUtils.drawRect(context, getLeft(), getTop(), getWidth(), getHeight(), color);
 
-        for (Component child : children) {
+        for (Component<?> child : children) {
             child.draw(context);
         }
     }

@@ -10,7 +10,7 @@ public class Window extends Component<Window> {
 
     @Override
     public void draw(DrawContext context) {
-        for (Component child : children) {
+        for (Component<?> child : children) {
             child.draw(context);
         }
     }

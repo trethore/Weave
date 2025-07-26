@@ -7,14 +7,14 @@ import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 
 public class Constraints {
-    private final Component component;
+    private final Component<?> component;
 
     private XConstraint x = new PixelConstraint(0);
     private YConstraint y = new PixelConstraint(0);
     private WidthConstraint width = new PixelConstraint(0);
     private HeightConstraint height = new PixelConstraint(0);
 
-    public Constraints(Component component) {
+    public Constraints(Component<?> component) {
         this.component = component;
     }
 

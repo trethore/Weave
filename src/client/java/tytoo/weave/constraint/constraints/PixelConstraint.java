@@ -14,22 +14,22 @@ public class PixelConstraint implements XConstraint, YConstraint, WidthConstrain
     }
 
     @Override
-    public float getX(Component component) {
+    public float getX(Component<?> component) {
         return component.getParent().getLeft() + value;
     }
 
     @Override
-    public float getY(Component component) {
+    public float getY(Component<?> component) {
         return component.getParent().getTop() + value;
     }
 
     @Override
-    public float getWidth(Component component) {
+    public float getWidth(Component<?> component) {
         return value;
     }
 
     @Override
-    public float getHeight(Component component) {
+    public float getHeight(Component<?> component) {
         return value;
     }
 }
