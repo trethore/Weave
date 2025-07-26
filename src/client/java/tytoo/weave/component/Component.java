@@ -9,12 +9,14 @@ import tytoo.weave.constraint.constraints.Constraints;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> {
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
+    protected List<Runnable> clickListeners = new ArrayList<>();
 
     public abstract void draw(DrawContext context);
 
@@ -80,5 +82,28 @@ public abstract class Component<T extends Component<T>> {
     public T setHeight(HeightConstraint constraint) {
         this.constraints.setHeight(constraint);
         return self();
+    }
+
+    public T onMouseClick(Runnable listener) {
+        this.clickListeners.add(listener);
+        return self();
+    }
+
+    public void mouseClick(float mouseX, float mouseY, int button) {
+        for (Runnable listener : clickListeners) {
+            listener.run();
+        }
+    }
+
+    public Component<?> hitTest(float x, float y) {
+        for (ListIterator<Component<?>> it = children.listIterator(children.size()); it.hasPrevious(); ) {
+            Component<?> child = it.previous();
+            if (child.isPointInside(x, y)) return child.hitTest(x, y);
+        }
+        return this;
+    }
+
+    public boolean isPointInside(float x, float y) {
+        return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();
     }
 }

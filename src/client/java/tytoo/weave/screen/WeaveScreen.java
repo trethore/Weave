@@ -21,4 +21,11 @@ public abstract class WeaveScreen extends Screen {
     public Window getWindow() {
         return window;
     }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        super.mouseClicked(mouseX, mouseY, button);
+        window.mouseClick((float) mouseX, (float) mouseY, button);
+        return true;
+    }
 }

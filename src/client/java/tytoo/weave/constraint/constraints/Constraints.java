@@ -57,4 +57,8 @@ public class Constraints {
     public static ChildBasedSizeConstraint childBased() {
         return new ChildBasedSizeConstraint(0);
     }
+
+    public static AspectRatioConstraint aspect(float ratio) {
+        return new AspectRatioConstraint(ratio);
+    }
 }
