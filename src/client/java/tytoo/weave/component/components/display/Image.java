@@ -1,4 +1,4 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.display;
 
 import net.minecraft.util.Identifier;
 

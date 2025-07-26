@@ -63,7 +63,7 @@ public final class Render2DUtils {
         endRender(buffer);
     }
 
-    public static void drawImage(Identifier id, int x1, int y1, int x2, int y2, int rotation, boolean parity, Color color) {
+    public static void drawImage(Identifier id, float x1, float y1, float x2, float y2, int rotation, boolean parity, Color color) {
         int[][] texCoords = {{0, 1}, {1, 1}, {1, 0}, {0, 0}};
         for (int i = 0; i < rotation % 4; i++) {
             int temp1 = texCoords[3][0], temp2 = texCoords[3][1];

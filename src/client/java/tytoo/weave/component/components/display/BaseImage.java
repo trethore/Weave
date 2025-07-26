@@ -1,4 +1,4 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.display;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
@@ -21,10 +21,10 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
     public void draw(DrawContext context) {
         Render2DUtils.drawImage(
                 imageId,
-                (int) getLeft(),
-                (int) getTop(),
-                (int) (getLeft() + getWidth()),
-                (int) (getTop() + getHeight()),
+                getLeft(),
+                getTop(),
+                getLeft() + getWidth(),
+                getTop() + getHeight(),
                 rotation,
                 parity,
                 color

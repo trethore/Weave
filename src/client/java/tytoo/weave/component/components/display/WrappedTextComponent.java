@@ -1,4 +1,4 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.display;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -6,7 +6,6 @@ import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import tytoo.weave.theme.ThemeManager;
 
-import java.awt.*;
 import java.util.List;
 
 public class WrappedTextComponent extends TextComponent {
@@ -15,8 +14,13 @@ public class WrappedTextComponent extends TextComponent {
 
         this.constraints.setHeight(component -> {
             TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
-            int lines = textRenderer.wrapLines(text, (int) component.getWidth()).size();
-            return (float) lines * textRenderer.fontHeight;
+            WrappedTextComponent self = (WrappedTextComponent) component;
+
+            if (self.getWidth() <= 0 || self.scale <= 0) return 0f;
+
+            int wrapWidth = (int) (self.getWidth() / self.scale);
+            int lines = textRenderer.wrapLines(self.text, wrapWidth).size();
+            return (float) lines * textRenderer.fontHeight * self.scale;
         });
     }
 
@@ -31,23 +35,35 @@ public class WrappedTextComponent extends TextComponent {
     @Override
     public void draw(DrawContext context) {
         TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
-        List<OrderedText> lines = textRenderer.wrapLines(this.text, (int) this.getWidth());
-
-        Color drawColor = this.color != null ? this.color : ThemeManager.getTheme().getTextColor();
+        Text textToDraw = getDrawableText();
+        java.awt.Color drawColor = getDrawableColor();
         boolean shadow = this.hasShadow != null ? this.hasShadow : ThemeManager.getTheme().isTextShadowed();
+
+        int wrapWidth = (int) (this.getWidth() / this.scale);
+        if (wrapWidth <= 0) {
+            drawChildren(context);
+            return;
+        }
+        List<OrderedText> lines = textRenderer.wrapLines(textToDraw, wrapWidth);
+
+        context.getMatrices().push();
+        context.getMatrices().translate(getLeft(), getTop(), 0);
+        context.getMatrices().scale(this.scale, this.scale, 1.0f);
 
         int yOffset = 0;
         for (OrderedText line : lines) {
             context.drawText(
                     textRenderer,
                     line,
-                    (int) getLeft(),
-                    (int) getTop() + yOffset,
+                    0,
+                    yOffset,
                     drawColor.getRGB(),
                     shadow
             );
             yOffset += textRenderer.fontHeight;
         }
+
+        context.getMatrices().pop();
         drawChildren(context);
     }
 }

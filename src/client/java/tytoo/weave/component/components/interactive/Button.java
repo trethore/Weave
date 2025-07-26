@@ -1,6 +1,8 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.interactive;
 
 import net.minecraft.text.Text;
+import tytoo.weave.component.components.display.TextComponent;
+import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
 
 import java.awt.*;

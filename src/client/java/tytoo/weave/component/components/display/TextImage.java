@@ -1,7 +1,8 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.display;
 
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import tytoo.weave.component.components.layout.Container;
 import tytoo.weave.constraint.constraints.Constraints;
 
 public class TextImage extends Container {

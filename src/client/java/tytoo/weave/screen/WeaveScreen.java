@@ -5,7 +5,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
-import tytoo.weave.component.components.Window;
+import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;

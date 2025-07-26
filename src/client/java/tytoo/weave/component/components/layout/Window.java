@@ -1,4 +1,4 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.layout;
 
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.constraint.constraints.Constraints;

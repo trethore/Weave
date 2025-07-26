@@ -1,6 +1,7 @@
-package tytoo.weave.component.components;
+package tytoo.weave.component.components.interactive;
 
 import net.minecraft.util.Identifier;
+import tytoo.weave.component.components.display.BaseImage;
 
 import java.awt.*;
 import java.util.function.Consumer;

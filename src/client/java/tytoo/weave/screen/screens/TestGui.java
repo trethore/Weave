@@ -1,11 +1,15 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import tytoo.weave.component.components.*;
-import tytoo.weave.component.components.Button;
-import tytoo.weave.component.components.Panel;
-import tytoo.weave.component.components.TextComponent;
+import tytoo.weave.component.components.display.TextComponent;
+import tytoo.weave.component.components.display.TextImage;
+import tytoo.weave.component.components.display.WrappedTextComponent;
+import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.ImageButton;
+import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.screen.WeaveScreen;
 
@@ -64,5 +68,19 @@ public class TestGui extends WeaveScreen {
                 .setX(Constraints.center())
                 .setY(Constraints.center()));
 
+        TextComponent.of("This is a big text!")
+                .setScale(2.0f)
+                .setX(Constraints.pixels(10))
+                .setY(Constraints.sibling(10))
+                .setParent(getWindow());
+
+        TextComponent.of("This text has ")
+                .append(Text.literal("multiple").formatted(Formatting.RED, Formatting.BOLD))
+                .append(Text.literal(" colors and a "))
+                .append(Text.literal("hover color").formatted(Formatting.AQUA))
+                .setHoverColor(Color.YELLOW)
+                .setX(Constraints.pixels(10))
+                .setY(Constraints.sibling(10))
+                .setParent(getWindow());
     }
 }
