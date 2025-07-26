@@ -3,7 +3,7 @@
 	"id": "weave-ui",
 	"version": "${version}",
 	"name": "Weave",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Weave is a declarative and component-based UI library for Minecraft, making it easy to build beautiful and intuitive GUIs in Java.",
 	"authors": [
 		"Me!"
 	],
