@@ -42,6 +42,10 @@ public abstract class Component<T extends Component<T>> {
         return parent;
     }
 
+    public List<Component<?>> getChildren() {
+        return children;
+    }
+
     public float getLeft() {
         return this.constraints.getX();
     }

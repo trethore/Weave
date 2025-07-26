@@ -33,4 +33,28 @@ public class Constraints {
     public static PixelConstraint pixels(float value) {
         return new PixelConstraint(value);
     }
+
+    public static RelativeConstraint relative(float value) {
+        return new RelativeConstraint(value);
+    }
+
+    public static CenterConstraint center() {
+        return new CenterConstraint();
+    }
+
+    public static SiblingConstraint sibling(float padding) {
+        return new SiblingConstraint(padding);
+    }
+
+    public static SiblingConstraint sibling() {
+        return new SiblingConstraint(0);
+    }
+
+    public static ChildBasedSizeConstraint childBased(float padding) {
+        return new ChildBasedSizeConstraint(padding);
+    }
+
+    public static ChildBasedSizeConstraint childBased() {
+        return new ChildBasedSizeConstraint(0);
+    }
 }
