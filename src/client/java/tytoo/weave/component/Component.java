@@ -43,6 +43,12 @@ public abstract class Component<T extends Component<T>> {
         return (T) this;
     }
 
+    public void drawChildren(DrawContext context) {
+        for (Component<?> child : children) {
+            child.draw(context);
+        }
+    }
+
     public void addChild(Component<?> child) {
         this.children.add(child);
         child.parent = this;
@@ -228,6 +234,13 @@ public abstract class Component<T extends Component<T>> {
         return screen.getFocusedComponent() == this;
     }
 
+    public boolean isHovered() {
+        WeaveScreen screen = WeaveScreen.getCurrentScreen();
+        if (screen == null) {
+            return false;
+        }
+        return screen.getHoveredComponent() == this;
+    }
 
     public boolean isPointInside(float x, float y) {
         return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();

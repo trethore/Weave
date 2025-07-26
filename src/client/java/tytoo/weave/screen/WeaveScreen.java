@@ -45,6 +45,14 @@ public abstract class WeaveScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        if (client != null) {
+            this.mouseMoved(client.mouse.getX() / client.getWindow().getScaleFactor(), client.mouse.getY() / client.getWindow().getScaleFactor());
+        }
+    }
+
+    @Override
     public void close() {
         super.close();
         currentScreen = null;
@@ -156,5 +164,10 @@ public abstract class WeaveScreen extends Screen {
         if (focusedComponent != null) {
             bubbleEvent(focusedComponent, new FocusGainedEvent(), Component::fireFocusGained);
         }
+    }
+
+    @Nullable
+    public Component<?> getHoveredComponent() {
+        return hoveredComponent;
     }
 }

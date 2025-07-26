@@ -24,7 +24,11 @@ public class Constraints {
     }
 
     public static RelativeConstraint relative(float value) {
-        return new RelativeConstraint(value);
+        return new RelativeConstraint(value, 0);
+    }
+
+    public static RelativeConstraint relative(float value, float offset) {
+        return new RelativeConstraint(value, offset);
     }
 
     public static CenterConstraint center() {

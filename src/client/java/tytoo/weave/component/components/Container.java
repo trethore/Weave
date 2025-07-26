@@ -10,9 +10,7 @@ public class Container extends Component<Container> {
 
     @Override
     public void draw(DrawContext context) {
-        for (Component<?> child : children) {
-            child.draw(context);
-        }
+        drawChildren(context);
     }
 
     public Container addChildren(Component<?>... components) {

@@ -9,9 +9,11 @@ import tytoo.weave.utils.McUtils;
 
 public class RelativeConstraint implements XConstraint, YConstraint, WidthConstraint, HeightConstraint {
     private final float value;
+    private final float offset;
 
-    public RelativeConstraint(float value) {
+    public RelativeConstraint(float value, float offset) {
         this.value = value;
+        this.offset = offset;
     }
 
     @Override
@@ -22,7 +24,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledWidth() * value)
                     .orElse(0f);
         }
-        return parent.getLeft() + parent.getWidth() * value;
+        return parent.getLeft() + parent.getWidth() * value + offset;
     }
 
     @Override
@@ -33,7 +35,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledHeight() * value)
                     .orElse(0f);
         }
-        return parent.getTop() + parent.getHeight() * value;
+        return parent.getTop() + parent.getHeight() * value + offset;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledWidth() * value)
                     .orElse(0f);
         }
-        return parent.getWidth() * value;
+        return parent.getWidth() * value + offset;
     }
 
     @Override
@@ -55,6 +57,6 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledHeight() * value)
                     .orElse(0f);
         }
-        return parent.getHeight() * value;
+        return parent.getHeight() * value + offset;
     }
 }
