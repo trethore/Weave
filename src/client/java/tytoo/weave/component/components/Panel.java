@@ -1,30 +1,7 @@
 package tytoo.weave.component.components;
 
-import net.minecraft.client.gui.DrawContext;
-import tytoo.weave.component.Component;
-import tytoo.weave.theme.ThemeManager;
-import tytoo.weave.utils.render.Render2DUtils;
-
-import java.awt.*;
-
-public class Panel extends Component<Panel> {
-    protected Color color;
-
+public class Panel extends BasePanel<Panel> {
     public static Panel create() {
         return new Panel();
-    }
-
-    @Override
-    public void draw(DrawContext context) {
-        Color drawColor = this.color != null ? this.color : ThemeManager.getTheme().getPanelColor();
-        if (drawColor != null) {
-            Render2DUtils.drawRect(context, getLeft(), getTop(), getWidth(), getHeight(), drawColor);
-        }
-        drawChildren(context);
-    }
-
-    public Panel setColor(Color color) {
-        this.color = color;
-        return this;
     }
 }

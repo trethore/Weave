@@ -7,7 +7,7 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class Window extends Panel {
+public class Window extends BasePanel<Window> {
     public Window() {
         this.parent = null;
         this.setX(Constraints.center());
