@@ -6,6 +6,7 @@ import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 
+@SuppressWarnings("unused")
 public class Constraints {
     private final Component<?> component;
 
@@ -17,18 +18,6 @@ public class Constraints {
     public Constraints(Component<?> component) {
         this.component = component;
     }
-
-    public float getX() { return x.getX(component); }
-    public void setX(XConstraint x) { this.x = x; }
-
-    public float getY() { return y.getY(component); }
-    public void setY(YConstraint y) { this.y = y; }
-
-    public float getWidth() { return width.getWidth(component); }
-    public void setWidth(WidthConstraint width) { this.width = width; }
-
-    public float getHeight() { return height.getHeight(component); }
-    public void setHeight(HeightConstraint height) { this.height = height; }
 
     public static PixelConstraint pixels(float value) {
         return new PixelConstraint(value);
@@ -60,5 +49,37 @@ public class Constraints {
 
     public static AspectRatioConstraint aspect(float ratio) {
         return new AspectRatioConstraint(ratio);
+    }
+
+    public float getX() {
+        return x.getX(component);
+    }
+
+    public void setX(XConstraint x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y.getY(component);
+    }
+
+    public void setY(YConstraint y) {
+        this.y = y;
+    }
+
+    public float getWidth() {
+        return width.getWidth(component);
+    }
+
+    public void setWidth(WidthConstraint width) {
+        this.width = width;
+    }
+
+    public float getHeight() {
+        return height.getHeight(component);
+    }
+
+    public void setHeight(HeightConstraint height) {
+        this.height = height;
     }
 }

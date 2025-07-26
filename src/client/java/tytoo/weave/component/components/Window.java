@@ -1,58 +1,17 @@
 package tytoo.weave.component.components;
 
-import net.minecraft.client.gui.DrawContext;
-import tytoo.weave.component.Component;
-import tytoo.weave.utils.McUtils;
+import tytoo.weave.constraint.constraints.Constraints;
 
-public class Window extends Component<Window> {
+import java.awt.*;
+
+public class Window extends Panel {
     public Window() {
-        this.parent = this;
-    }
+        this.parent = null;
 
-
-    @Override
-    public void draw(DrawContext context) {
-        // The window itself doesn't draw anything, but it draws its children.
-        // We also need to call the super method to handle potential debug outlines or other effects in the future.
-        // super.draw(context);
-
-        // For now, let's keep it simple and just draw children.
-        // The base Component draw method will be expanded later.
-
-        for (Component<?> child : children) {
-            child.draw(context);
-        }
-    }
-
-    @Override
-    public float getLeft() {
-        return McUtils.getMc()
-                .map(mc -> (mc.getWindow().getScaledWidth() - getWidth()) / 2f)
-                .orElse(0f);
-    }
-
-    @Override
-    public float getTop() {
-        return McUtils.getMc()
-                .map(mc -> (mc.getWindow().getScaledHeight() - getHeight()) / 2f)
-                .orElse(0f);
-    }
-
-    @Override
-    public float getWidth() {
-        return 400;
-    }
-
-    @Override
-    public float getHeight() {
-        return 300;
-    }
-
-    @Override
-    public void mouseClick(float mouseX, float mouseY, int button) {
-        if (isPointInside(mouseX, mouseY)) {
-            Component<?> target = hitTest(mouseX, mouseY);
-            target.mouseClick(mouseX, mouseY, button);
-        }
+        this.setX(Constraints.center());
+        this.setY(Constraints.center());
+        this.setWidth(Constraints.pixels(400));
+        this.setHeight(Constraints.pixels(300));
+        this.setColor(new Color(0, 0, 0, 100));
     }
 }

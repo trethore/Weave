@@ -16,6 +16,8 @@ public class SiblingConstraint implements XConstraint, YConstraint {
     @Override
     public float getX(Component<?> component) {
         Component<?> parent = component.getParent();
+        if (parent == null) return padding;
+
         List<Component<?>> siblings = parent.getChildren();
         int index = siblings.indexOf(component);
 
@@ -30,6 +32,8 @@ public class SiblingConstraint implements XConstraint, YConstraint {
     @Override
     public float getY(Component<?> component) {
         Component<?> parent = component.getParent();
+        if (parent == null) return padding;
+
         List<Component<?>> siblings = parent.getChildren();
         int index = siblings.indexOf(component);
 

@@ -9,6 +9,10 @@ import java.awt.*;
 public class Panel extends Component<Panel> {
     private Color color = Color.WHITE;
 
+    public static Panel create() {
+        return new Panel();
+    }
+
     @Override
     public void draw(DrawContext context) {
         Render2DUtils.drawRect(context, getLeft(), getTop(), getWidth(), getHeight(), color);
@@ -21,9 +25,5 @@ public class Panel extends Component<Panel> {
     public Panel setColor(Color color) {
         this.color = color;
         return this;
-    }
-
-    public static Panel create() {
-        return new Panel();
     }
 }
