@@ -24,7 +24,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledWidth() * value)
                     .orElse(0f);
         }
-        return parent.getLeft() + parent.getWidth() * value + offset;
+        return parent.getInnerLeft() + parent.getInnerWidth() * value + offset;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledHeight() * value)
                     .orElse(0f);
         }
-        return parent.getTop() + parent.getHeight() * value + offset;
+        return parent.getInnerTop() + parent.getInnerHeight() * value + offset;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledWidth() * value)
                     .orElse(0f);
         }
-        return parent.getWidth() * value + offset;
+        return parent.getInnerWidth() * value + offset;
     }
 
     @Override
@@ -57,6 +57,6 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
                     .map(mc -> mc.getWindow().getScaledHeight() * value)
                     .orElse(0f);
         }
-        return parent.getHeight() * value + offset;
+        return parent.getInnerHeight() * value + offset;
     }
 }

@@ -13,11 +13,11 @@ public class AspectRatioConstraint implements WidthConstraint, HeightConstraint 
 
     @Override
     public float getWidth(Component<?> component) {
-        return component.getHeight() * ratio;
+        return component.getRawHeight() * ratio;
     }
 
     @Override
     public float getHeight(Component<?> component) {
-        return component.getWidth() / ratio;
+        return component.getRawWidth() / ratio;
     }
 }

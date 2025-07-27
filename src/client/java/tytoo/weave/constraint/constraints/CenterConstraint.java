@@ -11,10 +11,10 @@ public class CenterConstraint implements XConstraint, YConstraint {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
-                    .map(mc -> (mc.getWindow().getScaledWidth() - component.getWidth()) / 2f)
+                    .map(mc -> (mc.getWindow().getScaledWidth() - component.getRawWidth()) / 2f)
                     .orElse(0f);
         }
-        return parent.getLeft() + (parent.getWidth() - component.getWidth()) / 2f;
+        return parent.getInnerLeft() + (parent.getInnerWidth() - component.getRawWidth()) / 2f;
     }
 
     @Override
@@ -22,9 +22,9 @@ public class CenterConstraint implements XConstraint, YConstraint {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
-                    .map(mc -> (mc.getWindow().getScaledHeight() - component.getHeight()) / 2f)
+                    .map(mc -> (mc.getWindow().getScaledHeight() - component.getRawHeight()) / 2f)
                     .orElse(0f);
         }
-        return parent.getTop() + (parent.getHeight() - component.getHeight()) / 2f;
+        return parent.getInnerTop() + (parent.getInnerHeight() - component.getRawHeight()) / 2f;
     }
 }

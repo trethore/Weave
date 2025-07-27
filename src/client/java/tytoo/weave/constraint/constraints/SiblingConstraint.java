@@ -22,11 +22,11 @@ public class SiblingConstraint implements XConstraint, YConstraint {
         int index = siblings.indexOf(component);
 
         if (index == 0) {
-            return parent.getLeft() + padding;
+            return parent.getInnerLeft() + padding;
         }
 
         Component<?> previousSibling = siblings.get(index - 1);
-        return previousSibling.getLeft() + previousSibling.getWidth() + padding;
+        return previousSibling.getRawLeft() + previousSibling.getRawWidth() + padding;
     }
 
     @Override
@@ -38,10 +38,10 @@ public class SiblingConstraint implements XConstraint, YConstraint {
         int index = siblings.indexOf(component);
 
         if (index == 0) {
-            return parent.getTop() + padding;
+            return parent.getInnerTop() + padding;
         }
 
         Component<?> previousSibling = siblings.get(index - 1);
-        return previousSibling.getTop() + previousSibling.getHeight() + padding;
+        return previousSibling.getRawTop() + previousSibling.getRawHeight() + padding;
     }
 }

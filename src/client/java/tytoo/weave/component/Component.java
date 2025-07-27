@@ -14,6 +14,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.style.EdgeInsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,8 @@ public abstract class Component<T extends Component<T>> {
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
-    @Nullable
+    protected EdgeInsets margin = EdgeInsets.zero();
+    protected EdgeInsets padding = EdgeInsets.zero();
     protected Layout layout;
 
     protected List<Consumer<MouseClickEvent>> mouseClickListeners = new ArrayList<>();
@@ -82,16 +84,34 @@ public abstract class Component<T extends Component<T>> {
         return children;
     }
 
-    public float getLeft() {
+    public float getRawLeft() {
         return this.constraints.getX();
     }
 
-    public float getTop() {
+    public float getRawTop() {
         return this.constraints.getY();
     }
 
-    public float getWidth() {
+    public float getRawWidth() {
         return this.constraints.getWidth();
+    }
+
+    public float getRawHeight() {
+        return this.constraints.getHeight();
+    }
+
+    public float getLeft() {
+        return getRawLeft() + margin.left;
+    }
+
+    public float getTop() {
+        return getRawTop() + margin.top;
+    }
+
+    public float getWidth() {
+        float rawWidth = getRawWidth();
+        if (rawWidth == 0) return 0;
+        return rawWidth - margin.left - margin.right;
     }
 
     public T setWidth(WidthConstraint constraint) {
@@ -100,7 +120,9 @@ public abstract class Component<T extends Component<T>> {
     }
 
     public float getHeight() {
-        return this.constraints.getHeight();
+        float rawHeight = getRawHeight();
+        if (rawHeight == 0) return 0;
+        return rawHeight - margin.top - margin.bottom;
     }
 
     public T setHeight(HeightConstraint constraint) {
@@ -108,8 +130,71 @@ public abstract class Component<T extends Component<T>> {
         return self();
     }
 
+    public float getInnerLeft() {
+        return getLeft() + padding.left;
+    }
+
+    public float getInnerTop() {
+        return getTop() + padding.top;
+    }
+
+    public float getInnerWidth() {
+        return getWidth() - padding.left - padding.right;
+    }
+
+    public float getInnerHeight() {
+        return getHeight() - padding.top - padding.bottom;
+    }
+
     public T setX(XConstraint constraint) {
         this.constraints.setX(constraint);
+        return self();
+    }
+
+    private void handleAutoMargins() {
+        if (Float.isNaN(this.margin.left) && Float.isNaN(this.margin.right)) {
+            this.constraints.setX(Constraints.center());
+            this.margin.left = 0;
+            this.margin.right = 0;
+        }
+
+        if (Float.isNaN(this.margin.top) && Float.isNaN(this.margin.bottom)) {
+            this.constraints.setY(Constraints.center());
+            this.margin.top = 0;
+            this.margin.bottom = 0;
+        }
+    }
+
+    public T setMargin(float all) {
+        this.margin = new EdgeInsets(all);
+        handleAutoMargins();
+        return self();
+    }
+
+    public T setMargin(float vertical, float horizontal) {
+        this.margin = new EdgeInsets(vertical, horizontal);
+        handleAutoMargins();
+        return self();
+    }
+
+    public T setMargin(float top, float right, float bottom, float left) {
+        this.margin = new EdgeInsets(top, right, bottom, left);
+        handleAutoMargins();
+        return self();
+    }
+
+    public T setPadding(float all) {
+        this.padding = new EdgeInsets(all);
+        return self();
+    }
+
+    public T setPadding(float vertical, float horizontal) {
+        this.padding = new EdgeInsets(vertical, horizontal);
+        return self();
+    }
+
+    public T setPadding(float top, float right, float bottom, float left) {
+        this.padding = new EdgeInsets(top, right, bottom, left);
         return self();
     }
 

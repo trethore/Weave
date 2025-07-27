@@ -101,7 +101,7 @@ public class TestGui extends WeaveScreen {
                 .setWidth(Constraints.relative(0.9f))
                 .setHeight(Constraints.pixels(30))
                 .setColor(new Color(50, 50, 50))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, 5))
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_BETWEEN, 5))
                 .setParent(getWindow());
 
         layoutPanel.addChildren(Button.of("Left"), Button.of("Middle"), Button.of("Right"));

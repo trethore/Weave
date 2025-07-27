@@ -30,64 +30,140 @@ public class LinearLayout implements Layout {
         if (children.isEmpty()) return;
 
         if (orientation == Orientation.HORIZONTAL) {
+            applyHorizontalLayout(children);
+        } else { // VERTICAL
+            applyVerticalLayout(children);
+        }
+    }
+
+    private void applyHorizontalLayout(final List<Component<?>> children) {
+        for (Component<?> child : children) {
+            child.setY(Constraints.center());
+        }
+
+        if (alignment == Alignment.START || alignment == Alignment.CENTER || alignment == Alignment.END) {
             if (alignment == Alignment.START) {
                 children.getFirst().setX(Constraints.pixels(0));
             } else {
                 children.getFirst().setX(c -> {
-                    Component<?> parent = c.getParent();
-                    if (parent == null) return 0f;
-
-                    List<Component<?>> siblings = parent.getChildren();
+                    if (c.getParent() == null) return 0f;
+                    List<Component<?>> siblings = c.getParent().getChildren();
                     float totalChildrenWidth = 0;
                     if (!siblings.isEmpty()) {
-                        for (Component<?> sibling : siblings) totalChildrenWidth += sibling.getWidth();
+                        for (Component<?> sibling : siblings) totalChildrenWidth += sibling.getRawWidth();
                         totalChildrenWidth += gap * (siblings.size() - 1);
                     }
-
-                    return parent.getLeft() + switch (alignment) {
-                        case CENTER -> (parent.getWidth() - totalChildrenWidth) / 2;
-                        case END -> parent.getWidth() - totalChildrenWidth;
+                    return c.getParent().getLeft() + switch (alignment) {
+                        case CENTER -> (c.getParent().getInnerWidth() - totalChildrenWidth) / 2;
+                        case END -> c.getParent().getInnerWidth() - totalChildrenWidth;
                         default -> 0;
                     };
                 });
             }
-
             for (int i = 1; i < children.size(); i++) {
                 children.get(i).setX(Constraints.sibling(gap));
             }
+        } else {
+            for (int i = 0; i < children.size(); i++) {
+                final int index = i;
+                children.get(index).setX(c -> {
+                    Component<?> p = c.getParent();
+                    if (p == null) return 0f;
+                    List<Component<?>> siblings = p.getChildren();
+                    if (siblings.isEmpty()) return p.getLeft();
 
-            for (Component<?> child : children) {
-                child.setY(Constraints.center());
+                    float totalSiblingsWidth = siblings.stream().map(Component::getRawWidth).reduce(0f, Float::sum);
+                    float freeSpace = p.getInnerWidth() - totalSiblingsWidth;
+
+                    float previousSiblingsWidth = 0;
+                    for (int j = 0; j < index; j++) {
+                        previousSiblingsWidth += siblings.get(j).getWidth();
+                    }
+
+                    return p.getLeft() + previousSiblingsWidth + switch (alignment) {
+                        case SPACE_BETWEEN -> {
+                            if (siblings.size() <= 1) yield freeSpace / 2;
+                            yield index * (freeSpace / (siblings.size() - 1));
+                        }
+                        case SPACE_AROUND -> {
+                            if (siblings.isEmpty()) yield 0f;
+                            float space = freeSpace / siblings.size();
+                            yield index * space + space / 2;
+                        }
+                        case SPACE_EVENLY -> {
+                            if (siblings.isEmpty()) yield 0f;
+                            float space = freeSpace / (siblings.size() + 1);
+                            yield (index + 1) * space;
+                        }
+                        default -> 0f;
+                    };
+                });
             }
-        } else { // VERTICAL
+        }
+    }
+
+    private void applyVerticalLayout(final List<Component<?>> children) {
+        for (Component<?> child : children) {
+            child.setX(Constraints.center());
+        }
+
+        if (alignment == Alignment.START || alignment == Alignment.CENTER || alignment == Alignment.END) {
             if (alignment == Alignment.START) {
                 children.getFirst().setY(Constraints.pixels(0));
             } else {
                 children.getFirst().setY(c -> {
-                    Component<?> parent = c.getParent();
-                    if (parent == null) return 0f;
-
-                    List<Component<?>> siblings = parent.getChildren();
+                    if (c.getParent() == null) return 0f;
+                    List<Component<?>> siblings = c.getParent().getChildren();
                     float totalChildrenHeight = 0;
                     if (!siblings.isEmpty()) {
-                        for (Component<?> sibling : siblings) totalChildrenHeight += sibling.getHeight();
+                        for (Component<?> sibling : siblings) totalChildrenHeight += sibling.getRawHeight();
                         totalChildrenHeight += gap * (siblings.size() - 1);
                     }
-
-                    return parent.getTop() + switch (alignment) {
-                        case CENTER -> (parent.getHeight() - totalChildrenHeight) / 2;
-                        case END -> parent.getHeight() - totalChildrenHeight;
+                    return c.getParent().getTop() + switch (alignment) {
+                        case CENTER -> (c.getParent().getInnerHeight() - totalChildrenHeight) / 2;
+                        case END -> c.getParent().getInnerHeight() - totalChildrenHeight;
                         default -> 0;
                     };
                 });
             }
-
             for (int i = 1; i < children.size(); i++) {
                 children.get(i).setY(Constraints.sibling(gap));
             }
+        } else {
+            for (int i = 0; i < children.size(); i++) {
+                final int index = i;
+                children.get(index).setY(c -> {
+                    Component<?> p = c.getParent();
+                    if (p == null) return 0f;
+                    List<Component<?>> siblings = p.getChildren();
+                    if (siblings.isEmpty()) return p.getTop();
 
-            for (Component<?> child : children) {
-                child.setX(Constraints.center());
+                    float totalSiblingsHeight = siblings.stream().map(Component::getRawHeight).reduce(0f, Float::sum);
+                    float freeSpace = p.getInnerHeight() - totalSiblingsHeight;
+
+                    float previousSiblingsHeight = 0;
+                    for (int j = 0; j < index; j++) {
+                        previousSiblingsHeight += siblings.get(j).getHeight();
+                    }
+
+                    return p.getTop() + previousSiblingsHeight + switch (alignment) {
+                        case SPACE_BETWEEN -> {
+                            if (siblings.size() <= 1) yield freeSpace / 2;
+                            yield index * (freeSpace / (siblings.size() - 1));
+                        }
+                        case SPACE_AROUND -> {
+                            if (siblings.isEmpty()) yield 0f;
+                            float space = freeSpace / siblings.size();
+                            yield index * space + space / 2;
+                        }
+                        case SPACE_EVENLY -> {
+                            if (siblings.isEmpty()) yield 0f;
+                            float space = freeSpace / (siblings.size() + 1);
+                            yield (index + 1) * space;
+                        }
+                        default -> 0f;
+                    };
+                });
             }
         }
     }
@@ -100,6 +176,9 @@ public class LinearLayout implements Layout {
     public enum Alignment {
         START,
         CENTER,
-        END
+        END,
+        SPACE_BETWEEN,
+        SPACE_AROUND,
+        SPACE_EVENLY
     }
 }

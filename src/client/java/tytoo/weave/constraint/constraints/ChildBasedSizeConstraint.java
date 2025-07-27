@@ -16,7 +16,7 @@ public class ChildBasedSizeConstraint implements WidthConstraint, HeightConstrai
         if (component.getChildren().isEmpty()) return padding * 2;
         float totalWidth = 0;
         for (Component<?> child : component.getChildren()) {
-            totalWidth += child.getWidth();
+            totalWidth += child.getRawWidth();
         }
         return totalWidth + (padding * (component.getChildren().size() + 1));
     }
@@ -26,7 +26,7 @@ public class ChildBasedSizeConstraint implements WidthConstraint, HeightConstrai
         if (component.getChildren().isEmpty()) return 0;
         float totalHeight = 0;
         for (Component<?> child : component.getChildren()) {
-            totalHeight += child.getHeight();
+            totalHeight += child.getRawHeight();
         }
         return totalHeight + (padding * (component.getChildren().size() - 1));
     }
