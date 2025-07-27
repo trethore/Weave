@@ -12,14 +12,15 @@ public class WrappedTextComponent extends TextComponent {
     public WrappedTextComponent(Text text) {
         super(text);
 
-        this.constraints.setHeight(component -> {
+        this.constraints.setHeight(c -> {
             TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
-            WrappedTextComponent self = (WrappedTextComponent) component;
+            WrappedTextComponent self = (WrappedTextComponent) c;
 
             if (self.getWidth() <= 0 || self.scale <= 0) return 0f;
 
+            Text textToWrap = self.getDrawableText();
             int wrapWidth = (int) (self.getWidth() / self.scale);
-            int lines = textRenderer.wrapLines(self.text, wrapWidth).size();
+            int lines = textRenderer.wrapLines(textToWrap, wrapWidth).size();
             return (float) lines * textRenderer.fontHeight * self.scale;
         });
     }
@@ -36,8 +37,7 @@ public class WrappedTextComponent extends TextComponent {
     public void draw(DrawContext context) {
         TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
         Text textToDraw = getDrawableText();
-        java.awt.Color drawColor = getDrawableColor();
-        boolean shadow = this.hasShadow != null ? this.hasShadow : ThemeManager.getTheme().isTextShadowed();
+        boolean shadow = hasShadow();
 
         int wrapWidth = (int) (this.getWidth() / this.scale);
         if (wrapWidth <= 0) {
@@ -52,14 +52,12 @@ public class WrappedTextComponent extends TextComponent {
 
         int yOffset = 0;
         for (OrderedText line : lines) {
-            context.drawText(
-                    textRenderer,
+            context.drawText(textRenderer,
                     line,
                     0,
                     yOffset,
-                    drawColor.getRGB(),
-                    shadow
-            );
+                    -1,
+                    shadow);
             yOffset += textRenderer.fontHeight;
         }
 

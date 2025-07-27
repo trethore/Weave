@@ -23,7 +23,7 @@ public class DefaultTheme implements Theme {
 
     @Override
     public boolean isTextShadowed() {
-        return false;
+        return true;
     }
 
     @Override

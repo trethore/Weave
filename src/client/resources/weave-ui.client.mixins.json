@@ -3,7 +3,7 @@
 	"package": "tytoo.weave.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-
+		"StyleMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

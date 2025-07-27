@@ -2,30 +2,33 @@ package tytoo.weave.component.components.display;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
 import tytoo.weave.component.Component;
+import tytoo.weave.style.Styling;
+import tytoo.weave.style.TextSegment;
 import tytoo.weave.theme.ThemeManager;
 
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class TextComponent extends Component<TextComponent> {
-    protected MutableText text;
-    protected Color color;
-    protected Color hoverColor;
-    protected Boolean hasShadow;
+    protected final List<TextSegment> segments = new ArrayList<>();
+    protected Styling baseStyle;
+    protected Styling hoverStyle;
     protected float scale = 1.0f;
 
+    private Text cachedText = null;
+    private int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
+
     public TextComponent(Text text) {
-        this.text = text.copy();
+        parseText(text);
 
         this.constraints.setWidth(component ->
-                ThemeManager.getTheme().getTextRenderer().getWidth(this.text) * this.scale
+                ThemeManager.getTheme().getTextRenderer().getWidth(getDrawableText()) * scale
         );
         this.constraints.setHeight(component ->
-                (float) ThemeManager.getTheme().getTextRenderer().fontHeight * this.scale
+                (float) ThemeManager.getTheme().getTextRenderer().fontHeight * scale
         );
     }
 
@@ -37,31 +40,66 @@ public class TextComponent extends Component<TextComponent> {
         return new TextComponent(text);
     }
 
-    protected Text getDrawableText() {
-        if (isHovered() && this.hoverColor != null) {
-            MutableText newText = Text.empty();
-            TextColor newColor = TextColor.fromRgb(this.hoverColor.getRGB());
-            this.text.visit((style, s) -> {
-                newText.append(Text.literal(s).setStyle(style.withColor(newColor)));
-                return Optional.empty();
-            }, Style.EMPTY);
-            return newText;
-        }
-        return this.text;
+    private void invalidateCache() {
+        this.cachedText = null;
     }
 
-    protected Color getDrawableColor() {
-        if (isHovered() && this.hoverColor != null) {
-            return this.hoverColor;
+    private void parseText(Text text) {
+        this.segments.clear();
+        text.visit((style, string) -> {
+            segments.add(new TextSegment(string, Styling.fromMinecraftStyle(style)));
+            return Optional.empty();
+        }, net.minecraft.text.Style.EMPTY);
+        invalidateCache();
+    }
+
+    protected Text getDrawableText() {
+        boolean isHovered = isHovered();
+        int currentHoverState = isHovered ? 1 : 0;
+
+        if (cachedText != null && lastHoverState == currentHoverState) {
+            return cachedText;
         }
-        return this.color != null ? this.color : ThemeManager.getTheme().getTextColor();
+
+        MutableText composedText = Text.empty();
+        for (TextSegment segment : segments) {
+            Styling style = segment.getFormatting();
+            if (baseStyle != null) {
+                style = baseStyle.mergeWith(style);
+            }
+            if (isHovered) {
+                if (hoverStyle != null) {
+                    style = style.mergeWith(hoverStyle);
+                }
+
+                Styling segmentHoverStyle = segment.getHoverStyling();
+                if (segmentHoverStyle != null) {
+                    style = style.mergeWith(segmentHoverStyle);
+                }
+            }
+            composedText.append(Text.literal(segment.getText()).setStyle(style.toMinecraftStyle()));
+        }
+
+        this.cachedText = composedText;
+        this.lastHoverState = currentHoverState;
+        return composedText;
+    }
+
+    protected boolean hasShadow() {
+        boolean isHovered = isHovered();
+        if (isHovered && hoverStyle != null && hoverStyle.isShadowSet()) {
+            return hoverStyle.hasShadow();
+        }
+        if (baseStyle != null && baseStyle.isShadowSet()) {
+            return baseStyle.hasShadow();
+        }
+        return ThemeManager.getTheme().isTextShadowed();
     }
 
     @Override
     public void draw(DrawContext context) {
         Text textToDraw = getDrawableText();
-        Color drawColor = getDrawableColor();
-        boolean shadow = this.hasShadow != null ? this.hasShadow : ThemeManager.getTheme().isTextShadowed();
+        boolean shadow = hasShadow();
 
         context.getMatrices().push();
         context.getMatrices().translate(getLeft(), getTop(), 0);
@@ -72,7 +110,7 @@ public class TextComponent extends Component<TextComponent> {
                 textToDraw,
                 0,
                 0,
-                drawColor.getRGB(),
+                -1,
                 shadow
         );
 
@@ -81,32 +119,47 @@ public class TextComponent extends Component<TextComponent> {
     }
 
     public TextComponent setText(Text text) {
-        this.text = text.copy();
+        parseText(text);
         return this;
     }
 
-    public TextComponent append(Text text) {
-        this.text.append(text);
+    public TextComponent setText(String text) {
+        this.segments.clear();
+        this.segments.add(new TextSegment(text, Styling.create()));
+        invalidateCache();
         return this;
     }
 
-    public TextComponent setColor(Color color) {
-        this.color = color;
+    public TextComponent append(String text) {
+        return append(text, Styling.create());
+    }
+
+    public TextComponent append(String text, Styling styling) {
+        this.segments.add(new TextSegment(text, styling));
+        invalidateCache();
         return this;
     }
 
-    public TextComponent setHoverColor(Color color) {
-        this.hoverColor = color;
+    public TextComponent append(String text, Styling styling, Styling hoverStyling) {
+        this.segments.add(new TextSegment(text, styling, hoverStyling));
+        invalidateCache();
+        return this;
+    }
+
+    public TextComponent setStyle(Styling style) {
+        this.baseStyle = style;
+        invalidateCache();
+        return this;
+    }
+
+    public TextComponent setHoverStyle(Styling style) {
+        this.hoverStyle = style;
+        invalidateCache();
         return this;
     }
 
     public TextComponent setScale(float scale) {
         this.scale = scale;
-        return this;
-    }
-
-    public TextComponent setShadow(boolean shadow) {
-        this.hasShadow = shadow;
         return this;
     }
 }

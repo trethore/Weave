@@ -1,7 +1,6 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.display.TextImage;
@@ -12,6 +11,7 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.style.Styling;
 
 import java.awt.*;
 
@@ -29,6 +29,8 @@ public class TestGui extends WeaveScreen {
         Button button = Button.of("Click me!")
                 .setX(Constraints.pixels(10))
                 .setY(Constraints.sibling(10))
+                .setHeight(Constraints.pixels(20))
+                .setColor(Color.BLACK)
                 .onClick(b -> System.out.println("Button clicked!"))
                 .setParent(getWindow());
 
@@ -75,10 +77,14 @@ public class TestGui extends WeaveScreen {
                 .setParent(getWindow());
 
         TextComponent.of("This text has ")
-                .append(Text.literal("multiple").formatted(Formatting.RED, Formatting.BOLD))
-                .append(Text.literal(" colors and a "))
-                .append(Text.literal("hover color").formatted(Formatting.AQUA))
-                .setHoverColor(Color.YELLOW)
+                .append("multiple", Styling.create().color(Color.RED).bold(true))
+                .append(" colors and a ")
+                .append(
+                        "hover style",
+                        Styling.create().color(Color.CYAN).underline(true),
+                        Styling.create().obfuscated(true)
+                )
+                .setHoverStyle(Styling.reset().color(Color.YELLOW).shadow(true).shadowColor(Color.ORANGE))
                 .setX(Constraints.pixels(10))
                 .setY(Constraints.sibling(10))
                 .setParent(getWindow());
