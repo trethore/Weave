@@ -1,6 +1,7 @@
 package tytoo.weave.component;
 
 import net.minecraft.client.gui.DrawContext;
+import org.jetbrains.annotations.Nullable;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -11,6 +12,7 @@ import tytoo.weave.event.focus.FocusLostEvent;
 import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
+import tytoo.weave.layout.Layout;
 import tytoo.weave.screen.WeaveScreen;
 
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ public abstract class Component<T extends Component<T>> {
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
+    @Nullable
+    protected Layout layout;
 
     protected List<Consumer<MouseClickEvent>> mouseClickListeners = new ArrayList<>();
     protected List<Consumer<MouseEnterEvent>> mouseEnterListeners = new ArrayList<>();
@@ -52,11 +56,17 @@ public abstract class Component<T extends Component<T>> {
     public void addChild(Component<?> child) {
         this.children.add(child);
         child.parent = this;
+        if (this.layout != null) {
+            this.layout.apply(this);
+        }
     }
 
     public void removeChild(Component<?> child) {
         this.children.remove(child);
         child.parent = null;
+        if (this.layout != null) {
+            this.layout.apply(this);
+        }
     }
 
     public Component<?> getParent() {
@@ -153,6 +163,21 @@ public abstract class Component<T extends Component<T>> {
         return self();
     }
 
+    public T setLayout(@Nullable Layout layout) {
+        this.layout = layout;
+        if (this.layout != null) {
+            this.layout.apply(this);
+        }
+        return self();
+    }
+
+    public T addChildren(Component<?>... components) {
+        for (Component<?> component : components) {
+            this.addChild(component);
+        }
+        return self();
+    }
+
     public void fireMouseClick(MouseClickEvent event) {
         for (Consumer<MouseClickEvent> listener : mouseClickListeners) {
             listener.accept(event);
@@ -239,7 +264,14 @@ public abstract class Component<T extends Component<T>> {
         if (screen == null) {
             return false;
         }
-        return screen.getHoveredComponent() == this;
+        Component<?> hovered = screen.getHoveredComponent();
+        if (hovered == null) {
+            return false;
+        }
+        for (Component<?> c = hovered; c != null; c = c.getParent()) {
+            if (c == this) return true;
+        }
+        return false;
     }
 
     public boolean isPointInside(float x, float y) {

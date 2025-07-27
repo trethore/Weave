@@ -17,7 +17,6 @@ public class Button extends BasePanel<Button> {
 
     public Button(Text text) {
         this.setFocusable(true);
-        this.setColor(new Color(100, 100, 100));
 
         this.label = TextComponent.of(text)
                 .setX(Constraints.center())
@@ -27,25 +26,9 @@ public class Button extends BasePanel<Button> {
         this.setWidth(Constraints.childBased(10));
         this.setHeight(Constraints.childBased(10));
 
-        final Color normalColor = new Color(100, 100, 100);
-        final Color hoverColor = new Color(120, 120, 120);
-
-        this.onMouseEnter(e -> {
-            if (!isFocused()) setColor(hoverColor);
-        });
-
-        this.onMouseLeave(e -> {
-            if (!isFocused()) setColor(normalColor);
-        });
-
-        this.onFocusGained(e -> setColor(hoverColor.brighter()));
-        this.onFocusLost(e -> {
-            if (isHovered()) {
-                setColor(hoverColor);
-            } else {
-                setColor(normalColor);
-            }
-        });
+        this.setNormalColor(new Color(100, 100, 100));
+        this.setHoveredColor(new Color(120, 120, 120));
+        this.setFocusedColor(new Color(120, 120, 120).brighter());
     }
 
     public static Button of(String text) {

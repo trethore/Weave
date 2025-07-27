@@ -12,11 +12,4 @@ public class Container extends Component<Container> {
     public void draw(DrawContext context) {
         drawChildren(context);
     }
-
-    public Container addChildren(Component<?>... components) {
-        for (Component<?> component : components) {
-            this.addChild(component);
-        }
-        return this;
-    }
 }

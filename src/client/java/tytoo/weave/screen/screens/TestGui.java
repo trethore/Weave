@@ -11,6 +11,7 @@ import tytoo.weave.component.components.interactive.ImageButton;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.style.Styling;
 
@@ -40,7 +41,8 @@ public class TestGui extends WeaveScreen {
                 .setX(Constraints.sibling(5))
                 .setY(c -> imageButton.getTop())
                 .setHeight(Constraints.pixels(20))
-                .setColor(Color.BLACK)
+                .setNormalColor(Color.BLACK)
+                .setHoveredColor(Color.GRAY)
                 .onClick(b -> System.out.println("Button clicked!"))
                 .setParent(getWindow());
 
@@ -64,12 +66,10 @@ public class TestGui extends WeaveScreen {
                 .setY(Constraints.sibling(10))
                 .setWidth(Constraints.pixels(100))
                 .setHeight(Constraints.pixels(50))
-                .setColor(Color.MAGENTA)
+                .setNormalColor(Color.MAGENTA)
+                .setFocusedColor(Color.YELLOW)
                 .setFocusable(true)
                 .setParent(getWindow());
-
-        focusTestPanel.onFocusGained(e -> focusTestPanel.setColor(Color.YELLOW));
-        focusTestPanel.onFocusLost(e -> focusTestPanel.setColor(Color.MAGENTA));
 
         focusTestPanel.addChild(TextComponent.of("Focusable Panel")
                 .setX(Constraints.center())
@@ -94,5 +94,16 @@ public class TestGui extends WeaveScreen {
                 .setY(Constraints.sibling(10))
                 .onMouseClick(listener -> System.out.println("Clicked!"))
                 .setParent(getWindow());
+
+        Panel layoutPanel = Panel.create()
+                .setX(Constraints.center())
+                .setY(Constraints.sibling(10))
+                .setWidth(Constraints.relative(0.9f))
+                .setHeight(Constraints.pixels(30))
+                .setColor(new Color(50, 50, 50))
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, 5))
+                .setParent(getWindow());
+
+        layoutPanel.addChildren(Button.of("Left"), Button.of("Middle"), Button.of("Right"));
     }
 }

@@ -66,24 +66,9 @@ public class ImageButton extends BasePanel<ImageButton> {
             return contentHeight + padding * 2;
         });
 
-        final Color normalColor = new Color(100, 100, 100);
-        final Color hoverColor = new Color(120, 120, 120);
-        this.setColor(normalColor);
-
-        this.onMouseEnter(e -> {
-            if (!isFocused()) setColor(hoverColor);
-        });
-        this.onMouseLeave(e -> {
-            if (!isFocused()) setColor(normalColor);
-        });
-        this.onFocusGained(e -> setColor(hoverColor.brighter()));
-        this.onFocusLost(e -> {
-            if (isHovered()) {
-                setColor(hoverColor);
-            } else {
-                setColor(normalColor);
-            }
-        });
+        this.setNormalColor(new Color(100, 100, 100));
+        this.setHoveredColor(new Color(120, 120, 120));
+        this.setFocusedColor(new Color(120, 120, 120).brighter());
     }
 
     public static ImageButton of(Identifier imageId) {
