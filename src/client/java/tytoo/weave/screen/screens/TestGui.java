@@ -1,9 +1,10 @@
 package tytoo.weave.screen.screens;
 
+
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import tytoo.weave.component.components.display.Image;
 import tytoo.weave.component.components.display.TextComponent;
-import tytoo.weave.component.components.display.TextImage;
 import tytoo.weave.component.components.display.WrappedTextComponent;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.ImageButton;
@@ -26,32 +27,36 @@ public class TestGui extends WeaveScreen {
                         .setWidth(Constraints.relative(0.9f))
         );
 
-        Button button = Button.of("Click me!")
+
+        ImageButton imageButton = ImageButton.of(Identifier.of("minecraft", "textures/item/diamond.png"), "Some text!")
                 .setX(Constraints.pixels(10))
-                .setY(Constraints.sibling(10))
+                .setY(Constraints.sibling(5))
+                .setImageSize(16, 16)
+                .setHeight(Constraints.pixels(20))
+                .onClick(b -> System.out.println("Image button clicked!"))
+                .setParent(getWindow());
+
+        Button.of("Click me!")
+                .setX(Constraints.sibling(5))
+                .setY(c -> imageButton.getTop())
                 .setHeight(Constraints.pixels(20))
                 .setColor(Color.BLACK)
                 .onClick(b -> System.out.println("Button clicked!"))
                 .setParent(getWindow());
 
-        ImageButton.of(Identifier.of("minecraft", "textures/item/diamond.png"))
-                .setX(Constraints.sibling(5))
-                .setY(c -> button.getTop())
-                .setWidth(Constraints.pixels(20))
-                .setHeight(Constraints.aspect(1.0f))
-                .onClick(b -> System.out.println("Image button clicked!"))
-                .setParent(getWindow());
-
         getWindow().addChild(Separator.horizontal()
-                .setColor(Color.GRAY)
+                .setColor(Color.PINK)
                 .setY(Constraints.sibling(10))
                 .setWidth(Constraints.relative(1f, -20))
                 .setX(Constraints.pixels(10))
         );
 
-        getWindow().addChild(TextImage.of(Identifier.of("minecraft", "textures/item/gold_ingot.png"), "An item with text!")
+        getWindow().addChild(Image.of(Identifier.of("minecraft", "textures/item/gold_ingot.png")).setLabel("An item with text!", Styling.create().bold(true))
                 .setX(Constraints.pixels(10))
-                .setY(Constraints.sibling(10))
+                .setY(Constraints.sibling(5))
+                .setWidth(Constraints.pixels(40))
+                .setHeight(Constraints.aspect(16 / 9f))
+                .setLabelScale(0.8f)
         );
 
         Panel focusTestPanel = Panel.create()
@@ -87,6 +92,7 @@ public class TestGui extends WeaveScreen {
                 .setHoverStyle(Styling.reset().color(Color.YELLOW).shadow(true).shadowColor(Color.ORANGE))
                 .setX(Constraints.pixels(10))
                 .setY(Constraints.sibling(10))
+                .onMouseClick(listener -> System.out.println("Clicked!"))
                 .setParent(getWindow());
     }
 }

@@ -97,11 +97,11 @@ public abstract class WeaveScreen extends Screen {
             clickedComponent = target;
             bubbleEvent(target, new MouseClickEvent((float) mouseX, (float) mouseY, button), Component::fireMouseClick);
 
-            if (target.isFocusable()) {
-                setFocusedComponent(target);
-            } else {
-                setFocusedComponent(null);
+            Component<?> componentToFocus = target;
+            while (componentToFocus != null && !componentToFocus.isFocusable()) {
+                componentToFocus = componentToFocus.getParent();
             }
+            setFocusedComponent(componentToFocus);
         } else {
             setFocusedComponent(null);
         }
