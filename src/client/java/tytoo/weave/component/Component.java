@@ -7,6 +7,7 @@ import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.event.EventType;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;
 import tytoo.weave.event.keyboard.CharTypeEvent;
@@ -16,9 +17,7 @@ import tytoo.weave.layout.Layout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.style.EdgeInsets;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -29,17 +28,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected EdgeInsets margin = EdgeInsets.zero();
     protected EdgeInsets padding = EdgeInsets.zero();
     protected Layout layout;
-
-    protected List<Consumer<MouseClickEvent>> mouseClickListeners = new ArrayList<>();
-    protected List<Consumer<MouseEnterEvent>> mouseEnterListeners = new ArrayList<>();
-    protected List<Consumer<MouseLeaveEvent>> mouseLeaveListeners = new ArrayList<>();
-    protected List<Consumer<MouseDragEvent>> mouseDragListeners = new ArrayList<>();
-    protected List<Consumer<MouseScrollEvent>> mouseScrollListeners = new ArrayList<>();
-    protected List<Consumer<KeyPressEvent>> keyPressListeners = new ArrayList<>();
-    protected List<Consumer<CharTypeEvent>> charTypeListeners = new ArrayList<>();
-    protected List<Consumer<FocusGainedEvent>> focusGainedListeners = new ArrayList<>();
-    protected List<Consumer<FocusLostEvent>> focusLostListeners = new ArrayList<>();
-
+    protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     private boolean focusable = false;
 
     public abstract void draw(DrawContext context);
@@ -204,47 +193,43 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public T onMouseClick(Consumer<MouseClickEvent> listener) {
-        this.mouseClickListeners.add(listener);
-        return self();
+        return onEvent(MouseClickEvent.TYPE, listener);
     }
 
     public T onMouseEnter(Consumer<MouseEnterEvent> listener) {
-        this.mouseEnterListeners.add(listener);
-        return self();
+        return onEvent(MouseEnterEvent.TYPE, listener);
     }
 
     public T onMouseLeave(Consumer<MouseLeaveEvent> listener) {
-        this.mouseLeaveListeners.add(listener);
-        return self();
+        return onEvent(MouseLeaveEvent.TYPE, listener);
     }
 
     public T onMouseDrag(Consumer<MouseDragEvent> listener) {
-        this.mouseDragListeners.add(listener);
-        return self();
+        return onEvent(MouseDragEvent.TYPE, listener);
     }
 
     public T onMouseScroll(Consumer<MouseScrollEvent> listener) {
-        this.mouseScrollListeners.add(listener);
-        return self();
+        return onEvent(MouseScrollEvent.TYPE, listener);
     }
 
     public T onKeyPress(Consumer<KeyPressEvent> listener) {
-        this.keyPressListeners.add(listener);
-        return self();
+        return onEvent(KeyPressEvent.TYPE, listener);
     }
 
     public T onCharTyped(Consumer<CharTypeEvent> listener) {
-        this.charTypeListeners.add(listener);
-        return self();
+        return onEvent(CharTypeEvent.TYPE, listener);
     }
 
     public T onFocusGained(Consumer<FocusGainedEvent> listener) {
-        this.focusGainedListeners.add(listener);
-        return self();
+        return onEvent(FocusGainedEvent.TYPE, listener);
     }
 
     public T onFocusLost(Consumer<FocusLostEvent> listener) {
-        this.focusLostListeners.add(listener);
+        return onEvent(FocusLostEvent.TYPE, listener);
+    }
+
+    public <E extends tytoo.weave.event.Event> T onEvent(EventType<E> type, Consumer<E> listener) {
+        this.eventListeners.computeIfAbsent(type, k -> new ArrayList<>()).add(listener);
         return self();
     }
 
@@ -263,57 +248,24 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
-    public void fireMouseClick(MouseClickEvent event) {
-        for (Consumer<MouseClickEvent> listener : mouseClickListeners) {
-            listener.accept(event);
-        }
-    }
+    @SuppressWarnings("unchecked")
+    public <E extends tytoo.weave.event.Event> void fireEvent(E event) {
+        EventType<E> type = (EventType<E>) event.getType();
 
-    public void fireMouseEnter(MouseEnterEvent event) {
-        for (Consumer<MouseEnterEvent> listener : mouseEnterListeners) {
-            listener.accept(event);
+        List<Consumer<?>> listeners = eventListeners.get(type);
+        if (listeners != null) {
+            for (Consumer<?> listener : new ArrayList<>(listeners)) {
+                ((Consumer<E>) listener).accept(event);
+            }
         }
-    }
 
-    public void fireMouseLeave(MouseLeaveEvent event) {
-        for (Consumer<MouseLeaveEvent> listener : mouseLeaveListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireMouseDrag(MouseDragEvent event) {
-        for (Consumer<MouseDragEvent> listener : mouseDragListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireMouseScroll(MouseScrollEvent event) {
-        for (Consumer<MouseScrollEvent> listener : mouseScrollListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireKeyPress(KeyPressEvent event) {
-        for (Consumer<KeyPressEvent> listener : keyPressListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireCharTyped(CharTypeEvent event) {
-        for (Consumer<CharTypeEvent> listener : charTypeListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireFocusGained(FocusGainedEvent event) {
-        for (Consumer<FocusGainedEvent> listener : focusGainedListeners) {
-            listener.accept(event);
-        }
-    }
-
-    public void fireFocusLost(FocusLostEvent event) {
-        for (Consumer<FocusLostEvent> listener : focusLostListeners) {
-            listener.accept(event);
+        if (!event.isCancelled()) {
+            List<Consumer<?>> anyListeners = eventListeners.get(tytoo.weave.event.Event.ANY);
+            if (anyListeners != null) {
+                for (Consumer<?> listener : new ArrayList<>(anyListeners)) {
+                    ((Consumer<tytoo.weave.event.Event>) listener).accept(event);
+                }
+            }
         }
     }
 
@@ -380,15 +332,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clone.margin = new EdgeInsets(this.margin.top, this.margin.right, this.margin.bottom, this.margin.left);
             clone.padding = new EdgeInsets(this.padding.top, this.padding.right, this.padding.bottom, this.padding.left);
 
-            clone.mouseClickListeners = new ArrayList<>(this.mouseClickListeners);
-            clone.mouseEnterListeners = new ArrayList<>(this.mouseEnterListeners);
-            clone.mouseLeaveListeners = new ArrayList<>(this.mouseLeaveListeners);
-            clone.mouseDragListeners = new ArrayList<>(this.mouseDragListeners);
-            clone.mouseScrollListeners = new ArrayList<>(this.mouseScrollListeners);
-            clone.keyPressListeners = new ArrayList<>(this.keyPressListeners);
-            clone.charTypeListeners = new ArrayList<>(this.charTypeListeners);
-            clone.focusGainedListeners = new ArrayList<>(this.focusGainedListeners);
-            clone.focusLostListeners = new ArrayList<>(this.focusLostListeners);
+            clone.eventListeners = new HashMap<>();
+            for (Map.Entry<EventType<?>, List<Consumer<?>>> entry : this.eventListeners.entrySet()) {
+                clone.eventListeners.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
 
             clone.children = new ArrayList<>();
             for (Component<?> child : this.children) {

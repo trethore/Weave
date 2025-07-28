@@ -76,10 +76,10 @@ public abstract class WeaveScreen extends Screen {
 
         if (newHovered != hoveredComponent) {
             if (hoveredComponent != null) {
-                bubbleEvent(hoveredComponent, new MouseLeaveEvent((float) mouseX, (float) mouseY), Component::fireMouseLeave);
+                bubbleEvent(hoveredComponent, new MouseLeaveEvent((float) mouseX, (float) mouseY), Component::fireEvent);
             }
             if (newHovered != null) {
-                bubbleEvent(newHovered, new MouseEnterEvent((float) mouseX, (float) mouseY), Component::fireMouseEnter);
+                bubbleEvent(newHovered, new MouseEnterEvent((float) mouseX, (float) mouseY), Component::fireEvent);
             }
             hoveredComponent = newHovered;
         }
@@ -95,7 +95,7 @@ public abstract class WeaveScreen extends Screen {
 
         if (target != null) {
             clickedComponent = target;
-            bubbleEvent(target, new MouseClickEvent((float) mouseX, (float) mouseY, button), Component::fireMouseClick);
+            bubbleEvent(target, new MouseClickEvent((float) mouseX, (float) mouseY, button), Component::fireEvent);
 
             Component<?> componentToFocus = target;
             while (componentToFocus != null && !componentToFocus.isFocusable()) {
@@ -118,7 +118,7 @@ public abstract class WeaveScreen extends Screen {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (clickedComponent != null) {
-            bubbleEvent(clickedComponent, new MouseDragEvent((float) mouseX, (float) mouseY, deltaX, deltaY, button), Component::fireMouseDrag);
+            bubbleEvent(clickedComponent, new MouseDragEvent((float) mouseX, (float) mouseY, deltaX, deltaY, button), Component::fireEvent);
         }
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
@@ -126,7 +126,7 @@ public abstract class WeaveScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         if (hoveredComponent != null) {
-            bubbleEvent(hoveredComponent, new MouseScrollEvent((float) mouseX, (float) mouseY, horizontalAmount, verticalAmount), Component::fireMouseScroll);
+            bubbleEvent(hoveredComponent, new MouseScrollEvent((float) mouseX, (float) mouseY, horizontalAmount, verticalAmount), Component::fireEvent);
         }
         return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
     }
@@ -134,7 +134,7 @@ public abstract class WeaveScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (focusedComponent != null) {
-            bubbleEvent(focusedComponent, new KeyPressEvent(keyCode, scanCode, modifiers), Component::fireKeyPress);
+            bubbleEvent(focusedComponent, new KeyPressEvent(keyCode, scanCode, modifiers), Component::fireEvent);
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
@@ -142,7 +142,7 @@ public abstract class WeaveScreen extends Screen {
     @Override
     public boolean charTyped(char chr, int modifiers) {
         if (focusedComponent != null) {
-            bubbleEvent(focusedComponent, new CharTypeEvent(chr, modifiers), Component::fireCharTyped);
+            bubbleEvent(focusedComponent, new CharTypeEvent(chr, modifiers), Component::fireEvent);
         }
         return super.charTyped(chr, modifiers);
     }
@@ -156,13 +156,13 @@ public abstract class WeaveScreen extends Screen {
         if (focusedComponent == component) return;
 
         if (focusedComponent != null) {
-            bubbleEvent(focusedComponent, new FocusLostEvent(), Component::fireFocusLost);
+            bubbleEvent(focusedComponent, new FocusLostEvent(), Component::fireEvent);
         }
 
         focusedComponent = component;
 
         if (focusedComponent != null) {
-            bubbleEvent(focusedComponent, new FocusGainedEvent(), Component::fireFocusGained);
+            bubbleEvent(focusedComponent, new FocusGainedEvent(), Component::fireEvent);
         }
     }
 

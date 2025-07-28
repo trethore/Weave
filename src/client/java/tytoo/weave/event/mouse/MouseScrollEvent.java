@@ -1,6 +1,9 @@
 package tytoo.weave.event.mouse;
 
+import tytoo.weave.event.EventType;
+
 public class MouseScrollEvent extends MouseEvent {
+    public static final EventType<MouseScrollEvent> TYPE = new EventType<>();
     private final double scrollX;
     private final double scrollY;
 
@@ -16,5 +19,10 @@ public class MouseScrollEvent extends MouseEvent {
 
     public double getScrollY() {
         return scrollY;
+    }
+
+    @Override
+    public EventType<MouseScrollEvent> getType() {
+        return TYPE;
     }
 }

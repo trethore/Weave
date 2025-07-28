@@ -1,6 +1,9 @@
 package tytoo.weave.event.keyboard;
 
+import tytoo.weave.event.EventType;
+
 public class KeyPressEvent extends KeyEvent {
+    public static final EventType<KeyPressEvent> TYPE = new EventType<>();
     private final int keyCode;
     private final int scanCode;
 
@@ -16,5 +19,10 @@ public class KeyPressEvent extends KeyEvent {
 
     public int getScanCode() {
         return scanCode;
+    }
+
+    @Override
+    public EventType<KeyPressEvent> getType() {
+        return TYPE;
     }
 }
