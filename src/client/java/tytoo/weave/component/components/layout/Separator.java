@@ -13,7 +13,7 @@ public class Separator extends BasePanel<Separator> {
             this.setWidth(Constraints.pixels(1));
             this.setHeight(Constraints.relative(1.0f));
         }
-        this.setColor(new Color(128, 128, 128));
+        this.getStyle().setColor(new Color(128, 128, 128));
     }
 
     public static Separator horizontal() {

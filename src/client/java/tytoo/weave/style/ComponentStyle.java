@@ -9,8 +9,8 @@ import java.awt.*;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class ComponentStyle {
-    private final Map<ComponentState, ComponentRenderer> renderers = new EnumMap<>(ComponentState.class);
+public class ComponentStyle implements Cloneable {
+    private Map<ComponentState, ComponentRenderer> renderers = new EnumMap<>(ComponentState.class);
     @Nullable
     private ComponentRenderer baseRenderer;
 
@@ -48,5 +48,16 @@ public class ComponentStyle {
 
     public ComponentStyle setColor(ComponentState state, Color color) {
         return setRenderer(state, new SolidColorRenderer(color));
+    }
+
+    @Override
+    public ComponentStyle clone() {
+        try {
+            ComponentStyle clone = (ComponentStyle) super.clone();
+            clone.renderers = new EnumMap<>(this.renderers);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("ComponentStyle is Cloneable but clone() failed", e);
+        }
     }
 }

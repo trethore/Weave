@@ -15,6 +15,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.EdgeInsets;
 import tytoo.weave.style.renderer.ComponentRenderer;
@@ -34,6 +35,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Object layoutData;
     protected ComponentStyle style = new ComponentStyle();
     private boolean focusable = false;
+    private boolean visible = true;
 
     @SuppressWarnings("unchecked")
     protected T self() {
@@ -41,6 +43,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void draw(DrawContext context) {
+        if (!this.visible) return;
         ComponentRenderer renderer = style.getRenderer(this);
         if (renderer != null) renderer.render(context, this);
         drawChildren(context);
@@ -264,6 +267,11 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return style;
     }
 
+    public T setStyle(ComponentStyle style) {
+        this.style = style;
+        return self();
+    }
+
     public T addChildren(Component<?>... components) {
         for (Component<?> component : components) {
             this.addChild(component);
@@ -295,7 +303,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public Component<?> hitTest(float x, float y) {
         for (ListIterator<Component<?>> it = children.listIterator(children.size()); it.hasPrevious(); ) {
             Component<?> child = it.previous();
-            if (child.isPointInside(x, y)) {
+            if (child.isVisible() && child.isPointInside(x, y)) {
                 return child.hitTest(x, y);
             }
         }
@@ -308,6 +316,20 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setFocusable(boolean focusable) {
         this.focusable = focusable;
+        return self();
+    }
+
+    public boolean isVisible() {
+        return this.visible;
+    }
+
+    public T setVisible(boolean visible) {
+        this.visible = visible;
+        return self();
+    }
+
+    public T bindVisibility(State<Boolean> visibilityState) {
+        visibilityState.bind(this::setVisible);
         return self();
     }
 
@@ -366,9 +388,11 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 clone.addChild(childClone);
             }
 
-            clone.style = this.style;
+            clone.setVisible(this.isVisible());
 
-            clone.layoutData = this.layoutData;
+            clone.style = this.style.clone();
+
+            clone.setLayoutData(this.layoutData);
 
             clone.updateClonedChildReferences(this);
 

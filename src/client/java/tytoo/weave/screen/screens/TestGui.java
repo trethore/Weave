@@ -22,7 +22,6 @@ public class TestGui extends WeaveScreen {
         getWindow()
                 .setWidth(Constraints.relative(0.9f))
                 .setHeight(Constraints.relative(0.9f))
-                .setColor(new Color(20, 20, 20, 220))
                 .setPadding(10)
                 .setLayout(LinearLayout.of(
                         LinearLayout.Orientation.VERTICAL,
@@ -30,10 +29,11 @@ public class TestGui extends WeaveScreen {
                         5
                 ));
 
+        getWindow().getStyle().setColor(new Color(20, 20, 20, 220));
+
         Panel header = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.pixels(30))
-                .setColor(new Color(40, 40, 40, 200))
                 .setLayout(LinearLayout.of(
                         LinearLayout.Orientation.VERTICAL,
                         LinearLayout.Alignment.CENTER)
@@ -44,16 +44,19 @@ public class TestGui extends WeaveScreen {
                                 .setScale(1.5f)
                 );
 
+        header.getStyle().setColor(new Color(40, 40, 40, 200));
+
         Panel content = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.relative(1.0f, -55))
-                .setColor(new Color(30, 30, 30, 150))
                 .setPadding(10)
                 .setLayout(LinearLayout.of(
                         LinearLayout.Orientation.VERTICAL,
                         LinearLayout.Alignment.START,
                         10)
                 );
+
+        content.getStyle().setColor(new Color(30, 30, 30, 150));
 
         Panel gridPanel = Panel.create()
                 .setWidth(Constraints.relative(0.75f))
@@ -75,8 +78,9 @@ public class TestGui extends WeaveScreen {
                 .setWidth(Constraints.pixels(100))
                 .setHeight(Constraints.pixels(30));
 
-        reactivePanelColor.bind(reactivePanel1::setColor);
-        reactivePanelColor.bind(reactivePanel2::setColor);
+
+        reactivePanelColor.bind(color -> reactivePanel1.getStyle().setColor(color));
+        reactivePanelColor.bind(color -> reactivePanel2.getStyle().setColor(color));
 
         Button changeColorButton = Button.of("Change Color")
                 .onClick(b -> {
@@ -87,7 +91,7 @@ public class TestGui extends WeaveScreen {
         Panel reactiveContainer = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.childBased(0))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.START, 10))
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_AROUND, 10))
                 .addChildren(changeColorButton, reactivePanel1, reactivePanel2);
 
         content.addChildren(gridPanel, Separator.horizontal(), reactiveContainer);

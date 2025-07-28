@@ -76,7 +76,10 @@ public class LinearLayout implements Layout {
             children.get(index).setX(c -> {
                 if (children.isEmpty()) return parent.getInnerLeft();
 
-                float totalSiblingsWidth = children.stream().map(Component::getRawWidth).reduce(0f, Float::sum);
+                float totalSiblingsWidth = 0;
+                for (Component<?> child : children) {
+                    totalSiblingsWidth += child.getRawWidth();
+                }
                 float freeSpace = parent.getInnerWidth() - totalSiblingsWidth;
 
                 float previousSiblingsWidth = 0;
@@ -144,7 +147,10 @@ public class LinearLayout implements Layout {
             final int index = i;
             children.get(index).setY(c -> {
                 if (children.isEmpty()) return parent.getInnerTop();
-                float totalSiblingsHeight = children.stream().map(Component::getRawHeight).reduce(0f, Float::sum);
+                float totalSiblingsHeight = 0;
+                for (Component<?> child : children) {
+                    totalSiblingsHeight += child.getRawHeight();
+                }
                 float freeSpace = parent.getInnerHeight() - totalSiblingsHeight;
                 float previousSiblingsHeight = 0;
                 for (int j = 0; j < index; j++) {
