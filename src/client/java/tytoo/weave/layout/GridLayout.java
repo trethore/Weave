@@ -39,75 +39,91 @@ public class GridLayout implements Layout {
         List<Component<?>> children = component.getChildren();
         if (children.isEmpty()) return;
 
+        Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(children);
+        PlacementResult placement = calculatePlacement(children, gridDataMap);
+        applyConstraintsToChildren(component, children, placement, gridDataMap);
+    }
+
+    private Map<Component<?>, GridData> getGridDataForChildren(List<Component<?>> children) {
         Map<Component<?>, GridData> gridDataMap = new HashMap<>();
         for (Component<?> child : children) {
             Object layoutData = child.getLayoutData();
-            if (layoutData instanceof GridData) {
-                gridDataMap.put(child, (GridData) layoutData);
-            } else {
-                gridDataMap.put(child, new GridData());
-            }
+            gridDataMap.put(child, layoutData instanceof GridData data ? data : new GridData());
         }
+        return gridDataMap;
+    }
 
+    private PlacementResult calculatePlacement(List<Component<?>> children, Map<Component<?>, GridData> gridDataMap) {
         Map<Component<?>, Point> childPositions = new HashMap<>();
         List<boolean[]> occupied = new ArrayList<>();
         int maxRow = 0;
-
         int cursorRow = 0;
         int cursorCol = 0;
 
         for (Component<?> child : children) {
             GridData data = gridDataMap.get(child);
-            int colSpan = Math.max(1, Math.min(columns, data.getColumnSpan()));
-            int rowSpan = Math.max(1, data.getRowSpan());
+            final int colSpan = Math.max(1, Math.min(columns, data.getColumnSpan()));
+            final int rowSpan = Math.max(1, data.getRowSpan());
 
-            while (true) {
-                if (cursorCol + colSpan > columns) {
-                    cursorCol = 0;
-                    cursorRow++;
-                    continue;
-                }
-
-                while (occupied.size() <= cursorRow + rowSpan - 1) {
-                    occupied.add(new boolean[columns]);
-                }
-
-                boolean fits = true;
-                for (int r = 0; r < rowSpan; r++) {
-                    for (int c = 0; c < colSpan; c++) {
-                        if (occupied.get(cursorRow + r)[cursorCol + c]) {
-                            fits = false;
-                            break;
-                        }
-                    }
-                    if (!fits) break;
-                }
-
-                if (fits) {
-                    break;
-                } else {
-                    cursorCol++;
-                    if (cursorCol >= columns) {
-                        cursorCol = 0;
-                        cursorRow++;
-                    }
-                }
-            }
+            Point position = findNextAvailablePosition(occupied, cursorRow, cursorCol, colSpan, rowSpan);
+            cursorRow = position.y;
+            cursorCol = position.x;
 
             childPositions.put(child, new Point(cursorCol, cursorRow));
-
-            for (int r = 0; r < rowSpan; r++) {
-                for (int c = 0; c < colSpan; c++) {
-                    occupied.get(cursorRow + r)[cursorCol + c] = true;
-                }
-            }
+            occupyCells(occupied, cursorRow, cursorCol, rowSpan, colSpan);
             maxRow = Math.max(maxRow, cursorRow + rowSpan - 1);
         }
 
-        final int totalRows = maxRow + 1;
+        return new PlacementResult(childPositions, maxRow + 1);
+    }
 
+    private Point findNextAvailablePosition(List<boolean[]> occupied, int startRow, int startCol, int colSpan, int rowSpan) {
+        int r = startRow;
+        int c = startCol;
+        while (true) {
+            if (c + colSpan > columns) {
+                c = 0;
+                r++;
+                continue;
+            }
+
+            while (occupied.size() <= r + rowSpan - 1) {
+                occupied.add(new boolean[columns]);
+            }
+
+            if (isAreaAvailable(occupied, r, c, rowSpan, colSpan)) {
+                return new Point(c, r);
+            } else {
+                c++;
+                if (c >= columns) {
+                    c = 0;
+                    r++;
+                }
+            }
+        }
+    }
+
+    private boolean isAreaAvailable(List<boolean[]> occupied, int r, int c, int rowSpan, int colSpan) {
+        for (int row = 0; row < rowSpan; row++) {
+            for (int col = 0; col < colSpan; col++) {
+                if (occupied.get(r + row)[c + col]) return false;
+            }
+        }
+        return true;
+    }
+
+    private void occupyCells(List<boolean[]> occupied, int r, int c, int rowSpan, int colSpan) {
+        for (int row = 0; row < rowSpan; row++) {
+            for (int col = 0; col < colSpan; col++) {
+                occupied.get(r + row)[c + col] = true;
+            }
+        }
+    }
+
+    private void applyConstraintsToChildren(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap) {
+        final int totalRows = placement.totalRows();
         for (Component<?> child : children) {
-            Point pos = childPositions.get(child);
+            Point pos = placement.positions().get(child);
             GridData data = gridDataMap.get(child);
             final int col = pos.x;
             final int row = pos.y;
@@ -115,35 +131,29 @@ public class GridLayout implements Layout {
             final int rowSpan = Math.max(1, data.getRowSpan());
 
             child.setWidth(c -> {
-                Component<?> p = c.getParent();
-                if (p == null) return 0f;
-                float cellWidth = (p.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
+                float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
                 return colSpan * cellWidth + (colSpan - 1) * horizontalGap;
             });
 
             child.setHeight(c -> {
-                Component<?> p = c.getParent();
-                if (p == null) return 0f;
-                float cellHeight = (p.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
+                float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
                 return rowSpan * cellHeight + (rowSpan - 1) * verticalGap;
             });
 
             child.setX(c -> {
-                Component<?> p = c.getParent();
-                if (p == null) return 0f;
-                float cellWidth = (p.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
-                return p.getInnerLeft() + col * (cellWidth + horizontalGap);
+                float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
+                return parent.getInnerLeft() + col * (cellWidth + horizontalGap);
             });
 
             child.setY(c -> {
-                Component<?> p = c.getParent();
-                if (p == null) return 0f;
-                float cellHeight = (p.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
-                return p.getInnerTop() + row * (cellHeight + verticalGap);
+                float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
+                return parent.getInnerTop() + row * (cellHeight + verticalGap);
             });
         }
     }
 
+    private record PlacementResult(Map<Component<?>, Point> positions, int totalRows) {
+    }
 
     public static class GridData {
         private int columnSpan = 1;

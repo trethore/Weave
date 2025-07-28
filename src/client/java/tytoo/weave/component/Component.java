@@ -45,20 +45,22 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
     }
 
-    public void addChild(Component<?> child) {
-        this.children.add(child);
-        child.parent = this;
+    private void relayout() {
         if (this.layout != null) {
             this.layout.apply(this);
         }
     }
 
+    public void addChild(Component<?> child) {
+        this.children.add(child);
+        child.parent = this;
+        relayout();
+    }
+
     public void removeChild(Component<?> child) {
         this.children.remove(child);
         child.parent = null;
-        if (this.layout != null) {
-            this.layout.apply(this);
-        }
+        relayout();
     }
 
     public Component<?> getParent() {

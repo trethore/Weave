@@ -55,11 +55,11 @@ public class TestGui extends WeaveScreen {
                 );
 
         Panel gridPanel = Panel.create()
-                .setWidth(Constraints.relative(0.5f))
-                .setHeight(Constraints.relative(0.5f))
+                .setWidth(Constraints.relative(1f))
+                .setHeight(Constraints.relative(1f))
                 .setLayout(GridLayout.of(2, 10, 10))
                 .addChildren(
-                        Button.of("1").setLayoutData(GridLayout.GridData.span(2, 2)),
+                        Button.of("1").setLayoutData(GridLayout.GridData.rowSpan(2)),
                         Button.of("2"), Button.of("3"),
                         Button.of("4"), Button.of("5")
                 );

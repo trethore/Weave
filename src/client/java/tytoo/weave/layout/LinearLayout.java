@@ -30,141 +30,144 @@ public class LinearLayout implements Layout {
         if (children.isEmpty()) return;
 
         if (orientation == Orientation.HORIZONTAL) {
-            applyHorizontalLayout(children);
-        } else { // VERTICAL
-            applyVerticalLayout(children);
+            applyHorizontalLayout(component, children);
+        } else {
+            applyVerticalLayout(component, children);
         }
     }
 
-    private void applyHorizontalLayout(final List<Component<?>> children) {
+    private void applyHorizontalLayout(Component<?> parent, List<Component<?>> children) {
         for (Component<?> child : children) {
             child.setY(Constraints.center());
         }
 
         if (alignment == Alignment.START || alignment == Alignment.CENTER || alignment == Alignment.END) {
-            if (alignment == Alignment.START) {
-                children.getFirst().setX(Constraints.pixels(0));
-            } else {
-                children.getFirst().setX(c -> {
-                    if (c.getParent() == null) return 0f;
-                    List<Component<?>> siblings = c.getParent().getChildren();
-                    float totalChildrenWidth = 0;
-                    if (!siblings.isEmpty()) {
-                        for (Component<?> sibling : siblings) totalChildrenWidth += sibling.getRawWidth();
-                        totalChildrenWidth += gap * (siblings.size() - 1);
-                    }
-                    return c.getParent().getInnerLeft() + switch (alignment) {
-                        case CENTER -> (c.getParent().getInnerWidth() - totalChildrenWidth) / 2f;
-                        case END -> c.getParent().getInnerWidth() - totalChildrenWidth;
-                        default -> 0;
-                    };
-                });
-            }
-            for (int i = 1; i < children.size(); i++) {
-                children.get(i).setX(Constraints.sibling(gap));
-            }
+            applyHorizontalAxisAlignment(parent, children);
         } else {
-            for (int i = 0; i < children.size(); i++) {
-                final int index = i;
-                children.get(index).setX(c -> {
-                    Component<?> p = c.getParent();
-                    if (p == null) return 0f;
-                    List<Component<?>> siblings = p.getChildren();
-                    if (siblings.isEmpty()) return p.getInnerLeft();
-
-                    float totalSiblingsWidth = siblings.stream().map(Component::getRawWidth).reduce(0f, Float::sum);
-                    float freeSpace = p.getInnerWidth() - totalSiblingsWidth;
-
-                    float previousSiblingsWidth = 0;
-                    for (int j = 0; j < index; j++) {
-                        previousSiblingsWidth += siblings.get(j).getWidth();
-                    }
-
-                    return p.getInnerLeft() + previousSiblingsWidth + switch (alignment) {
-                        case SPACE_BETWEEN -> {
-                            if (siblings.size() <= 1) yield freeSpace / 2;
-                            yield index * (freeSpace / (siblings.size() - 1));
-                        }
-                        case SPACE_AROUND -> {
-                            if (siblings.isEmpty()) yield 0f;
-                            float space = freeSpace / siblings.size();
-                            yield index * space + space / 2;
-                        }
-                        case SPACE_EVENLY -> {
-                            if (siblings.isEmpty()) yield 0f;
-                            float space = freeSpace / (siblings.size() + 1);
-                            yield (index + 1) * space;
-                        }
-                        default -> 0f;
-                    };
-                });
-            }
+            applyHorizontalAxisDistribution(parent, children);
         }
     }
 
-    private void applyVerticalLayout(final List<Component<?>> children) {
+    private void applyHorizontalAxisAlignment(Component<?> parent, List<Component<?>> children) {
+        if (alignment == Alignment.START) {
+            children.getFirst().setX(Constraints.pixels(0));
+        } else {
+            children.getFirst().setX(c -> {
+                float totalChildrenWidth = 0;
+                if (!children.isEmpty()) {
+                    for (Component<?> sibling : children) totalChildrenWidth += sibling.getRawWidth();
+                    totalChildrenWidth += gap * (children.size() - 1);
+                }
+                return parent.getInnerLeft() + switch (alignment) {
+                    case CENTER -> (parent.getInnerWidth() - totalChildrenWidth) / 2f;
+                    case END -> parent.getInnerWidth() - totalChildrenWidth;
+                    default -> 0;
+                };
+            });
+        }
+        for (int i = 1; i < children.size(); i++) {
+            children.get(i).setX(Constraints.sibling(gap));
+        }
+    }
+
+    private void applyHorizontalAxisDistribution(Component<?> parent, List<Component<?>> children) {
+        for (int i = 0; i < children.size(); i++) {
+            final int index = i;
+            children.get(index).setX(c -> {
+                if (children.isEmpty()) return parent.getInnerLeft();
+
+                float totalSiblingsWidth = children.stream().map(Component::getRawWidth).reduce(0f, Float::sum);
+                float freeSpace = parent.getInnerWidth() - totalSiblingsWidth;
+
+                float previousSiblingsWidth = 0;
+                for (int j = 0; j < index; j++) {
+                    previousSiblingsWidth += children.get(j).getWidth();
+                }
+
+                return parent.getInnerLeft() + previousSiblingsWidth + switch (alignment) {
+                    case SPACE_BETWEEN -> {
+                        if (children.size() <= 1) yield freeSpace / 2;
+                        yield index * (freeSpace / (children.size() - 1));
+                    }
+                    case SPACE_AROUND -> {
+                        if (children.isEmpty()) yield 0f;
+                        float space = freeSpace / children.size();
+                        yield index * space + space / 2;
+                    }
+                    case SPACE_EVENLY -> {
+                        if (children.isEmpty()) yield 0f;
+                        float space = freeSpace / (children.size() + 1);
+                        yield (index + 1) * space;
+                    }
+                    default -> 0f;
+                };
+            });
+        }
+    }
+
+    private void applyVerticalLayout(Component<?> parent, List<Component<?>> children) {
         for (Component<?> child : children) {
             child.setX(Constraints.center());
         }
 
         if (alignment == Alignment.START || alignment == Alignment.CENTER || alignment == Alignment.END) {
-            if (alignment == Alignment.START) {
-                children.getFirst().setY(Constraints.pixels(0));
-            } else {
-                children.getFirst().setY(c -> {
-                    if (c.getParent() == null) return 0f;
-                    List<Component<?>> siblings = c.getParent().getChildren();
-                    float totalChildrenHeight = 0;
-                    if (!siblings.isEmpty()) {
-                        for (Component<?> sibling : siblings) totalChildrenHeight += sibling.getRawHeight();
-                        totalChildrenHeight += gap * (siblings.size() - 1);
-                    }
-                    return c.getParent().getInnerTop() + switch (alignment) {
-                        case CENTER -> (c.getParent().getInnerHeight() - totalChildrenHeight) / 2f;
-                        case END -> c.getParent().getInnerHeight() - totalChildrenHeight;
-                        default -> 0;
-                    };
-                });
-            }
-            for (int i = 1; i < children.size(); i++) {
-                children.get(i).setY(Constraints.sibling(gap));
-            }
+            applyVerticalAxisAlignment(parent, children);
         } else {
-            for (int i = 0; i < children.size(); i++) {
-                final int index = i;
-                children.get(index).setY(c -> {
-                    Component<?> p = c.getParent();
-                    if (p == null) return 0f;
-                    List<Component<?>> siblings = p.getChildren();
-                    if (siblings.isEmpty()) return p.getInnerTop();
+            applyVerticalAxisDistribution(parent, children);
+        }
+    }
 
-                    float totalSiblingsHeight = siblings.stream().map(Component::getRawHeight).reduce(0f, Float::sum);
-                    float freeSpace = p.getInnerHeight() - totalSiblingsHeight;
+    private void applyVerticalAxisAlignment(Component<?> parent, List<Component<?>> children) {
+        if (alignment == Alignment.START) {
+            children.getFirst().setY(Constraints.pixels(0));
+        } else {
+            children.getFirst().setY(c -> {
+                float totalChildrenHeight = 0;
+                if (!children.isEmpty()) {
+                    for (Component<?> sibling : children) totalChildrenHeight += sibling.getRawHeight();
+                    totalChildrenHeight += gap * (children.size() - 1);
+                }
+                return parent.getInnerTop() + switch (alignment) {
+                    case CENTER -> (parent.getInnerHeight() - totalChildrenHeight) / 2f;
+                    case END -> parent.getInnerHeight() - totalChildrenHeight;
+                    default -> 0;
+                };
+            });
+        }
+        for (int i = 1; i < children.size(); i++) {
+            children.get(i).setY(Constraints.sibling(gap));
+        }
+    }
 
-                    float previousSiblingsHeight = 0;
-                    for (int j = 0; j < index; j++) {
-                        previousSiblingsHeight += siblings.get(j).getHeight();
+    private void applyVerticalAxisDistribution(Component<?> parent, List<Component<?>> children) {
+        for (int i = 0; i < children.size(); i++) {
+            final int index = i;
+            children.get(index).setY(c -> {
+                if (children.isEmpty()) return parent.getInnerTop();
+                float totalSiblingsHeight = children.stream().map(Component::getRawHeight).reduce(0f, Float::sum);
+                float freeSpace = parent.getInnerHeight() - totalSiblingsHeight;
+                float previousSiblingsHeight = 0;
+                for (int j = 0; j < index; j++) {
+                    previousSiblingsHeight += children.get(j).getHeight();
+                }
+                return parent.getInnerTop() + previousSiblingsHeight + switch (alignment) {
+                    case SPACE_BETWEEN -> {
+                        if (children.size() <= 1) yield freeSpace / 2;
+                        yield index * (freeSpace / (children.size() - 1));
                     }
-
-                    return p.getInnerTop() + previousSiblingsHeight + switch (alignment) {
-                        case SPACE_BETWEEN -> {
-                            if (siblings.size() <= 1) yield freeSpace / 2;
-                            yield index * (freeSpace / (siblings.size() - 1));
-                        }
-                        case SPACE_AROUND -> {
-                            if (siblings.isEmpty()) yield 0f;
-                            float space = freeSpace / siblings.size();
-                            yield index * space + space / 2;
-                        }
-                        case SPACE_EVENLY -> {
-                            if (siblings.isEmpty()) yield 0f;
-                            float space = freeSpace / (siblings.size() + 1);
-                            yield (index + 1) * space;
-                        }
-                        default -> 0f;
-                    };
-                });
-            }
+                    case SPACE_AROUND -> {
+                        if (children.isEmpty()) yield 0f;
+                        float space = freeSpace / children.size();
+                        yield index * space + space / 2;
+                    }
+                    case SPACE_EVENLY -> {
+                        if (children.isEmpty()) yield 0f;
+                        float space = freeSpace / (children.size() + 1);
+                        yield (index + 1) * space;
+                    }
+                    default -> 0f;
+                };
+            });
         }
     }
 
