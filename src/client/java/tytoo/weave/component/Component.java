@@ -29,6 +29,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected EdgeInsets padding = EdgeInsets.zero();
     protected Layout layout;
     protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
+    protected Object layoutData;
     private boolean focusable = false;
 
     public abstract void draw(DrawContext context);
@@ -241,6 +242,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public Object getLayoutData() {
+        return layoutData;
+    }
+
+    public T setLayoutData(Object layoutData) {
+        this.layoutData = layoutData;
+        return self();
+    }
+
     public T addChildren(Component<?>... components) {
         for (Component<?> component : components) {
             this.addChild(component);
@@ -342,6 +352,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 Component<?> childClone = child.clone();
                 clone.addChild(childClone);
             }
+
+            clone.layoutData = this.layoutData;
 
             clone.updateClonedChildReferences(this);
 
