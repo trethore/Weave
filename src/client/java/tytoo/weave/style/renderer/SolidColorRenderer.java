@@ -7,9 +7,17 @@ import tytoo.weave.utils.render.Render2DUtils;
 import java.awt.*;
 
 public class SolidColorRenderer implements ComponentRenderer {
-    private final Color color;
+    private Color color;
 
     public SolidColorRenderer(Color color) {
+        this.color = color;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
         this.color = color;
     }
 

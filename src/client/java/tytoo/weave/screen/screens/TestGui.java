@@ -94,7 +94,30 @@ public class TestGui extends WeaveScreen {
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_AROUND, 10))
                 .addChildren(changeColorButton, reactivePanel1, reactivePanel2);
 
-        content.addChildren(gridPanel, Separator.horizontal(), reactiveContainer);
+        Panel animatablePanel = Panel.create()
+                .setWidth(Constraints.pixels(50))
+                .setHeight(Constraints.pixels(50));
+        animatablePanel.getStyle().setColor(Color.CYAN);
+
+        State<Boolean> toggled = new State<>(false);
+
+        Button animateButton = Button.of("Animate Me!")
+                .onClick(b -> {
+                    toggled.set(!toggled.get());
+                    if (toggled.get()) {
+                        animatablePanel.animate()
+                                .duration(100)
+                                .color(Color.BLUE);
+                    } else {
+                        animatablePanel.animate()
+                                .duration(500)
+                                .color(Color.RED);
+                    }
+                });
+
+        Panel animationContainer = Panel.create().setWidth(Constraints.relative(1.0f)).setHeight(Constraints.childBased(0)).setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_AROUND, 10)).addChildren(animateButton, animatablePanel);
+
+        content.addChildren(gridPanel, Separator.horizontal(), reactiveContainer, Separator.horizontal(), animationContainer);
 
         getWindow().addChildren(header, Separator.horizontal(), content);
     }

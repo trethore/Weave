@@ -2,6 +2,7 @@ package tytoo.weave.component;
 
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
+import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -404,5 +405,9 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     protected void updateClonedChildReferences(Component<T> original) {
         // Default implementation is empty.
+    }
+
+    public AnimationBuilder<T> animate() {
+        return new AnimationBuilder<>(self());
     }
 }

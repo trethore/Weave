@@ -28,17 +28,22 @@ public class ComponentStyle implements Cloneable {
         return baseRenderer;
     }
 
+    @Nullable
+    public ComponentRenderer getBaseRenderer() {
+        return baseRenderer;
+    }
+
+    public ComponentStyle setBaseRenderer(@Nullable ComponentRenderer renderer) {
+        this.baseRenderer = renderer;
+        return this;
+    }
+
     public ComponentStyle setRenderer(ComponentState state, @Nullable ComponentRenderer renderer) {
         if (renderer == null) {
             renderers.remove(state);
         } else {
             renderers.put(state, renderer);
         }
-        return this;
-    }
-
-    public ComponentStyle setBaseRenderer(@Nullable ComponentRenderer renderer) {
-        this.baseRenderer = renderer;
         return this;
     }
 

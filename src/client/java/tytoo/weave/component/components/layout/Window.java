@@ -5,7 +5,6 @@ import tytoo.weave.theme.ThemeManager;
 
 public class Window extends BasePanel<Window> {
     public Window() {
-        this.parent = null;
         this.setX(Constraints.center());
         this.setY(Constraints.center());
         this.setWidth(Constraints.pixels(400));

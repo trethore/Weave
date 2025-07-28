@@ -34,34 +34,19 @@ public class WrappedTextComponent extends TextComponent {
     }
 
     @Override
-    public void draw(DrawContext context) {
+    protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
-        Text textToDraw = getDrawableText();
-        boolean shadow = hasShadow();
 
         int wrapWidth = (int) (this.getWidth() / this.scale);
-        if (wrapWidth <= 0) {
-            drawChildren(context);
-            return;
-        }
-        List<OrderedText> lines = textRenderer.wrapLines(textToDraw, wrapWidth);
-
-        context.getMatrices().push();
-        context.getMatrices().translate(getLeft(), getTop(), 0);
-        context.getMatrices().scale(this.scale, this.scale, 1.0f);
+        if (wrapWidth <= 0) return;
+        List<OrderedText> lines = textRenderer.wrapLines(text, wrapWidth);
 
         int yOffset = 0;
         for (OrderedText line : lines) {
             context.drawText(textRenderer,
                     line,
-                    0,
-                    yOffset,
-                    -1,
-                    shadow);
+                    0, yOffset, -1, shadow);
             yOffset += textRenderer.fontHeight;
         }
-
-        context.getMatrices().pop();
-        drawChildren(context);
     }
 }

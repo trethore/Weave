@@ -2,8 +2,8 @@ package tytoo.weave.style;
 
 public class TextSegment {
     private final String text;
-    private final Styling styling;
     private final Styling hoverStyling;
+    private Styling styling;
 
     public TextSegment(String text, Styling styling) {
         this(text, styling, null);
@@ -13,6 +13,10 @@ public class TextSegment {
         this.text = text;
         this.styling = styling;
         this.hoverStyling = hoverStyling;
+    }
+
+    public void setStyling(Styling styling) {
+        this.styling = styling;
     }
 
     public String getText() {

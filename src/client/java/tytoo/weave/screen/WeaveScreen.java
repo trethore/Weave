@@ -4,6 +4,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import tytoo.weave.animation.Animator;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.event.Event;
@@ -36,6 +37,7 @@ public abstract class WeaveScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        Animator.getInstance().update();
         super.render(context, mouseX, mouseY, delta);
         window.draw(context);
     }

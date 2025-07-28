@@ -98,24 +98,22 @@ public class TextComponent extends Component<TextComponent> {
 
     @Override
     public void draw(DrawContext context) {
-        Text textToDraw = getDrawableText();
-        boolean shadow = hasShadow();
-
         context.getMatrices().push();
         context.getMatrices().translate(getLeft(), getTop(), 0);
         context.getMatrices().scale(this.scale, this.scale, 1.0f);
 
-        context.drawText(
-                ThemeManager.getTheme().getTextRenderer(),
-                textToDraw,
-                0,
-                0,
-                -1,
-                shadow
-        );
+        drawScaledContent(context, getDrawableText(), hasShadow());
 
         context.getMatrices().pop();
         drawChildren(context);
+    }
+
+    protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
+        context.drawText(
+                ThemeManager.getTheme().getTextRenderer(),
+                text,
+                0, 0, -1, shadow
+        );
     }
 
     @Override
@@ -139,20 +137,22 @@ public class TextComponent extends Component<TextComponent> {
         return this;
     }
 
-    public TextComponent append(String text) {
+    public TextSegment append(String text) {
         return append(text, Styling.create());
     }
 
-    public TextComponent append(String text, Styling styling) {
-        this.segments.add(new TextSegment(text, styling));
+    public TextSegment append(String text, Styling styling) {
+        TextSegment segment = new TextSegment(text, styling);
+        this.segments.add(segment);
         invalidateCache();
-        return this;
+        return segment;
     }
 
-    public TextComponent append(String text, Styling styling, Styling hoverStyling) {
-        this.segments.add(new TextSegment(text, styling, hoverStyling));
+    public TextSegment append(String text, Styling styling, Styling hoverStyling) {
+        TextSegment segment = new TextSegment(text, styling, hoverStyling);
+        this.segments.add(segment);
         invalidateCache();
-        return this;
+        return segment;
     }
 
     public TextComponent setStyle(Styling style) {
