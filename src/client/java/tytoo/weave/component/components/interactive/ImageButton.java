@@ -2,6 +2,7 @@ package tytoo.weave.component.components.interactive;
 
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
@@ -81,6 +82,26 @@ public class ImageButton extends BasePanel<ImageButton> {
 
     public static ImageButton of(Identifier imageId, Text text) {
         return new ImageButton(imageId, text);
+    }
+
+    @Override
+    protected void updateClonedChildReferences(Component<ImageButton> original) {
+        super.updateClonedChildReferences(original);
+        ImageButton originalButton = (ImageButton) original;
+
+        if (originalButton.image != null) {
+            int imageIndex = originalButton.getChildren().indexOf(originalButton.image);
+            if (imageIndex != -1) {
+                this.image = (BaseImage<?>) this.getChildren().get(imageIndex);
+            }
+        }
+
+        if (originalButton.label != null) {
+            int labelIndex = originalButton.getChildren().indexOf(originalButton.label);
+            if (labelIndex != -1) {
+                this.label = (TextComponent) this.getChildren().get(labelIndex);
+            }
+        }
     }
 
     public ImageButton onClick(Consumer<ImageButton> action) {

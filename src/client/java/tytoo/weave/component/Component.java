@@ -22,7 +22,7 @@ import java.util.ListIterator;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public abstract class Component<T extends Component<T>> {
+public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
@@ -361,5 +361,50 @@ public abstract class Component<T extends Component<T>> {
 
     public boolean isPointInside(float x, float y) {
         return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public T clone() {
+        try {
+            T clone = (T) super.clone();
+
+            clone.parent = null;
+
+            clone.constraints = new Constraints(clone);
+            clone.constraints.setX(this.constraints.getXConstraint());
+            clone.constraints.setY(this.constraints.getYConstraint());
+            clone.constraints.setWidth(this.constraints.getWidthConstraint());
+            clone.constraints.setHeight(this.constraints.getHeightConstraint());
+
+            clone.margin = new EdgeInsets(this.margin.top, this.margin.right, this.margin.bottom, this.margin.left);
+            clone.padding = new EdgeInsets(this.padding.top, this.padding.right, this.padding.bottom, this.padding.left);
+
+            clone.mouseClickListeners = new ArrayList<>(this.mouseClickListeners);
+            clone.mouseEnterListeners = new ArrayList<>(this.mouseEnterListeners);
+            clone.mouseLeaveListeners = new ArrayList<>(this.mouseLeaveListeners);
+            clone.mouseDragListeners = new ArrayList<>(this.mouseDragListeners);
+            clone.mouseScrollListeners = new ArrayList<>(this.mouseScrollListeners);
+            clone.keyPressListeners = new ArrayList<>(this.keyPressListeners);
+            clone.charTypeListeners = new ArrayList<>(this.charTypeListeners);
+            clone.focusGainedListeners = new ArrayList<>(this.focusGainedListeners);
+            clone.focusLostListeners = new ArrayList<>(this.focusLostListeners);
+
+            clone.children = new ArrayList<>();
+            for (Component<?> child : this.children) {
+                Component<?> childClone = child.clone();
+                clone.addChild(childClone);
+            }
+
+            clone.updateClonedChildReferences(this);
+
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Component is Cloneable but clone() failed", e);
+        }
+    }
+
+    protected void updateClonedChildReferences(Component<T> original) {
+        // Default implementation is empty.
     }
 }

@@ -55,6 +55,22 @@ public class Constraints {
         return new AspectRatioConstraint(ratio);
     }
 
+    public XConstraint getXConstraint() {
+        return x;
+    }
+
+    public YConstraint getYConstraint() {
+        return y;
+    }
+
+    public WidthConstraint getWidthConstraint() {
+        return width;
+    }
+
+    public HeightConstraint getHeightConstraint() {
+        return height;
+    }
+
     public float getX() {
         return x.getX(component);
     }

@@ -1,6 +1,7 @@
 package tytoo.weave.component.components.interactive;
 
 import net.minecraft.text.Text;
+import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -37,6 +38,18 @@ public class Button extends BasePanel<Button> {
 
     public static Button of(Text text) {
         return new Button(text);
+    }
+
+    @Override
+    protected void updateClonedChildReferences(Component<Button> original) {
+        super.updateClonedChildReferences(original);
+        Button originalButton = (Button) original;
+        if (originalButton.label != null) {
+            int labelIndex = originalButton.getChildren().indexOf(originalButton.label);
+            if (labelIndex != -1) {
+                this.label = (TextComponent) this.getChildren().get(labelIndex);
+            }
+        }
     }
 
     public Button setText(Text text) {

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class TextComponent extends Component<TextComponent> {
-    protected final List<TextSegment> segments = new ArrayList<>();
+    protected List<TextSegment> segments = new ArrayList<>();
     protected Styling baseStyle;
     protected Styling hoverStyle;
     protected float scale = 1.0f;
@@ -116,6 +116,15 @@ public class TextComponent extends Component<TextComponent> {
 
         context.getMatrices().pop();
         drawChildren(context);
+    }
+
+    @Override
+    public TextComponent clone() {
+        TextComponent clone = super.clone();
+
+        clone.segments = new ArrayList<>(this.segments);
+        clone.invalidateCache();
+        return clone;
     }
 
     public TextComponent setText(Text text) {

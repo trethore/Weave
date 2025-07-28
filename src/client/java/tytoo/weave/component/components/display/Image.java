@@ -13,7 +13,7 @@ import tytoo.weave.style.Styling;
 import java.awt.*;
 
 public class Image extends Component<Image> {
-    private final BaseImage<?> imagePart;
+    private BaseImage<?> imagePart;
     private TextComponent labelPart;
     private float gap = 2;
 
@@ -40,6 +40,26 @@ public class Image extends Component<Image> {
 
     public static Image of(Identifier imageId) {
         return new Image(imageId);
+    }
+
+    @Override
+    protected void updateClonedChildReferences(Component<Image> original) {
+        super.updateClonedChildReferences(original);
+        Image originalImage = (Image) original;
+
+        if (originalImage.imagePart != null) {
+            int imageIndex = originalImage.getChildren().indexOf(originalImage.imagePart);
+            if (imageIndex != -1) {
+                this.imagePart = (BaseImage<?>) this.getChildren().get(imageIndex);
+            }
+        }
+
+        if (originalImage.labelPart != null) {
+            int labelIndex = originalImage.getChildren().indexOf(originalImage.labelPart);
+            if (labelIndex != -1) {
+                this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
+            }
+        }
     }
 
     @Override
