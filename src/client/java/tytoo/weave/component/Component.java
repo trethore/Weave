@@ -15,7 +15,9 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.EdgeInsets;
+import tytoo.weave.style.renderer.ComponentRenderer;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -30,13 +32,18 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Layout layout;
     protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     protected Object layoutData;
+    protected ComponentStyle style = new ComponentStyle();
     private boolean focusable = false;
-
-    public abstract void draw(DrawContext context);
 
     @SuppressWarnings("unchecked")
     protected T self() {
         return (T) this;
+    }
+
+    public void draw(DrawContext context) {
+        ComponentRenderer renderer = style.getRenderer(this);
+        if (renderer != null) renderer.render(context, this);
+        drawChildren(context);
     }
 
     public void drawChildren(DrawContext context) {
@@ -253,6 +260,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public ComponentStyle getStyle() {
+        return style;
+    }
+
     public T addChildren(Component<?>... components) {
         for (Component<?> component : components) {
             this.addChild(component);
@@ -354,6 +365,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 Component<?> childClone = child.clone();
                 clone.addChild(childClone);
             }
+
+            clone.style = this.style;
 
             clone.layoutData = this.layoutData;
 

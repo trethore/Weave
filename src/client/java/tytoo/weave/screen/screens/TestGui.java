@@ -9,10 +9,11 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.GridLayout;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.state.State;
 import tytoo.weave.style.Styling;
 
 import java.awt.*;
-
+import java.util.Random;
 
 public class TestGui extends WeaveScreen {
     public TestGui() {
@@ -21,7 +22,7 @@ public class TestGui extends WeaveScreen {
         getWindow()
                 .setWidth(Constraints.relative(0.9f))
                 .setHeight(Constraints.relative(0.9f))
-                .setColor(new Color(20, 20, 20, 180))
+                .setColor(new Color(20, 20, 20, 220))
                 .setPadding(10)
                 .setLayout(LinearLayout.of(
                         LinearLayout.Orientation.VERTICAL,
@@ -55,8 +56,8 @@ public class TestGui extends WeaveScreen {
                 );
 
         Panel gridPanel = Panel.create()
-                .setWidth(Constraints.relative(1f))
-                .setHeight(Constraints.relative(1f))
+                .setWidth(Constraints.relative(0.75f))
+                .setHeight(Constraints.relative(0.5f))
                 .setLayout(GridLayout.of(2, 10, 10))
                 .addChildren(
                         Button.of("1").setLayoutData(GridLayout.GridData.rowSpan(2)),
@@ -64,9 +65,33 @@ public class TestGui extends WeaveScreen {
                         Button.of("4"), Button.of("5")
                 );
 
-        content.addChildren(gridPanel, Separator.horizontal());
+        State<Color> reactivePanelColor = new State<>(new Color(40, 80, 160));
 
+        Panel reactivePanel1 = Panel.create()
+                .setWidth(Constraints.pixels(100))
+                .setHeight(Constraints.pixels(30));
 
-        getWindow().addChildren(header, content);
+        Panel reactivePanel2 = Panel.create()
+                .setWidth(Constraints.pixels(100))
+                .setHeight(Constraints.pixels(30));
+
+        reactivePanelColor.bind(reactivePanel1::setColor);
+        reactivePanelColor.bind(reactivePanel2::setColor);
+
+        Button changeColorButton = Button.of("Change Color")
+                .onClick(b -> {
+                    Random rand = new Random();
+                    reactivePanelColor.set(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
+                });
+
+        Panel reactiveContainer = Panel.create()
+                .setWidth(Constraints.relative(1.0f))
+                .setHeight(Constraints.childBased(0))
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.START, 10))
+                .addChildren(changeColorButton, reactivePanel1, reactivePanel2);
+
+        content.addChildren(gridPanel, Separator.horizontal(), reactiveContainer);
+
+        getWindow().addChildren(header, Separator.horizontal(), content);
     }
 }

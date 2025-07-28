@@ -5,6 +5,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.ComponentState;
 
 import java.awt.*;
 import java.util.function.Consumer;
@@ -27,9 +28,9 @@ public class Button extends BasePanel<Button> {
         this.setWidth(Constraints.childBased(10));
         this.setHeight(Constraints.childBased(10));
 
-        this.setNormalColor(new Color(100, 100, 100));
-        this.setHoveredColor(new Color(120, 120, 120));
-        this.setFocusedColor(new Color(120, 120, 120).brighter());
+        this.style.setColor(ComponentState.NORMAL, new Color(100, 100, 100));
+        this.style.setColor(ComponentState.HOVERED, new Color(120, 120, 120));
+        this.style.setColor(ComponentState.FOCUSED, new Color(120, 120, 120).brighter());
     }
 
     public static Button of(String text) {

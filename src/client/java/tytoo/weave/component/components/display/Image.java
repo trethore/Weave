@@ -1,6 +1,5 @@
 package tytoo.weave.component.components.display;
 
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -80,11 +79,6 @@ public class Image extends Component<Image> {
                 this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
             }
         }
-    }
-
-    @Override
-    public void draw(DrawContext context) {
-        drawChildren(context);
     }
 
     @Override

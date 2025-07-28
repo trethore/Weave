@@ -1,9 +1,7 @@
 package tytoo.weave.component.components.display;
 
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 import tytoo.weave.component.Component;
-import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
@@ -15,22 +13,12 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
 
     public BaseImage(Identifier imageId) {
         this.imageId = imageId;
-    }
-
-    @Override
-    public void draw(DrawContext context) {
-        Render2DUtils.drawImage(
-                context,
-                imageId,
-                getLeft(),
-                getTop(),
-                getLeft() + getWidth(),
-                getTop() + getHeight(),
-                rotation,
-                parity,
-                color
-        );
-        drawChildren(context);
+        this.style.setBaseRenderer((context, component) -> tytoo.weave.utils.render.Render2DUtils.drawImage(
+                context, this.imageId,
+                component.getLeft(), component.getTop(),
+                component.getLeft() + component.getWidth(), component.getTop() + component.getHeight(),
+                this.rotation, this.parity, this.color
+        ));
     }
 
     @SuppressWarnings("unchecked")
