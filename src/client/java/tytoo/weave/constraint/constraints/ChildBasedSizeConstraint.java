@@ -13,21 +13,21 @@ public class ChildBasedSizeConstraint implements WidthConstraint, HeightConstrai
 
     @Override
     public float getWidth(Component<?> component) {
-        if (component.getChildren().isEmpty()) return padding * 2;
-        float totalWidth = 0;
+        if (component.getChildren().isEmpty()) return this.padding * 2;
+        float maxWidth = 0;
         for (Component<?> child : component.getChildren()) {
-            totalWidth += child.getRawWidth();
+            maxWidth = Math.max(maxWidth, child.getRawWidth());
         }
-        return totalWidth + (padding * (component.getChildren().size() + 1));
+        return maxWidth + this.padding * 2;
     }
 
     @Override
     public float getHeight(Component<?> component) {
-        if (component.getChildren().isEmpty()) return 0;
-        float totalHeight = 0;
+        if (component.getChildren().isEmpty()) return this.padding * 2;
+        float maxHeight = 0;
         for (Component<?> child : component.getChildren()) {
-            totalHeight += child.getRawHeight();
+            maxHeight = Math.max(maxHeight, child.getRawHeight());
         }
-        return totalHeight + (padding * (component.getChildren().size() - 1));
+        return maxHeight + this.padding * 2;
     }
 }

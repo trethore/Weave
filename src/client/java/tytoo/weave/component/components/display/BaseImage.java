@@ -20,6 +20,7 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
     @Override
     public void draw(DrawContext context) {
         Render2DUtils.drawImage(
+                context,
                 imageId,
                 getLeft(),
                 getTop(),

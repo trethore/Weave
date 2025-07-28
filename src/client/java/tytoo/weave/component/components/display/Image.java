@@ -9,8 +9,11 @@ import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.style.Styling;
+import tytoo.weave.utils.ImageManager;
 
 import java.awt.*;
+import java.io.File;
+import java.net.URL;
 
 public class Image extends Component<Image> {
     private BaseImage<?> imagePart;
@@ -38,8 +41,25 @@ public class Image extends Component<Image> {
         });
     }
 
-    public static Image of(Identifier imageId) {
+    public static Image from(Identifier imageId) {
         return new Image(imageId);
+    }
+
+    public static Image from(File file) {
+        return ImageManager.getIdentifierForFile(file)
+                .map(Image::from)
+                .orElseGet(() -> Image.from(ImageManager.getPlaceholder()).setColor(new Color(128, 0, 128)));
+    }
+
+    public static Image from(URL url) {
+        Image image = Image.from(ImageManager.getPlaceholder()).setColor(new Color(128, 0, 128));
+        ImageManager.getIdentifierForUrl(url)
+                .thenAccept(id -> image.setImage(id).setColor(Color.WHITE))
+                .exceptionally(t -> {
+                    image.setColor(new Color(200, 0, 0));
+                    return null;
+                });
+        return image;
     }
 
     @Override

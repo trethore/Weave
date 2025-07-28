@@ -53,8 +53,8 @@ public class LinearLayout implements Layout {
                         for (Component<?> sibling : siblings) totalChildrenWidth += sibling.getRawWidth();
                         totalChildrenWidth += gap * (siblings.size() - 1);
                     }
-                    return c.getParent().getLeft() + switch (alignment) {
-                        case CENTER -> (c.getParent().getInnerWidth() - totalChildrenWidth) / 2;
+                    return c.getParent().getInnerLeft() + switch (alignment) {
+                        case CENTER -> (c.getParent().getInnerWidth() - totalChildrenWidth) / 2f;
                         case END -> c.getParent().getInnerWidth() - totalChildrenWidth;
                         default -> 0;
                     };
@@ -70,7 +70,7 @@ public class LinearLayout implements Layout {
                     Component<?> p = c.getParent();
                     if (p == null) return 0f;
                     List<Component<?>> siblings = p.getChildren();
-                    if (siblings.isEmpty()) return p.getLeft();
+                    if (siblings.isEmpty()) return p.getInnerLeft();
 
                     float totalSiblingsWidth = siblings.stream().map(Component::getRawWidth).reduce(0f, Float::sum);
                     float freeSpace = p.getInnerWidth() - totalSiblingsWidth;
@@ -80,7 +80,7 @@ public class LinearLayout implements Layout {
                         previousSiblingsWidth += siblings.get(j).getWidth();
                     }
 
-                    return p.getLeft() + previousSiblingsWidth + switch (alignment) {
+                    return p.getInnerLeft() + previousSiblingsWidth + switch (alignment) {
                         case SPACE_BETWEEN -> {
                             if (siblings.size() <= 1) yield freeSpace / 2;
                             yield index * (freeSpace / (siblings.size() - 1));
@@ -119,8 +119,8 @@ public class LinearLayout implements Layout {
                         for (Component<?> sibling : siblings) totalChildrenHeight += sibling.getRawHeight();
                         totalChildrenHeight += gap * (siblings.size() - 1);
                     }
-                    return c.getParent().getTop() + switch (alignment) {
-                        case CENTER -> (c.getParent().getInnerHeight() - totalChildrenHeight) / 2;
+                    return c.getParent().getInnerTop() + switch (alignment) {
+                        case CENTER -> (c.getParent().getInnerHeight() - totalChildrenHeight) / 2f;
                         case END -> c.getParent().getInnerHeight() - totalChildrenHeight;
                         default -> 0;
                     };
@@ -136,7 +136,7 @@ public class LinearLayout implements Layout {
                     Component<?> p = c.getParent();
                     if (p == null) return 0f;
                     List<Component<?>> siblings = p.getChildren();
-                    if (siblings.isEmpty()) return p.getTop();
+                    if (siblings.isEmpty()) return p.getInnerTop();
 
                     float totalSiblingsHeight = siblings.stream().map(Component::getRawHeight).reduce(0f, Float::sum);
                     float freeSpace = p.getInnerHeight() - totalSiblingsHeight;
@@ -146,7 +146,7 @@ public class LinearLayout implements Layout {
                         previousSiblingsHeight += siblings.get(j).getHeight();
                     }
 
-                    return p.getTop() + previousSiblingsHeight + switch (alignment) {
+                    return p.getInnerTop() + previousSiblingsHeight + switch (alignment) {
                         case SPACE_BETWEEN -> {
                             if (siblings.size() <= 1) yield freeSpace / 2;
                             yield index * (freeSpace / (siblings.size() - 1));
