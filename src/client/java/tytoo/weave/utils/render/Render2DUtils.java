@@ -55,10 +55,25 @@ public final class Render2DUtils {
     }
 
     public static void drawOutline(DrawContext context, float x, float y, float width, float height, float lineWidth, Color color) {
-        drawRect(context, x, y, width, lineWidth, color);
-        drawRect(context, x, y + height - lineWidth, width, lineWidth, color);
-        drawRect(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
-        drawRect(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+        drawOutline(context, x, y, width, height, lineWidth, color, true);
+    }
+
+    public static void drawOutline(DrawContext context, float x, float y, float width, float height, float lineWidth, Color color, boolean inside) {
+        if (inside) {
+            drawRect(context, x, y, width, lineWidth, color);
+            drawRect(context, x, y + height - lineWidth, width, lineWidth, color);
+            drawRect(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+            drawRect(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+        } else {
+            // Top
+            drawRect(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
+            // Bottom
+            drawRect(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
+            // Left
+            drawRect(context, x - lineWidth, y, lineWidth, height, color);
+            // Right
+            drawRect(context, x + width, y, lineWidth, height, color);
+        }
     }
 
     public static void drawImage(DrawContext context, Identifier id, float x1, float y1, float x2, float y2, int rotation, boolean parity, Color color) {

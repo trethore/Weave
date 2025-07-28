@@ -8,6 +8,7 @@ import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.effects.Effect;
 import tytoo.weave.event.EventType;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;
@@ -35,6 +36,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     protected Object layoutData;
     protected ComponentStyle style = new ComponentStyle();
+    protected List<Effect> effects = new ArrayList<>();
     private boolean focusable = false;
     private boolean visible = true;
 
@@ -45,9 +47,18 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public void draw(DrawContext context) {
         if (!this.visible) return;
+
+        for (Effect effect : effects) {
+            effect.beforeDraw(context, this);
+        }
+
         ComponentRenderer renderer = style.getRenderer(this);
         if (renderer != null) renderer.render(context, this);
         drawChildren(context);
+
+        for (int i = effects.size() - 1; i >= 0; i--) {
+            effects.get(i).afterDraw(context, this);
+        }
     }
 
     public void drawChildren(DrawContext context) {
@@ -280,6 +291,11 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public T addEffect(Effect effect) {
+        this.effects.add(effect);
+        return self();
+    }
+
     @SuppressWarnings("unchecked")
     public <E extends tytoo.weave.event.Event> void fireEvent(E event) {
         EventType<E> type = (EventType<E>) event.getType();
@@ -396,6 +412,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clone.setLayoutData(this.layoutData);
 
             clone.updateClonedChildReferences(this);
+
+            clone.effects = new ArrayList<>(this.effects);
 
             return clone;
         } catch (CloneNotSupportedException e) {

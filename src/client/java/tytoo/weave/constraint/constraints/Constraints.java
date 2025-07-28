@@ -55,6 +55,10 @@ public class Constraints {
         return new AspectRatioConstraint(ratio);
     }
 
+    public static SumOfChildrenHeightConstraint sumOfChildrenHeight(float padding, float gap) {
+        return new SumOfChildrenHeightConstraint(padding, gap);
+    }
+
     public XConstraint getXConstraint() {
         return x;
     }

@@ -4,16 +4,15 @@ import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.layout.GridLayout;
+import tytoo.weave.effects.Effects;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.State;
 import tytoo.weave.style.Styling;
 
 import java.awt.*;
-import java.util.Random;
 
 public class TestGui extends WeaveScreen {
     public TestGui() {
@@ -53,71 +52,25 @@ public class TestGui extends WeaveScreen {
                 .setLayout(LinearLayout.of(
                         LinearLayout.Orientation.VERTICAL,
                         LinearLayout.Alignment.START,
-                        10)
+                        5)
                 );
 
         content.getStyle().setColor(new Color(30, 30, 30, 150));
-
-        Panel gridPanel = Panel.create()
-                .setWidth(Constraints.relative(0.75f))
-                .setHeight(Constraints.relative(0.5f))
-                .setLayout(GridLayout.of(2, 10, 10))
-                .addChildren(
-                        Button.of("1").setLayoutData(GridLayout.GridData.rowSpan(2)),
-                        Button.of("2"), Button.of("3"),
-                        Button.of("4"), Button.of("5")
-                );
-
-        State<Color> reactivePanelColor = new State<>(new Color(40, 80, 160));
-
-        Panel reactivePanel1 = Panel.create()
-                .setWidth(Constraints.pixels(100))
-                .setHeight(Constraints.pixels(30));
-
-        Panel reactivePanel2 = Panel.create()
-                .setWidth(Constraints.pixels(100))
-                .setHeight(Constraints.pixels(30));
+        content.addEffect(Effects.outline(new Color(80, 255, 80), 2));
 
 
-        reactivePanelColor.bind(color -> reactivePanel1.getStyle().setColor(color));
-        reactivePanelColor.bind(color -> reactivePanel2.getStyle().setColor(color));
+        ScrollPanel scrollPanel = new ScrollPanel();
+        scrollPanel.setWidth(Constraints.relative(1.0f)).setHeight(Constraints.relative(1.0f)).setPadding(2).setGap(5);
+        scrollPanel.getStyle().setColor(new Color(0, 0, 0, 50));
+        for (int i = 1; i <= 20; i++) {
+            int finalI = i;
+            scrollPanel.addChildren(Button.of("Scrollable Button " + i)
+                    .setWidth(Constraints.relative(1.0f))
+                    .onClick(action -> System.out.println("Clicked " + finalI))
+            );
+        }
 
-        Button changeColorButton = Button.of("Change Color")
-                .onClick(b -> {
-                    Random rand = new Random();
-                    reactivePanelColor.set(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
-                });
-
-        Panel reactiveContainer = Panel.create()
-                .setWidth(Constraints.relative(1.0f))
-                .setHeight(Constraints.childBased(0))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_AROUND, 10))
-                .addChildren(changeColorButton, reactivePanel1, reactivePanel2);
-
-        Panel animatablePanel = Panel.create()
-                .setWidth(Constraints.pixels(50))
-                .setHeight(Constraints.pixels(50));
-        animatablePanel.getStyle().setColor(Color.CYAN);
-
-        State<Boolean> toggled = new State<>(false);
-
-        Button animateButton = Button.of("Animate Me!")
-                .onClick(b -> {
-                    toggled.set(!toggled.get());
-                    if (toggled.get()) {
-                        animatablePanel.animate()
-                                .duration(100)
-                                .color(Color.BLUE);
-                    } else {
-                        animatablePanel.animate()
-                                .duration(500)
-                                .color(Color.RED);
-                    }
-                });
-
-        Panel animationContainer = Panel.create().setWidth(Constraints.relative(1.0f)).setHeight(Constraints.childBased(0)).setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.SPACE_AROUND, 10)).addChildren(animateButton, animatablePanel);
-
-        content.addChildren(gridPanel, Separator.horizontal(), reactiveContainer, Separator.horizontal(), animationContainer);
+        content.addChildren(scrollPanel);
 
         getWindow().addChildren(header, Separator.horizontal(), content);
     }

@@ -72,6 +72,10 @@ public abstract class WeaveScreen extends Screen {
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
         super.mouseMoved(mouseX, mouseY);
+        updateHoveredComponent(mouseX, mouseY);
+    }
+
+    private void updateHoveredComponent(double mouseX, double mouseY) {
         Component<?> newHovered = window.isPointInside((float) mouseX, (float) mouseY)
                 ? window.hitTest((float) mouseX, (float) mouseY)
                 : null;
@@ -130,7 +134,8 @@ public abstract class WeaveScreen extends Screen {
         if (hoveredComponent != null) {
             bubbleEvent(hoveredComponent, new MouseScrollEvent((float) mouseX, (float) mouseY, horizontalAmount, verticalAmount), Component::fireEvent);
         }
-        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+        updateHoveredComponent(mouseX, mouseY);
+        return true;
     }
 
     @Override

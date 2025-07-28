@@ -16,11 +16,11 @@ public class ComponentStyle implements Cloneable {
 
     @Nullable
     public ComponentRenderer getRenderer(Component<?> component) {
-        if (component.isHovered() && renderers.containsKey(ComponentState.HOVERED)) {
-            return renderers.get(ComponentState.HOVERED);
-        }
         if (component.isFocused() && renderers.containsKey(ComponentState.FOCUSED)) {
             return renderers.get(ComponentState.FOCUSED);
+        }
+        if (component.isHovered() && renderers.containsKey(ComponentState.HOVERED)) {
+            return renderers.get(ComponentState.HOVERED);
         }
         if (renderers.containsKey(ComponentState.NORMAL)) {
             return renderers.get(ComponentState.NORMAL);
