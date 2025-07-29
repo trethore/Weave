@@ -40,14 +40,6 @@ public class Constraints {
         return new CenterConstraint();
     }
 
-    public static SiblingConstraint sibling(float padding) {
-        return new SiblingConstraint(padding);
-    }
-
-    public static SiblingConstraint sibling() {
-        return new SiblingConstraint(0);
-    }
-
     public static ChildBasedSizeConstraint childBased(float padding) {
         return new ChildBasedSizeConstraint(padding);
     }
@@ -81,7 +73,7 @@ public class Constraints {
     }
 
     public float getX() {
-        return x.getX(component);
+        return x.calculateX(component, 0, 0);
     }
 
     public void setX(XConstraint x) {
@@ -89,7 +81,7 @@ public class Constraints {
     }
 
     public float getY() {
-        return y.getY(component);
+        return y.calculateY(component, 0, 0);
     }
 
     public void setY(YConstraint y) {
@@ -97,12 +89,15 @@ public class Constraints {
     }
 
     public float getWidth() {
-        float calculatedWidth = width.getWidth(component);
-        return Math.max(this.minWidth, Math.min(this.maxWidth, calculatedWidth));
+        return getWidth(0);
     }
 
     public void setWidth(WidthConstraint width) {
         this.width = width;
+    }
+
+    public float getWidth(float parentWidth) {
+        return clampWidth(width.calculateWidth(component, parentWidth));
     }
 
     public void setMinWidth(float minWidth) {
@@ -114,12 +109,19 @@ public class Constraints {
     }
 
     public float getHeight() {
-        float calculatedHeight = height.getHeight(component);
-        return Math.max(this.minHeight, Math.min(this.maxHeight, calculatedHeight));
+        return getHeight(0);
     }
 
     public void setHeight(HeightConstraint height) {
         this.height = height;
+    }
+
+    public float getHeight(float parentHeight) {
+        return clampHeight(height.calculateHeight(component, parentHeight));
+    }
+
+    public float clampWidth(float width) {
+        return Math.max(this.minWidth, Math.min(this.maxWidth, width));
     }
 
     public void setMinHeight(float minHeight) {
@@ -128,5 +130,9 @@ public class Constraints {
 
     public void setMaxHeight(float maxHeight) {
         this.maxHeight = maxHeight;
+    }
+
+    public float clampHeight(float height) {
+        return Math.max(this.minHeight, Math.min(this.maxHeight, height));
     }
 }

@@ -65,13 +65,9 @@ public final class Render2DUtils {
             drawRect(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
             drawRect(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
         } else {
-            // Top
             drawRect(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
-            // Bottom
             drawRect(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
-            // Left
             drawRect(context, x - lineWidth, y, lineWidth, height, color);
-            // Right
             drawRect(context, x + width, y, lineWidth, height, color);
         }
     }
@@ -107,4 +103,20 @@ public final class Render2DUtils {
         endRender(bufferbuilder);
     }
 
+    public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, Color color) {
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        int segments = Math.max(20, (int) (radius / 1.5));
+
+        BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+
+        buffer.vertex(matrix, centerX, centerY, 0).color(color.getRGB());
+
+        for (int i = 0; i <= segments; i++) {
+            double angle = i * 2.0 * Math.PI / segments;
+            float x = centerX + (float) (Math.sin(angle) * radius);
+            float y = centerY + (float) (Math.cos(angle) * radius);
+            buffer.vertex(matrix, x, y, 0).color(color.getRGB());
+        }
+        endRender(buffer);
+    }
 }

@@ -25,7 +25,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, this.gap));
         super.addChild(this.contentPanel);
 
-        this.contentPanel.setY(c -> this.getInnerTop() + this.scrollY.get());
+        this.contentPanel.setY((c, parentHeight, componentHeight) -> this.scrollY.get());
+        this.scrollY.addListener((v) -> this.contentPanel.invalidateLayout());
 
         this.onMouseScroll(event -> {
             float contentHeight = this.contentPanel.getRawHeight();

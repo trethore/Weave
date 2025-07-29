@@ -24,10 +24,10 @@ public class TextComponent extends Component<TextComponent> {
     public TextComponent(Text text) {
         parseText(text);
 
-        this.constraints.setWidth(component ->
+        this.constraints.setWidth((component, parentWidth) ->
                 ThemeManager.getTheme().getTextRenderer().getWidth(getDrawableText()) * scale
         );
-        this.constraints.setHeight(component ->
+        this.constraints.setHeight((component, parentHeight) ->
                 (float) ThemeManager.getTheme().getTextRenderer().fontHeight * scale
         );
     }
@@ -165,6 +165,7 @@ public class TextComponent extends Component<TextComponent> {
 
     public TextComponent setScale(float scale) {
         this.scale = scale;
+        invalidateLayout();
         return this;
     }
 }

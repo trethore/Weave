@@ -35,13 +35,13 @@ public class GridLayout implements Layout {
     }
 
     @Override
-    public void apply(Component<?> component) {
-        List<Component<?>> children = component.getChildren();
+    public void arrangeChildren(Component<?> parent) {
+        List<Component<?>> children = parent.getChildren();
         if (children.isEmpty()) return;
 
         Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(children);
         PlacementResult placement = calculatePlacement(children, gridDataMap);
-        applyConstraintsToChildren(component, children, placement, gridDataMap);
+        applyArrangement(parent, children, placement, gridDataMap);
     }
 
     private Map<Component<?>, GridData> getGridDataForChildren(List<Component<?>> children) {
@@ -120,35 +120,24 @@ public class GridLayout implements Layout {
         }
     }
 
-    private void applyConstraintsToChildren(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap) {
+    private void applyArrangement(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap) {
         final int totalRows = placement.totalRows();
+        final float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
+        final float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
+
         for (Component<?> child : children) {
+            if (!child.isVisible()) continue;
+
             Point pos = placement.positions().get(child);
             GridData data = gridDataMap.get(child);
-            final int col = pos.x;
-            final int row = pos.y;
-            final int colSpan = Math.max(1, Math.min(columns, data.getColumnSpan()));
-            final int rowSpan = Math.max(1, data.getRowSpan());
 
-            child.setWidth(c -> {
-                float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
-                return colSpan * cellWidth + (colSpan - 1) * horizontalGap;
-            });
+            float cellX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
+            float cellY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
 
-            child.setHeight(c -> {
-                float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
-                return rowSpan * cellHeight + (rowSpan - 1) * verticalGap;
-            });
+            float childX = cellX + (cellWidth - child.getFinalWidth()) / 2f;
+            float childY = cellY + (cellHeight - child.getFinalHeight()) / 2f;
 
-            child.setX(c -> {
-                float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
-                return parent.getInnerLeft() + col * (cellWidth + horizontalGap);
-            });
-
-            child.setY(c -> {
-                float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
-                return parent.getInnerTop() + row * (cellHeight + verticalGap);
-            });
+            child.arrange(childX, childY);
         }
     }
 

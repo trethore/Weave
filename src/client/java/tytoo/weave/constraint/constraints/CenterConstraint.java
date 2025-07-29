@@ -6,25 +6,26 @@ import tytoo.weave.constraint.YConstraint;
 import tytoo.weave.utils.McUtils;
 
 public class CenterConstraint implements XConstraint, YConstraint {
+
     @Override
-    public float getX(Component<?> component) {
+    public float calculateX(Component<?> component, float parentWidth, float componentWidth) {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
-                    .map(mc -> (mc.getWindow().getScaledWidth() - component.getRawWidth()) / 2f)
+                    .map(mc -> (mc.getWindow().getScaledWidth() - componentWidth) / 2f)
                     .orElse(0f);
         }
-        return parent.getInnerLeft() + (parent.getInnerWidth() - component.getRawWidth()) / 2f;
+        return (parentWidth - componentWidth) / 2f;
     }
 
     @Override
-    public float getY(Component<?> component) {
+    public float calculateY(Component<?> component, float parentHeight, float componentHeight) {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
-                    .map(mc -> (mc.getWindow().getScaledHeight() - component.getRawHeight()) / 2f)
+                    .map(mc -> (mc.getWindow().getScaledHeight() - componentHeight) / 2f)
                     .orElse(0f);
         }
-        return parent.getInnerTop() + (parent.getInnerHeight() - component.getRawHeight()) / 2f;
+        return (parentHeight - componentHeight) / 2f;
     }
 }

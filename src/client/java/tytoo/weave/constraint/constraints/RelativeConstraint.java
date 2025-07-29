@@ -17,46 +17,46 @@ public class RelativeConstraint implements XConstraint, YConstraint, WidthConstr
     }
 
     @Override
-    public float getX(Component<?> component) {
+    public float calculateX(Component<?> component, float parentWidth, float componentWidth) {
+        Component<?> parent = component.getParent();
+        if (parent == null) {
+            return McUtils.getMc()
+                    .map(mc -> mc.getWindow().getScaledWidth() * value + offset)
+                    .orElse(0f);
+        }
+        return parentWidth * value + offset;
+    }
+
+    @Override
+    public float calculateY(Component<?> component, float parentHeight, float componentHeight) {
+        Component<?> parent = component.getParent();
+        if (parent == null) {
+            return McUtils.getMc()
+                    .map(mc -> mc.getWindow().getScaledHeight() * value + offset)
+                    .orElse(0f);
+        }
+        return parentHeight * value + offset;
+    }
+
+    @Override
+    public float calculateWidth(Component<?> component, float parentWidth) {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
                     .map(mc -> mc.getWindow().getScaledWidth() * value)
                     .orElse(0f);
         }
-        return parent.getInnerLeft() + parent.getInnerWidth() * value + offset;
+        return parentWidth * value + offset;
     }
 
     @Override
-    public float getY(Component<?> component) {
+    public float calculateHeight(Component<?> component, float parentHeight) {
         Component<?> parent = component.getParent();
         if (parent == null) {
             return McUtils.getMc()
                     .map(mc -> mc.getWindow().getScaledHeight() * value)
                     .orElse(0f);
         }
-        return parent.getInnerTop() + parent.getInnerHeight() * value + offset;
-    }
-
-    @Override
-    public float getWidth(Component<?> component) {
-        Component<?> parent = component.getParent();
-        if (parent == null) {
-            return McUtils.getMc()
-                    .map(mc -> mc.getWindow().getScaledWidth() * value)
-                    .orElse(0f);
-        }
-        return parent.getInnerWidth() * value + offset;
-    }
-
-    @Override
-    public float getHeight(Component<?> component) {
-        Component<?> parent = component.getParent();
-        if (parent == null) {
-            return McUtils.getMc()
-                    .map(mc -> mc.getWindow().getScaledHeight() * value)
-                    .orElse(0f);
-        }
-        return parent.getInnerHeight() * value + offset;
+        return parentHeight * value + offset;
     }
 }

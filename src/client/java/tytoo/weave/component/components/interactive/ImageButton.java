@@ -41,29 +41,29 @@ public class ImageButton extends BasePanel<ImageButton> {
                     .setParent(this);
         }
 
-        this.image.setX(c -> {
-            float contentWidth = image.getWidth();
+        this.image.setX((c, pW, cW) -> {
+            float contentWidth = image.getMeasuredWidth();
             if (label != null) {
-                contentWidth += gap + label.getWidth();
+                contentWidth += gap + label.getMeasuredWidth();
             }
-            return c.getParent().getLeft() + (c.getParent().getWidth() - contentWidth) / 2;
+            return (pW - contentWidth) / 2;
         });
 
         if (this.label != null) {
-            this.label.setX(c -> image.getLeft() + image.getWidth() + gap);
+            this.label.setX((c, pW, cW) -> image.getMeasuredWidth() + gap);
         }
 
-        this.setWidth(c -> {
-            float contentWidth = image.getWidth();
+        this.setWidth((c, p) -> {
+            float contentWidth = image.getMeasuredWidth();
             if (label != null) {
-                contentWidth += gap + label.getWidth();
+                contentWidth += gap + label.getMeasuredWidth();
             }
             return contentWidth + padding * 2;
         });
-        this.setHeight(c -> {
-            float contentHeight = image.getHeight();
+        this.setHeight((c, p) -> {
+            float contentHeight = image.getMeasuredHeight();
             if (label != null) {
-                contentHeight = Math.max(contentHeight, label.getHeight());
+                contentHeight = Math.max(contentHeight, label.getMeasuredHeight());
             }
             return contentHeight + padding * 2;
         });

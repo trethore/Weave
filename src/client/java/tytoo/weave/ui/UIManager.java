@@ -33,8 +33,27 @@ public class UIManager {
     }
 
     public static void onRender(Screen screen, DrawContext context) {
-        Animator.getInstance().update();
-        getState(screen).flatMap(state -> Optional.ofNullable(state.getRoot())).ifPresent(root -> root.draw(context));
+        getState(screen).ifPresent(state -> {
+            Component<?> root = state.getRoot();
+            if (root == null) return;
+
+            if (root.isLayoutDirty()) {
+                McUtils.getMc().ifPresent(client -> {
+                    float screenWidth = client.getWindow().getScaledWidth();
+                    float screenHeight = client.getWindow().getScaledHeight();
+
+                    root.measure(screenWidth, screenHeight);
+                    float widthWithMargin = root.getMeasuredWidth() + root.getMargin().left + root.getMargin().right;
+                    float heightWithMargin = root.getMeasuredHeight() + root.getMargin().top + root.getMargin().bottom;
+                    float rootX = root.getConstraints().getXConstraint().calculateX(root, screenWidth, widthWithMargin);
+                    float rootY = root.getConstraints().getYConstraint().calculateY(root, screenHeight, heightWithMargin);
+                    root.arrange(rootX, rootY);
+                });
+            }
+
+            Animator.getInstance().update();
+            root.draw(context);
+        });
     }
 
     public static void onInit(Screen screen) {

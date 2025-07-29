@@ -3,5 +3,5 @@ package tytoo.weave.constraint;
 import tytoo.weave.component.Component;
 
 public interface YConstraint {
-    float getY(Component<?> component);
+    float calculateY(Component<?> component, float parentHeight, float componentHeight);
 }

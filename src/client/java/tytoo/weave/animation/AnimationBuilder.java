@@ -36,7 +36,8 @@ public class AnimationBuilder<C extends Component<C>> {
 
     public void width(float to) {
         State<Float> widthState = new State<>(component.getWidth());
-        component.setWidth(c -> widthState.get());
+        component.setWidth((c, p) -> widthState.get());
+        widthState.addListener(v -> component.invalidateLayout());
         Consumer<Animation<Float>> finalOnFinish = onFinish != null ? onFinish::accept : null;
         Animation<Float> animation = new Animation<>(widthState, to, duration, easing, Interpolators.FLOAT, finalOnFinish);
         Animator.getInstance().add(animation);
@@ -44,7 +45,8 @@ public class AnimationBuilder<C extends Component<C>> {
 
     public void height(float to) {
         State<Float> heightState = new State<>(component.getHeight());
-        component.setHeight(c -> heightState.get());
+        component.setHeight((c, p) -> heightState.get());
+        heightState.addListener(v -> component.invalidateLayout());
         Consumer<Animation<Float>> finalOnFinish = onFinish != null ? onFinish::accept : null;
         Animation<Float> animation = new Animation<>(heightState, to, duration, easing, Interpolators.FLOAT, finalOnFinish);
         Animator.getInstance().add(animation);
@@ -52,7 +54,8 @@ public class AnimationBuilder<C extends Component<C>> {
 
     public void x(float to) {
         State<Float> xState = new State<>(component.getRawLeft());
-        component.setX(c -> xState.get());
+        component.setX((c, pW, cW) -> xState.get());
+        xState.addListener(v -> component.invalidateLayout());
         Consumer<Animation<Float>> finalOnFinish = onFinish != null ? onFinish::accept : null;
         Animation<Float> animation = new Animation<>(xState, to, duration, easing, Interpolators.FLOAT, finalOnFinish);
         Animator.getInstance().add(animation);
@@ -60,7 +63,8 @@ public class AnimationBuilder<C extends Component<C>> {
 
     public void y(float to) {
         State<Float> yState = new State<>(component.getRawTop());
-        component.setY(c -> yState.get());
+        component.setY((c, pH, cH) -> yState.get());
+        yState.addListener(v -> component.invalidateLayout());
         Consumer<Animation<Float>> finalOnFinish = onFinish != null ? onFinish::accept : null;
         Animation<Float> animation = new Animation<>(yState, to, duration, easing, Interpolators.FLOAT, finalOnFinish);
         Animator.getInstance().add(animation);

@@ -27,16 +27,16 @@ public class Image extends Component<Image> {
                 .setHeight(Constraints.pixels(16))
                 .setParent(this);
 
-        super.setWidth(c -> {
-            float imageW = imagePart.getWidth();
-            float labelW = labelPart != null ? labelPart.getWidth() : 0;
+        super.setWidth((c, p) -> {
+            float imageW = imagePart.getMeasuredWidth();
+            float labelW = labelPart != null ? labelPart.getMeasuredWidth() : 0;
             return Math.max(imageW, labelW);
         });
 
-        super.setHeight(c -> {
-            float imageH = imagePart.getHeight();
+        super.setHeight((c, p) -> {
+            float imageH = imagePart.getMeasuredHeight();
             if (labelPart == null) return imageH;
-            return imageH + gap + labelPart.getHeight();
+            return imageH + gap + labelPart.getMeasuredHeight();
         });
     }
 
@@ -124,7 +124,7 @@ public class Image extends Component<Image> {
         this.labelPart = label;
         if (this.labelPart != null) {
             this.labelPart.setX(Constraints.center());
-            this.labelPart.setY(Constraints.sibling(gap));
+            this.labelPart.setY((c, parentHeight, componentHeight) -> imagePart.getMeasuredHeight() + gap);
             this.labelPart.setParent(this);
         }
         return this;

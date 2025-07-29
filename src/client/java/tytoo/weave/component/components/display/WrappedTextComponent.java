@@ -12,7 +12,7 @@ public class WrappedTextComponent extends TextComponent {
     public WrappedTextComponent(Text text) {
         super(text);
 
-        this.constraints.setHeight(c -> {
+        this.constraints.setHeight((c, parentHeight) -> {
             TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
             WrappedTextComponent self = (WrappedTextComponent) c;
 

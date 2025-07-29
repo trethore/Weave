@@ -39,8 +39,13 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Object layoutData;
     protected ComponentStyle style;
     protected List<Effect> effects = new ArrayList<>();
+
+    protected float measuredWidth, measuredHeight;
+    protected float finalX, finalY, finalWidth, finalHeight;
+    protected boolean layoutDirty = true;
     private boolean focusable = false;
     private boolean visible = true;
+
 
     public Component() {
         ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
@@ -74,22 +79,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
     }
 
-    private void relayout() {
-        if (this.layout != null) {
-            this.layout.apply(this);
-        }
-    }
-
     public void addChild(Component<?> child) {
         this.children.add(child);
         child.parent = this;
-        relayout();
+        invalidateLayout();
+    }
+
+    public void invalidateLayout() {
+        if (!this.layoutDirty) {
+            this.layoutDirty = true;
+            if (parent != null) {
+                parent.invalidateLayout();
+            }
+        }
     }
 
     public void removeChild(Component<?> child) {
         this.children.remove(child);
         child.parent = null;
-        relayout();
+        invalidateLayout();
     }
 
     public Component<?> getParent() {
@@ -106,19 +114,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getRawLeft() {
-        return this.constraints.getX();
+        return this.finalX;
     }
 
     public float getRawTop() {
-        return this.constraints.getY();
+        return this.finalY;
     }
 
     public float getRawWidth() {
-        return this.constraints.getWidth();
+        return this.finalWidth;
     }
 
     public float getRawHeight() {
-        return this.constraints.getHeight();
+        return this.finalHeight;
     }
 
     public float getLeft() {
@@ -137,16 +145,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setWidth(WidthConstraint constraint) {
         this.constraints.setWidth(constraint);
+        invalidateLayout();
         return self();
     }
 
     public T setMinWidth(float minWidth) {
         this.constraints.setMinWidth(minWidth);
+        invalidateLayout();
         return self();
     }
 
     public T setMaxWidth(float maxWidth) {
         this.constraints.setMaxWidth(maxWidth);
+        invalidateLayout();
         return self();
     }
 
@@ -158,16 +169,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setHeight(HeightConstraint constraint) {
         this.constraints.setHeight(constraint);
+        invalidateLayout();
         return self();
     }
 
     public T setMinHeight(float minHeight) {
         this.constraints.setMinHeight(minHeight);
+        invalidateLayout();
         return self();
     }
 
     public T setMaxHeight(float maxHeight) {
         this.constraints.setMaxHeight(maxHeight);
+        invalidateLayout();
         return self();
     }
 
@@ -189,6 +203,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setX(XConstraint constraint) {
         this.constraints.setX(constraint);
+        invalidateLayout();
         return self();
     }
 
@@ -206,41 +221,41 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
     }
 
-    public T setMargin(float all) {
-        this.margin = new EdgeInsets(all);
-        handleAutoMargins();
-        return self();
-    }
-
     public T setMargin(float vertical, float horizontal) {
         this.margin = new EdgeInsets(vertical, horizontal);
+        invalidateLayout();
         handleAutoMargins();
         return self();
     }
 
     public T setMargin(float top, float right, float bottom, float left) {
         this.margin = new EdgeInsets(top, right, bottom, left);
+        invalidateLayout();
         handleAutoMargins();
         return self();
     }
 
     public T setPadding(float all) {
         this.padding = new EdgeInsets(all);
+        invalidateLayout();
         return self();
     }
 
     public T setPadding(float vertical, float horizontal) {
         this.padding = new EdgeInsets(vertical, horizontal);
+        invalidateLayout();
         return self();
     }
 
     public T setPadding(float top, float right, float bottom, float left) {
         this.padding = new EdgeInsets(top, right, bottom, left);
+        invalidateLayout();
         return self();
     }
 
     public T setY(YConstraint constraint) {
         this.constraints.setY(constraint);
+        invalidateLayout();
         return self();
     }
 
@@ -287,9 +302,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setLayout(@Nullable Layout layout) {
         this.layout = layout;
-        if (this.layout != null) {
-            this.layout.apply(this);
-        }
+        invalidateLayout();
         return self();
     }
 
@@ -299,6 +312,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setLayoutData(Object layoutData) {
         this.layoutData = layoutData;
+        invalidateLayout();
         return self();
     }
 
@@ -308,6 +322,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setStyle(ComponentStyle style) {
         this.style = style;
+        invalidateLayout();
         return self();
     }
 
@@ -320,6 +335,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T addEffect(Effect effect) {
         this.effects.add(effect);
+        invalidateLayout();
         return self();
     }
 
@@ -369,6 +385,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setVisible(boolean visible) {
         this.visible = visible;
+        if (parent != null) parent.invalidateLayout();
         return self();
     }
 
@@ -411,6 +428,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
             clone.parent = null;
 
+            clone.layoutDirty = true;
+
             clone.constraints = new Constraints(clone);
             clone.constraints.setX(this.constraints.getXConstraint());
             clone.constraints.setY(this.constraints.getYConstraint());
@@ -432,13 +451,9 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             }
 
             clone.setVisible(this.isVisible());
-
             clone.style = this.style.clone();
-
             clone.setLayoutData(this.layoutData);
-
             clone.updateClonedChildReferences(this);
-
             clone.effects = new ArrayList<>(this.effects);
 
             return clone;
@@ -453,6 +468,99 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public AnimationBuilder<T> animate() {
         return new AnimationBuilder<>(self());
+    }
+
+    public Constraints getConstraints() {
+        return this.constraints;
+    }
+
+    public EdgeInsets getMargin() {
+        return this.margin;
+    }
+
+    public T setMargin(float all) {
+        this.margin = new EdgeInsets(all);
+        invalidateLayout();
+        handleAutoMargins();
+        return self();
+    }
+
+    public float getMeasuredWidth() {
+        return measuredWidth;
+    }
+
+    public float getMeasuredHeight() {
+        return measuredHeight;
+    }
+
+    public float getFinalWidth() {
+        return finalWidth;
+    }
+
+    public float getFinalHeight() {
+        return finalHeight;
+    }
+
+    public boolean isLayoutDirty() {
+        return layoutDirty;
+    }
+
+    public void measure(float availableWidth, float availableHeight) {
+        if (!this.visible) {
+            this.measuredWidth = 0;
+            this.measuredHeight = 0;
+            return;
+        }
+
+        float horizontalPadding = padding.left + padding.right;
+        float verticalPadding = padding.top + padding.bottom;
+
+        for (Component<?> child : children) {
+            child.measure(availableWidth - horizontalPadding, availableHeight - verticalPadding);
+        }
+
+        WidthConstraint wc = constraints.getWidthConstraint();
+        HeightConstraint hc = constraints.getHeightConstraint();
+
+        float w, h;
+
+        if (wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
+            h = hc.calculateHeight(this, availableHeight);
+            this.measuredHeight = h;
+            w = wc.calculateWidth(this, availableWidth);
+        } else if (hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
+            w = wc.calculateWidth(this, availableWidth);
+            this.measuredWidth = w;
+            h = hc.calculateHeight(this, availableHeight);
+        } else {
+            w = wc.calculateWidth(this, availableWidth);
+            h = hc.calculateHeight(this, availableHeight);
+        }
+
+        this.measuredWidth = constraints.clampWidth(w);
+        this.measuredHeight = constraints.clampHeight(h);
+    }
+
+    public void arrange(float x, float y) {
+        if (!this.visible) return;
+
+        this.finalX = x;
+        this.finalY = y;
+        this.finalWidth = this.measuredWidth + this.margin.left + this.margin.right;
+        this.finalHeight = this.measuredHeight + this.margin.top + this.margin.bottom;
+
+        if (this.layout != null) {
+            this.layout.arrangeChildren(this);
+        } else {
+            for (Component<?> child : this.children) {
+                if (!child.isVisible()) continue;
+                float childX = child.getConstraints().getXConstraint().calculateX(child, this.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right);
+                float childY = child.getConstraints().getYConstraint().calculateY(child, this.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom);
+                child.arrange(this.getInnerLeft() + childX, this.getInnerTop() + childY);
+            }
+        }
+
+        this.layoutDirty = false;
     }
 
     public T bringToFront() {
