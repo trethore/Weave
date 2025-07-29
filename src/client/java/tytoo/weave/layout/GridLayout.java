@@ -121,6 +121,8 @@ public class GridLayout implements Layout {
     }
 
     private void applyArrangement(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap) {
+        if (placement.totalRows() == 0) return;
+
         final int totalRows = placement.totalRows();
         final float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
         final float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
@@ -130,12 +132,19 @@ public class GridLayout implements Layout {
 
             Point pos = placement.positions().get(child);
             GridData data = gridDataMap.get(child);
+            final int colSpan = Math.max(1, data.getColumnSpan());
+            final int rowSpan = Math.max(1, data.getRowSpan());
 
-            float cellX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
-            float cellY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
+            float availableWidthForChild = colSpan * cellWidth + (colSpan - 1) * horizontalGap;
+            float availableHeightForChild = rowSpan * cellHeight + (rowSpan - 1) * verticalGap;
 
-            float childX = cellX + (cellWidth - child.getFinalWidth()) / 2f;
-            float childY = cellY + (cellHeight - child.getFinalHeight()) / 2f;
+            child.measure(availableWidthForChild, availableHeightForChild);
+
+            float startX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
+            float startY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
+
+            float childX = startX + (availableWidthForChild - (child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right)) / 2f;
+            float childY = startY + (availableHeightForChild - (child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom)) / 2f;
 
             child.arrange(childX, childY);
         }

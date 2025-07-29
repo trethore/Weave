@@ -512,15 +512,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             return;
         }
 
-        float horizontalPadding = padding.left + padding.right;
-        float verticalPadding = padding.top + padding.bottom;
-
-        for (Component<?> child : children) {
-            child.measure(availableWidth - horizontalPadding, availableHeight - verticalPadding);
-        }
-
         WidthConstraint wc = constraints.getWidthConstraint();
         HeightConstraint hc = constraints.getHeightConstraint();
+
+        boolean widthDependsOnChildren = wc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
+        boolean heightDependsOnChildren = hc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint || hc instanceof tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
+
+        if (widthDependsOnChildren || heightDependsOnChildren) {
+            float horizontalPadding = padding.left + padding.right;
+            float verticalPadding = padding.top + padding.bottom;
+            for (Component<?> child : children) {
+                child.measure(availableWidth - horizontalPadding, availableHeight - verticalPadding);
+            }
+        }
 
         float w, h;
 
@@ -539,6 +543,14 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         this.measuredWidth = constraints.clampWidth(w);
         this.measuredHeight = constraints.clampHeight(h);
+
+        if (!widthDependsOnChildren && !heightDependsOnChildren) {
+            float horizontalPadding = padding.left + padding.right;
+            float verticalPadding = padding.top + padding.bottom;
+            for (Component<?> child : children) {
+                child.measure(this.measuredWidth - horizontalPadding, this.measuredHeight - verticalPadding);
+            }
+        }
     }
 
     public void arrange(float x, float y) {
