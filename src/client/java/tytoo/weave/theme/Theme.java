@@ -1,17 +1,10 @@
 package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
-
-import java.awt.*;
+import tytoo.weave.style.Styling;
 
 public interface Theme {
     TextRenderer getTextRenderer();
 
-    Color getPanelColor();
-
-    Color getTextColor();
-
-    boolean isTextShadowed();
-
-    Color getWindowColor();
+    Styling getDefaultTextStyle();
 }

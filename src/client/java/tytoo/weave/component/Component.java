@@ -16,11 +16,13 @@ import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
-import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.EdgeInsets;
 import tytoo.weave.style.renderer.ComponentRenderer;
+import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.UIManager;
+import tytoo.weave.utils.McUtils;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -35,10 +37,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Layout layout;
     protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     protected Object layoutData;
-    protected ComponentStyle style = new ComponentStyle();
+    protected ComponentStyle style;
     protected List<Effect> effects = new ArrayList<>();
     private boolean focusable = false;
     private boolean visible = true;
+
+    public Component() {
+        ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
+        this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
+    }
 
     @SuppressWarnings("unchecked")
     protected T self() {
@@ -133,6 +140,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public T setMinWidth(float minWidth) {
+        this.constraints.setMinWidth(minWidth);
+        return self();
+    }
+
+    public T setMaxWidth(float maxWidth) {
+        this.constraints.setMaxWidth(maxWidth);
+        return self();
+    }
+
     public float getHeight() {
         float rawHeight = getRawHeight();
         if (rawHeight == 0) return 0;
@@ -141,6 +158,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setHeight(HeightConstraint constraint) {
         this.constraints.setHeight(constraint);
+        return self();
+    }
+
+    public T setMinHeight(float minHeight) {
+        this.constraints.setMinHeight(minHeight);
+        return self();
+    }
+
+    public T setMaxHeight(float maxHeight) {
+        this.constraints.setMaxHeight(maxHeight);
         return self();
     }
 
@@ -351,26 +378,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public boolean isFocused() {
-        WeaveScreen screen = WeaveScreen.getCurrentScreen();
-        if (screen == null) {
-            return false;
-        }
-        return screen.getFocusedComponent() == this;
+        return McUtils.getMc().map(mc -> mc.currentScreen)
+                .flatMap(UIManager::getState)
+                .map(state -> state.getFocusedComponent() == this)
+                .orElse(false);
     }
 
     public boolean isHovered() {
-        WeaveScreen screen = WeaveScreen.getCurrentScreen();
-        if (screen == null) {
-            return false;
-        }
-        Component<?> hovered = screen.getHoveredComponent();
-        if (hovered == null) {
-            return false;
-        }
-        for (Component<?> c = hovered; c != null; c = c.getParent()) {
-            if (c == this) return true;
-        }
-        return false;
+        return McUtils.getMc().map(mc -> mc.currentScreen)
+                .flatMap(UIManager::getState)
+                .map(state -> {
+                    Component<?> hovered = state.getHoveredComponent();
+                    if (hovered == null) {
+                        return false;
+                    }
+                    for (Component<?> c = hovered; c != null; c = c.getParent()) {
+                        if (c == this) return true;
+                    }
+                    return false;
+                }).orElse(false);
     }
 
     public boolean isPointInside(float x, float y) {
@@ -427,5 +453,21 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public AnimationBuilder<T> animate() {
         return new AnimationBuilder<>(self());
+    }
+
+    public T bringToFront() {
+        if (parent != null) {
+            parent.children.remove(this);
+            parent.children.add(this);
+        }
+        return self();
+    }
+
+    public T sendToBack() {
+        if (parent != null) {
+            parent.children.remove(this);
+            parent.children.addFirst(this);
+        }
+        return self();
     }
 }

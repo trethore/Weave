@@ -13,6 +13,9 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
     private float gap = 2f;
 
     public ScrollPanel() {
+        this.setWidth(Constraints.relative(1.0f));
+        this.setHeight(Constraints.relative(1.0f));
+
         this.addEffect(Effects.scissor());
 
         this.contentPanel = Panel.create()

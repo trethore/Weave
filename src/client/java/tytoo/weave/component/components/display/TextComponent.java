@@ -40,10 +40,6 @@ public class TextComponent extends Component<TextComponent> {
         return new TextComponent(text);
     }
 
-    private void invalidateCache() {
-        this.cachedText = null;
-    }
-
     private void parseText(Text text) {
         this.segments.clear();
         text.visit((style, string) -> {
@@ -53,31 +49,31 @@ public class TextComponent extends Component<TextComponent> {
         invalidateCache();
     }
 
+    private void invalidateCache() {
+        this.cachedText = null;
+    }
+
     protected Text getDrawableText() {
         boolean isHovered = isHovered();
         int currentHoverState = isHovered ? 1 : 0;
 
-        if (cachedText != null && lastHoverState == currentHoverState) {
-            return cachedText;
-        }
+        if (cachedText != null && lastHoverState == currentHoverState) return cachedText;
 
         MutableText composedText = Text.empty();
-        for (TextSegment segment : segments) {
-            Styling style = segment.getFormatting();
-            if (baseStyle != null) {
-                style = baseStyle.mergeWith(style);
-            }
-            if (isHovered) {
-                if (hoverStyle != null) {
-                    style = style.mergeWith(hoverStyle);
-                }
+        Styling themeStyle = ThemeManager.getTheme().getDefaultTextStyle();
 
-                Styling segmentHoverStyle = segment.getHoverStyling();
-                if (segmentHoverStyle != null) {
-                    style = style.mergeWith(segmentHoverStyle);
-                }
+        for (TextSegment segment : segments) {
+            Styling finalStyle = themeStyle.mergeWith(segment.getFormatting());
+
+            if (baseStyle != null) {
+                finalStyle = finalStyle.mergeWith(baseStyle);
             }
-            composedText.append(Text.literal(segment.getText()).setStyle(style.toMinecraftStyle()));
+
+            if (isHovered) {
+                if (hoverStyle != null) finalStyle = finalStyle.mergeWith(hoverStyle);
+                if (segment.getHoverStyling() != null) finalStyle = finalStyle.mergeWith(segment.getHoverStyling());
+            }
+            composedText.append(Text.literal(segment.getText()).setStyle(finalStyle.toMinecraftStyle()));
         }
 
         this.cachedText = composedText;
@@ -93,7 +89,7 @@ public class TextComponent extends Component<TextComponent> {
         if (baseStyle != null && baseStyle.isShadowSet()) {
             return baseStyle.hasShadow();
         }
-        return ThemeManager.getTheme().isTextShadowed();
+        return ThemeManager.getTheme().getDefaultTextStyle().hasShadow();
     }
 
     @Override

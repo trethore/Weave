@@ -15,6 +15,11 @@ public class Constraints {
     private WidthConstraint width = new PixelConstraint(0);
     private HeightConstraint height = new PixelConstraint(0);
 
+    private float minWidth = 0;
+    private float maxWidth = Float.MAX_VALUE;
+    private float minHeight = 0;
+    private float maxHeight = Float.MAX_VALUE;
+
     public Constraints(Component<?> component) {
         this.component = component;
     }
@@ -92,18 +97,36 @@ public class Constraints {
     }
 
     public float getWidth() {
-        return width.getWidth(component);
+        float calculatedWidth = width.getWidth(component);
+        return Math.max(this.minWidth, Math.min(this.maxWidth, calculatedWidth));
     }
 
     public void setWidth(WidthConstraint width) {
         this.width = width;
     }
 
+    public void setMinWidth(float minWidth) {
+        this.minWidth = minWidth;
+    }
+
+    public void setMaxWidth(float maxWidth) {
+        this.maxWidth = maxWidth;
+    }
+
     public float getHeight() {
-        return height.getHeight(component);
+        float calculatedHeight = height.getHeight(component);
+        return Math.max(this.minHeight, Math.min(this.maxHeight, calculatedHeight));
     }
 
     public void setHeight(HeightConstraint height) {
         this.height = height;
+    }
+
+    public void setMinHeight(float minHeight) {
+        this.minHeight = minHeight;
+    }
+
+    public void setMaxHeight(float maxHeight) {
+        this.maxHeight = maxHeight;
     }
 }
