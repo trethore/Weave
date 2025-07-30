@@ -25,10 +25,10 @@ public class TextComponent extends Component<TextComponent> {
         parseText(text);
 
         this.constraints.setWidth((component, parentWidth) ->
-                ThemeManager.getTheme().getTextRenderer().getWidth(getDrawableText()) * scale
+                getEffectiveTextRenderer().getWidth(getDrawableText()) * scale
         );
         this.constraints.setHeight((component, parentHeight) ->
-                (float) ThemeManager.getTheme().getTextRenderer().fontHeight * scale
+                (float) getEffectiveTextRenderer().fontHeight * scale
         );
     }
 
@@ -106,7 +106,7 @@ public class TextComponent extends Component<TextComponent> {
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         context.drawText(
-                ThemeManager.getTheme().getTextRenderer(),
+                getEffectiveTextRenderer(),
                 text,
                 0, 0, -1, shadow
         );

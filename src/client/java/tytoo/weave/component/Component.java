@@ -1,5 +1,6 @@
 package tytoo.weave.component;
 
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.animation.AnimationBuilder;
@@ -41,6 +42,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected List<Effect> effects = new ArrayList<>();
 
     protected float measuredWidth, measuredHeight;
+    @Nullable
+    protected TextRenderer textRenderer;
     protected float finalX, finalY, finalWidth, finalHeight;
     protected boolean layoutDirty = true;
     private boolean focusable = false;
@@ -257,6 +260,21 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         this.constraints.setY(constraint);
         invalidateLayout();
         return self();
+    }
+
+    public T setTextRenderer(@Nullable TextRenderer textRenderer) {
+        this.textRenderer = textRenderer;
+        invalidateLayout();
+        return self();
+    }
+
+    public TextRenderer getEffectiveTextRenderer() {
+        for (Component<?> c = this; c != null; c = c.getParent()) {
+            if (c.textRenderer != null) {
+                return c.textRenderer;
+            }
+        }
+        return ThemeManager.getTheme().getTextRenderer();
     }
 
     public T onMouseClick(Consumer<MouseClickEvent> listener) {

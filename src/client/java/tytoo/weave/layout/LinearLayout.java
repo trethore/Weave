@@ -3,6 +3,7 @@ package tytoo.weave.layout;
 import tytoo.weave.component.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class LinearLayout implements Layout {
     private final Orientation orientation;
@@ -23,88 +24,110 @@ public class LinearLayout implements Layout {
         return new LinearLayout(orientation, alignment, 0);
     }
 
+    private static Data getLayoutData(Component<?> component) {
+        Object layoutData = component.getLayoutData();
+        if (layoutData instanceof Data) {
+            return (Data) layoutData;
+        }
+        return new Data(0);
+    }
+
     @Override
     public void arrangeChildren(Component<?> parent) {
-        List<Component<?>> children = parent.getChildren();
-        if (children.isEmpty()) return;
+        List<Component<?>> visibleChildren = parent.getChildren().stream()
+                .filter(Component::isVisible)
+                .collect(Collectors.toList());
+
+        if (visibleChildren.isEmpty()) return;
 
         if (orientation == Orientation.HORIZONTAL) {
-            applyHorizontalLayout(parent, children);
+            applyHorizontalLayout(parent, visibleChildren);
         } else {
-            applyVerticalLayout(parent, children);
+            applyVerticalLayout(parent, visibleChildren);
         }
     }
 
-    private void applyHorizontalLayout(Component<?> parent, List<Component<?>> children) {
-        List<Component<?>> visibleChildren = children.stream().filter(Component::isVisible).toList();
-        if (visibleChildren.isEmpty()) return;
-
-        float totalChildrenWidth = 0;
-        for (var child : visibleChildren) {
-            totalChildrenWidth += child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right;
-        }
-        totalChildrenWidth += Math.max(0, visibleChildren.size() - 1) * gap;
-
-        float currentX;
-        float freeSpace = parent.getInnerWidth() - totalChildrenWidth;
-
-        currentX = parent.getInnerLeft() + switch (alignment) {
-            case CENTER -> freeSpace / 2f;
-            case END -> freeSpace;
-            default -> 0;
-        };
-
-        if (alignment == Alignment.SPACE_EVENLY) currentX += freeSpace / (visibleChildren.size() + 1);
-        if (alignment == Alignment.SPACE_AROUND) currentX += freeSpace / (visibleChildren.size() * 2f);
+    private void applyHorizontalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
+        float totalGrow = 0;
+        float fixedWidth = 0;
 
         for (Component<?> child : visibleChildren) {
-            float childY = parent.getInnerTop() + (parent.getInnerHeight() - (child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom)) / 2f;
+            Data data = getLayoutData(child);
+            totalGrow += data.grow;
+            if (data.grow == 0) {
+                fixedWidth += child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right;
+            }
+        }
+
+        float totalGap = Math.max(0, visibleChildren.size() - 1) * gap;
+        float availableWidth = parent.getInnerWidth();
+        float remainingWidth = availableWidth - fixedWidth - totalGap;
+
+        float currentX = parent.getInnerLeft();
+
+        if (totalGrow == 0 && alignment != Alignment.START) {
+            currentX += switch (alignment) {
+                case CENTER -> remainingWidth / 2f;
+                case END -> remainingWidth;
+                case SPACE_EVENLY -> remainingWidth / (visibleChildren.size() + 1);
+                case SPACE_AROUND -> remainingWidth / (visibleChildren.size() * 2f);
+                default -> 0;
+            };
+        }
+
+        for (Component<?> child : visibleChildren) {
+            Data data = getLayoutData(child);
+            if (data.grow > 0 && totalGrow > 0) {
+                float childShare = (data.grow / totalGrow) * remainingWidth;
+                child.measure(childShare - (child.getMargin().left + child.getMargin().right), parent.getInnerHeight());
+            }
+
+            float childY = parent.getInnerTop() + (parent.getInnerHeight() - child.getFinalHeight()) / 2f;
             child.arrange(currentX + child.getMargin().left, childY + child.getMargin().top);
-
-            float childWidthWithMargin = child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right;
+            float childWidthWithMargin = child.getFinalWidth();
             currentX += childWidthWithMargin + gap;
-
-            if (alignment == Alignment.SPACE_BETWEEN && visibleChildren.size() > 1)
-                currentX += freeSpace / (visibleChildren.size() - 1);
-            if (alignment == Alignment.SPACE_AROUND) currentX += freeSpace / visibleChildren.size();
-            if (alignment == Alignment.SPACE_EVENLY) currentX += freeSpace / (visibleChildren.size() + 1);
         }
     }
 
-    private void applyVerticalLayout(Component<?> parent, List<Component<?>> children) {
-        List<Component<?>> visibleChildren = children.stream().filter(Component::isVisible).toList();
-        if (visibleChildren.isEmpty()) return;
-
-        float totalChildrenHeight = 0;
-        for (var child : children) {
-            if (!child.isVisible()) continue;
-            totalChildrenHeight += child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom;
-        }
-        totalChildrenHeight += Math.max(0, visibleChildren.size() - 1) * gap;
-
-        float currentY;
-        float freeSpace = parent.getInnerHeight() - totalChildrenHeight;
-
-        currentY = parent.getInnerTop() + switch (alignment) {
-            case CENTER -> freeSpace / 2f;
-            case END -> freeSpace;
-            default -> 0;
-        };
-
-        if (alignment == Alignment.SPACE_EVENLY) currentY += freeSpace / (visibleChildren.size() + 1);
-        if (alignment == Alignment.SPACE_AROUND) currentY += freeSpace / (visibleChildren.size() * 2f);
+    private void applyVerticalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
+        float totalGrow = 0;
+        float fixedHeight = 0;
 
         for (Component<?> child : visibleChildren) {
-            float childX = parent.getInnerLeft() + (parent.getInnerWidth() - (child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right)) / 2f;
+            Data data = getLayoutData(child);
+            totalGrow += data.grow;
+            if (data.grow == 0) {
+                fixedHeight += child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom;
+            }
+        }
+
+        float totalGap = Math.max(0, visibleChildren.size() - 1) * gap;
+        float availableHeight = parent.getInnerHeight();
+        float remainingHeight = availableHeight - fixedHeight - totalGap;
+
+        float currentY = parent.getInnerTop();
+
+        if (totalGrow == 0 && alignment != Alignment.START) {
+            currentY += switch (alignment) {
+                case CENTER -> remainingHeight / 2f;
+                case END -> remainingHeight;
+                case SPACE_EVENLY -> remainingHeight / (visibleChildren.size() + 1);
+                case SPACE_AROUND -> remainingHeight / (visibleChildren.size() * 2f);
+                default -> 0;
+            };
+        }
+
+        for (Component<?> child : visibleChildren) {
+            Data data = getLayoutData(child);
+            if (data.grow > 0 && totalGrow > 0) {
+                float childShare = (data.grow / totalGrow) * remainingHeight;
+                child.measure(parent.getInnerWidth(), childShare - (child.getMargin().top + child.getMargin().bottom));
+            }
+
+            float childX = parent.getInnerLeft() + (parent.getInnerWidth() - child.getFinalWidth()) / 2f;
             child.arrange(childX + child.getMargin().left, currentY + child.getMargin().top);
-
-            float childHeightWithMargin = child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom;
+            float childHeightWithMargin = child.getFinalHeight();
             currentY += childHeightWithMargin + gap;
-
-            if (alignment == Alignment.SPACE_BETWEEN && visibleChildren.size() > 1)
-                currentY += freeSpace / (visibleChildren.size() - 1);
-            if (alignment == Alignment.SPACE_AROUND) currentY += freeSpace / visibleChildren.size();
-            if (alignment == Alignment.SPACE_EVENLY) currentY += freeSpace / (visibleChildren.size() + 1);
         }
     }
 
@@ -120,5 +143,17 @@ public class LinearLayout implements Layout {
         SPACE_BETWEEN,
         SPACE_AROUND,
         SPACE_EVENLY
+    }
+
+    public static class Data {
+        public float grow;
+
+        public Data(float grow) {
+            this.grow = Math.max(0, grow);
+        }
+
+        public static Data grow(float factor) {
+            return new Data(factor);
+        }
     }
 }

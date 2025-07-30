@@ -4,7 +4,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-import tytoo.weave.theme.ThemeManager;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ public class WrappedTextComponent extends TextComponent {
         super(text);
 
         this.constraints.setHeight((c, parentHeight) -> {
-            TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
+            TextRenderer textRenderer = getEffectiveTextRenderer();
             WrappedTextComponent self = (WrappedTextComponent) c;
 
             if (self.getWidth() <= 0 || self.scale <= 0) return 0f;
@@ -35,7 +34,7 @@ public class WrappedTextComponent extends TextComponent {
 
     @Override
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
-        TextRenderer textRenderer = ThemeManager.getTheme().getTextRenderer();
+        TextRenderer textRenderer = getEffectiveTextRenderer();
 
         int wrapWidth = (int) (this.getWidth() / this.scale);
         if (wrapWidth <= 0) return;

@@ -1,23 +1,16 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
-import tytoo.weave.animation.Easing;
 import tytoo.weave.component.components.display.TextComponent;
-import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.effects.Effects;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.State;
-import tytoo.weave.style.Styling;
 
 import java.awt.*;
 
 public class TestGui extends WeaveScreen {
-
-    private final State<Boolean> isExpanded = new State<>(false);
 
     public TestGui() {
         super(Text.literal("Weave Showcase GUI"));
@@ -37,57 +30,44 @@ public class TestGui extends WeaveScreen {
                         LinearLayout.Orientation.VERTICAL,
                         LinearLayout.Alignment.CENTER)
                 )
-                .addChildren(
-                        TextComponent.of("Weave UI Showcase")
-                                .setStyle(Styling.create().bold(true))
-                                .setScale(1.5f)
-                );
+                .addChildren(TextComponent.of("LinearLayout Flex-Grow Showcase").setScale(1.5f));
         header.getStyle().setColor(new Color(40, 40, 40, 200));
 
         final float separatorY = 30 + 5;
         Separator separator = Separator.horizontal()
-                .setX(Constraints.pixels(0))
-                .setY(Constraints.pixels(separatorY));
+                .setY(Constraints.pixels(separatorY))
+                .setWidth(Constraints.relative(1.0f));
 
         final float contentY = separatorY + 1 + 5;
-        Panel contentPanel = Panel.create()
-                .setX(Constraints.pixels(0))
+        Panel dashboardPanel = Panel.create()
                 .setY(Constraints.pixels(contentY))
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight((c, parentHeight) -> parentHeight - contentY)
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, 20))
-                .addEffect(Effects.outline(Color.WHITE, 1));
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.START, 5));
 
-        Panel animatedPanel = Panel.create()
-                .setWidth(Constraints.pixels(150))
-                .setHeight(Constraints.pixels(100));
-        animatedPanel.getStyle().setColor(new Color(50, 50, 200));
+        Panel leftPanel = Panel.create()
+                .setWidth(Constraints.pixels(120))
+                .setHeight(Constraints.relative(1.0f))
+                .setPadding(5);
+        leftPanel.getStyle().setColor(new Color(30, 30, 30, 200));
+        leftPanel.addChildren(TextComponent.of("Fixed Width Panel"));
 
-        isExpanded.addListener(expanded -> {
-            if (expanded) {
-                animatedPanel.animate()
-                        .duration(500)
-                        .easing(Easing.EASE_OUT_BACK)
-                        .width(400f);
-                animatedPanel.animate()
-                        .duration(500)
-                        .color(new Color(200, 50, 50));
-            } else {
-                animatedPanel.animate()
-                        .duration(500)
-                        .easing(Easing.EASE_OUT_BACK)
-                        .width(150f);
-                animatedPanel.animate()
-                        .duration(500)
-                        .color(new Color(50, 50, 200));
-            }
-        });
+        Panel centerPanel = Panel.create()
+                .setHeight(Constraints.relative(1.0f))
+                .setPadding(5)
+                .setLayoutData(LinearLayout.Data.grow(1));
+        centerPanel.getStyle().setColor(new Color(40, 40, 40, 200));
+        centerPanel.addChildren(TextComponent.of("Flexible Panel (Grow = 1)"));
 
-        Button animateButton = Button.of("Animate!")
-                .onClick(button -> isExpanded.set(!isExpanded.get()));
+        Panel rightPanel = Panel.create()
+                .setHeight(Constraints.relative(1.0f))
+                .setPadding(5)
+                .setLayoutData(LinearLayout.Data.grow(2));
+        rightPanel.getStyle().setColor(new Color(50, 50, 50, 200));
+        rightPanel.addChildren(TextComponent.of("Flexible Panel (Grow = 2)"));
 
-        contentPanel.addChildren(animateButton, animatedPanel);
+        dashboardPanel.addChildren(leftPanel, centerPanel, rightPanel);
 
-        getWindow().addChildren(header, separator, contentPanel);
+        getWindow().addChildren(header, separator, dashboardPanel);
     }
 }
