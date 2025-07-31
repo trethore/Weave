@@ -120,8 +120,6 @@ public class TextComponent extends Component<TextComponent> {
 
     private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        float x = 0;
-        float y = 0;
 
         float timeProgress = (System.currentTimeMillis() / 1000f) * wave.speed();
         float textWidth = textRenderer.getWidth(text);
@@ -129,11 +127,12 @@ public class TextComponent extends Component<TextComponent> {
         if (textWidth <= 0) {
             if (!text.isEmpty()) {
                 Color color = wave.getColorAt(timeProgress);
-                context.drawText(textRenderer, text, (int) x, (int) y, color.getRGB(), shadow);
+                context.drawText(textRenderer, text, 0, 0, color.getRGB(), shadow);
             }
             return;
         }
 
+        float x = 0;
         for (int i = 0; i < text.length(); ++i) {
             String character = String.valueOf(text.charAt(i));
             float charWidth = textRenderer.getWidth(character);
@@ -144,7 +143,7 @@ public class TextComponent extends Component<TextComponent> {
             float totalProgress = timeProgress + posProgress;
 
             Color color = wave.getColorAt(totalProgress);
-            context.drawText(textRenderer, character, (int) x, (int) y, color.getRGB(), shadow);
+            context.drawText(textRenderer, character, (int) x, 0, color.getRGB(), shadow);
             x += charWidth;
         }
     }

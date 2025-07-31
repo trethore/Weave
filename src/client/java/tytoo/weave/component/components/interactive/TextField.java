@@ -15,6 +15,7 @@ import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.state.State;
+import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -27,14 +28,15 @@ import java.util.regex.Pattern;
 
 public class TextField extends BasePanel<TextField> {
     private static final long CURSOR_BLINK_INTERVAL_MS = 500;
+    private static final Color DEFAULT_VALID_BORDER_COLOR = new Color(0, 180, 0);
+    private static final Color DEFAULT_INVALID_BORDER_COLOR = new Color(180, 0, 0);
+    private static final Color DEFAULT_FOCUSED_BORDER_COLOR = new Color(160, 160, 160);
+    private static final Color DEFAULT_UNFOCUSED_BORDER_COLOR = new Color(80, 80, 80);
+    private static final Color DEFAULT_SELECTION_COLOR = new Color(50, 100, 200, 128);
+    private static final Color DEFAULT_PLACEHOLDER_COLOR = new Color(150, 150, 150);
+    private static final Color DEFAULT_CURSOR_COLOR = Color.LIGHT_GRAY;
     private final List<Consumer<String>> textChangeListeners = new ArrayList<>();
     private final State<ValidationState> validationState = new State<>(ValidationState.NEUTRAL);
-    public Color selectionColor = new Color(50, 100, 200, 128);
-    public Color validBorderColor = new Color(0, 180, 0);
-    public Color invalidBorderColor = new Color(180, 0, 0);
-    public Color focusedBorderColor = new Color(160, 160, 160);
-    public Color unfocusedBorderColor = new Color(80, 80, 80);
-    public Color placeholderColor = new Color(150, 150, 150);
     private String text = "";
     private int cursorPos = 0;
     private int selectionAnchor = 0;
@@ -77,10 +79,14 @@ public class TextField extends BasePanel<TextField> {
     }
 
     private Color getCurrentOutlineColor() {
+        var stylesheet = ThemeManager.getStylesheet();
         return switch (validationState.get()) {
-            case VALID -> validBorderColor;
-            case INVALID -> invalidBorderColor;
-            default -> isFocused() ? focusedBorderColor : unfocusedBorderColor;
+            case VALID -> stylesheet.getProperty(this.getClass(), "borderColor.valid", DEFAULT_VALID_BORDER_COLOR);
+            case INVALID ->
+                    stylesheet.getProperty(this.getClass(), "borderColor.invalid", DEFAULT_INVALID_BORDER_COLOR);
+            default -> isFocused()
+                    ? stylesheet.getProperty(this.getClass(), "borderColor.focused", DEFAULT_FOCUSED_BORDER_COLOR)
+                    : stylesheet.getProperty(this.getClass(), "borderColor.unfocused", DEFAULT_UNFOCUSED_BORDER_COLOR);
         };
     }
 
@@ -122,42 +128,12 @@ public class TextField extends BasePanel<TextField> {
         return setValidator(s -> pattern.matcher(s).matches());
     }
 
-    public TextField setSelectionColor(Color selectionColor) {
-        this.selectionColor = selectionColor;
-        return this;
-    }
-
-    public TextField setValidBorderColor(Color validBorderColor) {
-        this.validBorderColor = validBorderColor;
-        return this;
-    }
-
-    public TextField setInvalidBorderColor(Color invalidBorderColor) {
-        this.invalidBorderColor = invalidBorderColor;
-        return this;
-    }
-
-    public TextField setFocusedBorderColor(Color focusedBorderColor) {
-        this.focusedBorderColor = focusedBorderColor;
-        return this;
-    }
-
-    public TextField setUnfocusedBorderColor(Color unfocusedBorderColor) {
-        this.unfocusedBorderColor = unfocusedBorderColor;
-        return this;
-    }
-
     public TextField setPlaceholder(String placeholder) {
         return setPlaceholder(Text.of(placeholder));
     }
 
     public TextField setPlaceholder(@Nullable Text placeholder) {
         this.placeholder = placeholder;
-        return this;
-    }
-
-    public TextField setPlaceholderColor(Color color) {
-        this.placeholderColor = color;
         return this;
     }
 
@@ -285,10 +261,11 @@ public class TextField extends BasePanel<TextField> {
 
                     String selected = visibleText.substring(visibleSelectionStart, visibleSelectionEnd);
                     float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
+                    Color selectionColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "selectionColor", DEFAULT_SELECTION_COLOR);
 
                     float highlightY = textY - 2;
                     float highlightHeight = fontHeight + 1;
-                    Render2DUtils.drawRect(context, highlightX1, highlightY, highlightX2 - highlightX1, highlightHeight, this.selectionColor);
+                    Render2DUtils.drawRect(context, highlightX1, highlightY, highlightX2 - highlightX1, highlightHeight, selectionColor);
                 }
             }
 
@@ -300,7 +277,8 @@ public class TextField extends BasePanel<TextField> {
 
         } else {
             if (this.placeholder != null) {
-                context.drawText(textRenderer, this.placeholder, (int) this.getInnerLeft(), (int) textY, this.placeholderColor.getRGB(), true);
+                Color placeholderColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "placeholderColor", DEFAULT_PLACEHOLDER_COLOR);
+                context.drawText(textRenderer, this.placeholder, (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
             }
         }
     }
@@ -320,7 +298,8 @@ public class TextField extends BasePanel<TextField> {
             float cursorX = this.getInnerLeft() + textRenderer.getWidth(textBeforeCursor);
             float cursorY = textY - 2;
             float cursorHeight = textRenderer.fontHeight + 1;
-            Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, Color.LIGHT_GRAY);
+            Color cursorColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "cursorColor", DEFAULT_CURSOR_COLOR);
+            Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, cursorColor);
         }
     }
 

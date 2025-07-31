@@ -23,7 +23,7 @@ public class SumOfChildrenHeightConstraint implements HeightConstraint {
 
         float totalHeight = 0;
         for (Component<?> child : children) {
-            totalHeight += child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom;
+            totalHeight += child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom();
         }
 
         totalHeight += Math.max(0, children.size() - 1) * gap;

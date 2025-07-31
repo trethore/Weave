@@ -422,9 +422,12 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public Component<?> hitTest(float x, float y) {
+        if (!isPointInside(x, y)) return null;
+
         for (Component<?> child : children.reversed()) {
-            if (child.isVisible() && child.hitTest(x, y) != null) {
-                return child.hitTest(x, y);
+            if (child.isVisible()) {
+                Component<?> hit = child.hitTest(x, y);
+                if (hit != null) return hit;
             }
         }
         return this;

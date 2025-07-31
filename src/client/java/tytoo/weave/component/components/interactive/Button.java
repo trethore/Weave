@@ -1,61 +1,49 @@
 package tytoo.weave.component.components.interactive;
 
 import net.minecraft.text.Text;
-import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.style.ComponentState;
+import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
 import java.util.function.Consumer;
 
 public class Button extends BasePanel<Button> {
-    protected TextComponent label;
-
-    public Button(String text) {
-        this(Text.of(text));
-    }
-
-    public Button(Text text) {
+    public Button() {
         this.setFocusable(true);
-
-        this.label = TextComponent.of(text)
-                .setX(Constraints.center())
-                .setY(Constraints.center())
-                .setParent(this);
-
         this.setWidth(Constraints.childBased(10));
         this.setHeight(Constraints.childBased(10));
 
-        this.style.setColor(ComponentState.NORMAL, new Color(100, 100, 100));
-        this.style.setColor(ComponentState.HOVERED, new Color(120, 120, 120));
-        this.style.setColor(ComponentState.FOCUSED, new Color(120, 120, 120).brighter());
+        this.onMouseEnter(e -> updateVisualState());
+        this.onMouseLeave(e -> updateVisualState());
+        this.onFocusGained(e -> updateVisualState());
+        this.onFocusLost(e -> updateVisualState());
+    }
+
+    public static Button create() {
+        return new Button();
     }
 
     public static Button of(String text) {
-        return new Button(text);
+        return new Button().addChildren(TextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()));
     }
 
     public static Button of(Text text) {
-        return new Button(text);
+        return new Button().addChildren(TextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()));
     }
 
-    @Override
-    protected void updateClonedChildReferences(Component<Button> original) {
-        super.updateClonedChildReferences(original);
-        Button originalButton = (Button) original;
-        if (originalButton.label != null) {
-            int labelIndex = originalButton.getChildren().indexOf(originalButton.label);
-            if (labelIndex != -1) {
-                this.label = (TextComponent) this.getChildren().get(labelIndex);
-            }
-        }
-    }
+    private void updateVisualState() {
+        var stylesheet = ThemeManager.getStylesheet();
+        long duration = stylesheet.getProperty(this.getClass(), "animation.duration", 150L);
 
-    public Button setText(Text text) {
-        this.label.setText(text);
-        return this;
+        Color normalColor = stylesheet.getProperty(this.getClass(), "color.normal", new Color(100, 100, 100));
+        Color hoveredColor = stylesheet.getProperty(this.getClass(), "color.hovered", new Color(120, 120, 120));
+        Color focusedColor = stylesheet.getProperty(this.getClass(), "color.focused", new Color(140, 140, 140));
+
+        Color targetColor = isFocused() ? focusedColor : (isHovered() ? hoveredColor : normalColor);
+
+        this.animate().duration(duration).color(targetColor);
     }
 
     public Button onClick(Consumer<Button> action) {

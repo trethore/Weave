@@ -2,8 +2,6 @@ package tytoo.weave.component.components.layout;
 
 import tytoo.weave.constraint.constraints.Constraints;
 
-import java.awt.*;
-
 public class Separator extends BasePanel<Separator> {
     public Separator(Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
@@ -13,7 +11,6 @@ public class Separator extends BasePanel<Separator> {
             this.setWidth(Constraints.pixels(1));
             this.setHeight(Constraints.relative(1.0f));
         }
-        this.getStyle().setColor(new Color(128, 128, 128));
     }
 
     public static Separator horizontal() {

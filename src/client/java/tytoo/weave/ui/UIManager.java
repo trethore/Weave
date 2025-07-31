@@ -43,8 +43,8 @@ public class UIManager {
                     float screenHeight = client.getWindow().getScaledHeight();
 
                     root.measure(screenWidth, screenHeight);
-                    float widthWithMargin = root.getMeasuredWidth() + root.getMargin().left + root.getMargin().right;
-                    float heightWithMargin = root.getMeasuredHeight() + root.getMargin().top + root.getMargin().bottom;
+                    float widthWithMargin = root.getMeasuredWidth() + root.getMargin().left() + root.getMargin().right();
+                    float heightWithMargin = root.getMeasuredHeight() + root.getMargin().top() + root.getMargin().bottom();
                     float rootX = root.getConstraints().getXConstraint().calculateX(root, screenWidth, widthWithMargin);
                     float rootY = root.getConstraints().getYConstraint().calculateY(root, screenHeight, heightWithMargin);
                     root.arrange(rootX, rootY);
@@ -73,8 +73,7 @@ public class UIManager {
         if (stateOpt.isEmpty() || stateOpt.get().getRoot() == null) return false;
         UIState state = stateOpt.get();
         Component<?> root = state.getRoot();
-
-        Component<?> target = root.isPointInside((float) mouseX, (float) mouseY) ? root.hitTest((float) mouseX, (float) mouseY) : null;
+        Component<?> target = root.hitTest((float) mouseX, (float) mouseY);
         if (target != null) {
             state.setClickedComponent(target);
             bubbleEvent(target, new MouseClickEvent((float) mouseX, (float) mouseY, button), Component::fireEvent);
@@ -133,27 +132,33 @@ public class UIManager {
     private static void updateHoveredComponent(Screen screen, double mouseX, double mouseY) {
         getState(screen).ifPresent(state -> {
             if (state.getRoot() == null) return;
-            Component<?> newHovered = state.getRoot().isPointInside((float) mouseX, (float) mouseY) ? state.getRoot().hitTest((float) mouseX, (float) mouseY) : null;
-            if (newHovered != state.getHoveredComponent()) {
-                if (state.getHoveredComponent() != null) {
-                    bubbleEvent(state.getHoveredComponent(), new MouseLeaveEvent((float) mouseX, (float) mouseY), Component::fireEvent);
+            Component<?> newHovered = state.getRoot().hitTest((float) mouseX, (float) mouseY);
+            Component<?> oldHovered = state.getHoveredComponent();
+
+            if (newHovered != oldHovered) {
+                state.setHoveredComponent(newHovered);
+
+                if (oldHovered != null) {
+                    bubbleEvent(oldHovered, new MouseLeaveEvent((float) mouseX, (float) mouseY), Component::fireEvent);
                 }
                 if (newHovered != null) {
                     bubbleEvent(newHovered, new MouseEnterEvent((float) mouseX, (float) mouseY), Component::fireEvent);
                 }
-                state.setHoveredComponent(newHovered);
             }
         });
     }
 
     private static void setFocusedComponent(UIState state, @Nullable Component<?> component) {
-        if (state.getFocusedComponent() == component) return;
-        if (state.getFocusedComponent() != null) {
-            bubbleEvent(state.getFocusedComponent(), new FocusLostEvent(), Component::fireEvent);
-        }
+        Component<?> oldFocused = state.getFocusedComponent();
+        if (oldFocused == component) return;
+
         state.setFocusedComponent(component);
-        if (state.getFocusedComponent() != null) {
-            bubbleEvent(state.getFocusedComponent(), new FocusGainedEvent(), Component::fireEvent);
+
+        if (oldFocused != null) {
+            bubbleEvent(oldFocused, new FocusLostEvent(), Component::fireEvent);
+        }
+        if (component != null) {
+            bubbleEvent(component, new FocusGainedEvent(), Component::fireEvent);
         }
     }
 

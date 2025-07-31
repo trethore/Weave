@@ -83,6 +83,6 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
             }
             return hit;
         }
-        return this;
+        return null;
     }
 }

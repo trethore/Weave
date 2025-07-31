@@ -9,8 +9,6 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 
-import java.awt.*;
-
 public class TestGui extends WeaveScreen {
 
     public TestGui() {
@@ -21,7 +19,6 @@ public class TestGui extends WeaveScreen {
                 .setWidth(Constraints.relative(0.9f))
                 .setHeight(Constraints.relative(0.6f))
                 .setPadding(10);
-        getWindow().getStyle().setColor(new Color(20, 20, 20, 220));
 
         Panel header = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
@@ -31,7 +28,6 @@ public class TestGui extends WeaveScreen {
                         LinearLayout.Alignment.CENTER
                 ))
                 .addChildren(TextComponent.of("LinearLayout Cross-Axis Alignment Showcase").setScale(1.5f));
-        header.getStyle().setColor(new Color(40, 40, 40, 200));
 
         Panel contentPanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
@@ -42,12 +38,15 @@ public class TestGui extends WeaveScreen {
                         LinearLayout.CrossAxisAlignment.STRETCH,
                         5f
                 ));
-        contentPanel.getStyle().setColor(new Color(30, 30, 30, 200));
 
         contentPanel.addChildren(
-                Button.of("This button is stretched"),
-                Button.of("So is this one"),
-                Button.of("All children of a vertical layout with CrossAxisAlignment.STRETCH will fill the available width."),
+                Button.create()
+                        .addChildren(TextComponent.of("This button is stretched").setX(Constraints.center()).setY(Constraints.center())),
+                Button.create()
+                        .addChildren(TextComponent.of("So is this one").setX(Constraints.center()).setY(Constraints.center())),
+                Button.create()
+                        .setPadding(5)
+                        .addChildren(TextComponent.of("All children of a vertical layout with CrossAxisAlignment.STRETCH will fill the available width.").setX(Constraints.center()).setY(Constraints.center())),
                 Panel.create().setHeight(Constraints.pixels(20)).setLayoutData(LinearLayout.Data.grow(1))
         );
 

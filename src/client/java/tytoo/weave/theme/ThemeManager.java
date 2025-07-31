@@ -2,10 +2,10 @@ package tytoo.weave.theme;
 
 public class ThemeManager {
     private static Theme currentTheme = new DefaultTheme();
-    private static Stylesheet stylesheet = new Stylesheet();
 
-    public static Theme getTheme() {
-        return currentTheme;
+    @SuppressWarnings("unchecked")
+    public static <T extends Theme> T getTheme() {
+        return (T) currentTheme;
     }
 
     public static void setTheme(Theme theme) {
@@ -16,10 +16,6 @@ public class ThemeManager {
     }
 
     public static Stylesheet getStylesheet() {
-        return stylesheet;
-    }
-
-    public static void setStylesheet(Stylesheet stylesheet) {
-        ThemeManager.stylesheet = stylesheet;
+        return currentTheme.getStylesheet();
     }
 }
