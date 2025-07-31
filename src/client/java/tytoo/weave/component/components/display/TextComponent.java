@@ -1,13 +1,16 @@
 package tytoo.weave.component.components.display;
 
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import tytoo.weave.component.Component;
+import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.Styling;
 import tytoo.weave.style.TextSegment;
 import tytoo.weave.theme.ThemeManager;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -94,14 +97,63 @@ public class TextComponent extends Component<TextComponent> {
 
     @Override
     public void draw(DrawContext context) {
+        Styling activeStyling = getActiveStyling();
+        ColorWave colorWave = activeStyling != null ? activeStyling.getColorWave() : null;
+
         context.getMatrices().push();
         context.getMatrices().translate(getLeft(), getTop(), 0);
         context.getMatrices().scale(this.scale, this.scale, 1.0f);
 
-        drawScaledContent(context, getDrawableText(), hasShadow());
+        if (colorWave != null) {
+            StringBuilder sb = new StringBuilder();
+            for (TextSegment segment : segments) {
+                sb.append(segment.getText());
+            }
+            drawWaveText(context, sb.toString(), hasShadow(), colorWave);
+        } else {
+            drawScaledContent(context, getDrawableText(), hasShadow());
+        }
 
         context.getMatrices().pop();
         drawChildren(context);
+    }
+
+    private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave) {
+        TextRenderer textRenderer = getEffectiveTextRenderer();
+        float x = 0;
+        float y = 0;
+
+        float timeProgress = (System.currentTimeMillis() / 1000f) * wave.speed();
+        float textWidth = textRenderer.getWidth(text);
+
+        if (textWidth <= 0) {
+            if (!text.isEmpty()) {
+                Color color = wave.getColorAt(timeProgress);
+                context.drawText(textRenderer, text, (int) x, (int) y, color.getRGB(), shadow);
+            }
+            return;
+        }
+
+        for (int i = 0; i < text.length(); ++i) {
+            String character = String.valueOf(text.charAt(i));
+            float charWidth = textRenderer.getWidth(character);
+
+            float charCenterPos = x + charWidth / 2f;
+            float posProgress = charCenterPos / textWidth;
+
+            float totalProgress = timeProgress + posProgress;
+
+            Color color = wave.getColorAt(totalProgress);
+            context.drawText(textRenderer, character, (int) x, (int) y, color.getRGB(), shadow);
+            x += charWidth;
+        }
+    }
+
+    private Styling getActiveStyling() {
+        Styling finalStyle = ThemeManager.getTheme().getDefaultTextStyle();
+        if (baseStyle != null) finalStyle = finalStyle.mergeWith(baseStyle);
+        if (isHovered() && hoverStyle != null) finalStyle = finalStyle.mergeWith(hoverStyle);
+        return finalStyle;
     }
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {

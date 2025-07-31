@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SuppressWarnings("unused")
 public class ImageManager {
@@ -27,6 +29,7 @@ public class ImageManager {
     private static final MinecraftClient client = MinecraftClient.getInstance();
     private static final Map<File, Identifier> fileCache = new HashMap<>();
     private static final Map<URI, CompletableFuture<Identifier>> urlCache = new HashMap<>();
+    private static final ExecutorService VIRTUAL_THREAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     private static Identifier PLACEHOLDER_ID;
 
     public static Identifier getPlaceholder() {
@@ -75,7 +78,6 @@ public class ImageManager {
             return urlCache.get(uri);
         }
 
-
         CompletableFuture<Identifier> future = CompletableFuture.supplyAsync(() -> {
             try {
                 URLConnection connection = url.openConnection();
@@ -84,11 +86,9 @@ public class ImageManager {
                     return loadImage(inputStream);
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Failed to download or read image from URL: " + url, e);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to process image from URL: " + url, e);
+                throw new UncheckedIOException("Failed to download or read image from URL: " + url, e);
             }
-        }).thenApplyAsync(nativeImage -> {
+        }, VIRTUAL_THREAD_EXECUTOR).thenApplyAsync(nativeImage -> {
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
             Identifier id = Identifier.of("weave", "dynamic/" + UUID.randomUUID());
             client.getTextureManager().registerTexture(id, texture);

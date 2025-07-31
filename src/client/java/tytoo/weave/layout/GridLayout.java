@@ -62,8 +62,8 @@ public class GridLayout implements Layout {
 
         for (Component<?> child : children) {
             GridData data = gridDataMap.get(child);
-            final int colSpan = Math.max(1, Math.min(columns, data.getColumnSpan()));
-            final int rowSpan = Math.max(1, data.getRowSpan());
+            final int colSpan = Math.max(1, Math.min(columns, data.columnSpan()));
+            final int rowSpan = Math.max(1, data.rowSpan());
 
             Point position = findNextAvailablePosition(occupied, cursorRow, cursorCol, colSpan, rowSpan);
             cursorRow = position.y;
@@ -132,19 +132,19 @@ public class GridLayout implements Layout {
 
             Point pos = placement.positions().get(child);
             GridData data = gridDataMap.get(child);
-            final int colSpan = Math.max(1, data.getColumnSpan());
-            final int rowSpan = Math.max(1, data.getRowSpan());
+            final int colSpan = Math.max(1, data.columnSpan());
+            final int rowSpan = Math.max(1, data.rowSpan());
 
             float availableWidthForChild = colSpan * cellWidth + (colSpan - 1) * horizontalGap;
             float availableHeightForChild = rowSpan * cellHeight + (rowSpan - 1) * verticalGap;
 
             child.measure(availableWidthForChild, availableHeightForChild);
 
-            float startX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
-            float startY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
+            final float startX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
+            final float startY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
 
-            float childX = startX + (availableWidthForChild - (child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right)) / 2f;
-            float childY = startY + (availableHeightForChild - (child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom)) / 2f;
+            final float childX = startX + (availableWidthForChild - (child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right())) / 2f;
+            final float childY = startY + (availableHeightForChild - (child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom())) / 2f;
 
             child.arrange(childX, childY);
         }
@@ -153,38 +153,21 @@ public class GridLayout implements Layout {
     private record PlacementResult(Map<Component<?>, Point> positions, int totalRows) {
     }
 
-    public static class GridData {
-        private int columnSpan = 1;
-        private int rowSpan = 1;
-
-        private GridData() {
+    public record GridData(int columnSpan, int rowSpan) {
+        public GridData() {
+            this(1, 1);
         }
 
         public static GridData colSpan(int columnSpan) {
-            GridData data = new GridData();
-            data.columnSpan = columnSpan;
-            return data;
+            return new GridData(columnSpan, 1);
         }
 
         public static GridData rowSpan(int rowSpan) {
-            GridData data = new GridData();
-            data.rowSpan = rowSpan;
-            return data;
+            return new GridData(1, rowSpan);
         }
 
         public static GridData span(int colSpan, int rowSpan) {
-            GridData data = new GridData();
-            data.columnSpan = colSpan;
-            data.rowSpan = rowSpan;
-            return data;
-        }
-
-        public int getColumnSpan() {
-            return columnSpan;
-        }
-
-        public int getRowSpan() {
-            return rowSpan;
+            return new GridData(colSpan, rowSpan);
         }
     }
 }

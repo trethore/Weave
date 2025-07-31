@@ -18,8 +18,9 @@ public class Styling {
     private final @Nullable Boolean obfuscated;
     private final @Nullable Boolean shadow;
     private final @Nullable Color shadowColor;
+    private final @Nullable ColorWave colorWave;
 
-    private Styling(boolean reset, @Nullable Color color, @Nullable Boolean bold, @Nullable Boolean italic, @Nullable Boolean underline, @Nullable Boolean strikethrough, @Nullable Boolean obfuscated, @Nullable Boolean shadow, @Nullable Color shadowColor) {
+    private Styling(boolean reset, @Nullable Color color, @Nullable Boolean bold, @Nullable Boolean italic, @Nullable Boolean underline, @Nullable Boolean strikethrough, @Nullable Boolean obfuscated, @Nullable Boolean shadow, @Nullable Color shadowColor, @Nullable ColorWave colorWave) {
         this.reset = reset;
         this.color = color;
         this.bold = bold;
@@ -29,14 +30,15 @@ public class Styling {
         this.obfuscated = obfuscated;
         this.shadow = shadow;
         this.shadowColor = shadowColor;
+        this.colorWave = colorWave;
     }
 
     public static Styling create() {
-        return new Styling(false, null, null, null, null, null, null, null, null);
+        return new Styling(false, null, null, null, null, null, null, null, null, null);
     }
 
     public static Styling reset() {
-        return new Styling(true, null, false, false, false, false, false, false, null);
+        return new Styling(true, null, false, false, false, false, false, false, null, null);
     }
 
     public static Styling fromMinecraftStyle(Style style) {
@@ -54,41 +56,46 @@ public class Styling {
                 iStyle.weave$getUnderlinedRaw(),
                 iStyle.weave$getStrikethroughRaw(),
                 iStyle.weave$getObfuscatedRaw(),
-                null,
-                shadowColor
+                null, // shadow
+                shadowColor,
+                null // colorWave
         );
     }
 
     public Styling color(@Nullable Color color) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling bold(@Nullable Boolean bold) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling italic(@Nullable Boolean italic) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling underline(@Nullable Boolean underline) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling strikethrough(@Nullable Boolean strikethrough) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling obfuscated(@Nullable Boolean obfuscated) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling shadow(@Nullable Boolean shadow) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling shadowColor(@Nullable Color shadowColor) {
-        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor);
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
+    }
+
+    public Styling colorWave(@Nullable ColorWave colorWave) {
+        return new Styling(reset, color, bold, italic, underline, strikethrough, obfuscated, shadow, shadowColor, colorWave);
     }
 
     public Styling mergeWith(@Nullable Styling other) {
@@ -96,7 +103,7 @@ public class Styling {
         if (other.reset) return other;
 
         return new Styling(
-                this.reset,
+                false,
                 other.color != null ? other.color : this.color,
                 other.bold != null ? other.bold : this.bold,
                 other.italic != null ? other.italic : this.italic,
@@ -104,7 +111,8 @@ public class Styling {
                 other.strikethrough != null ? other.strikethrough : this.strikethrough,
                 other.obfuscated != null ? other.obfuscated : this.obfuscated,
                 other.shadow != null ? other.shadow : this.shadow,
-                other.shadowColor != null ? other.shadowColor : this.shadowColor
+                other.shadowColor != null ? other.shadowColor : this.shadowColor,
+                other.colorWave != null ? other.colorWave : this.colorWave
         );
     }
 
@@ -136,5 +144,10 @@ public class Styling {
     @Nullable
     public Color getShadowColor() {
         return shadowColor;
+    }
+
+    @Nullable
+    public ColorWave getColorWave() {
+        return colorWave;
     }
 }

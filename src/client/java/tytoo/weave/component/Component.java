@@ -1,8 +1,12 @@
 package tytoo.weave.component;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
@@ -25,7 +29,10 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -35,24 +42,39 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected Constraints constraints = new Constraints(this);
     protected EdgeInsets margin = EdgeInsets.zero();
     protected EdgeInsets padding = EdgeInsets.zero();
+    @Nullable
     protected Layout layout;
     protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     protected Object layoutData;
     protected ComponentStyle style;
     protected List<Effect> effects = new ArrayList<>();
-
-    protected float measuredWidth, measuredHeight;
     @Nullable
     protected TextRenderer textRenderer;
-    protected float finalX, finalY, finalWidth, finalHeight;
-    protected boolean layoutDirty = true;
+    protected float rotation = 0.0f; // degrees
+    protected float scaleX = 1.0f;
+    protected float scaleY = 1.0f;
+    protected float opacity = 1.0f;
+    private float measuredWidth, measuredHeight;
+    private float finalX, finalY, finalWidth, finalHeight;
+    private boolean layoutDirty = true;
     private boolean focusable = false;
     private boolean visible = true;
-
 
     public Component() {
         ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
         this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
+    }
+
+    protected void applyTransformations(DrawContext context) {
+        if (this.rotation == 0.0f && this.scaleX == 1.0f && this.scaleY == 1.0f) return;
+
+        float pivotX = getLeft() + getWidth() / 2;
+        float pivotY = getTop() + getHeight() / 2;
+
+        context.getMatrices().translate(pivotX, pivotY, 0);
+        context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(this.rotation));
+        context.getMatrices().scale(this.scaleX, this.scaleY, 1.0f);
+        context.getMatrices().translate(-pivotX, -pivotY, 0);
     }
 
     @SuppressWarnings("unchecked")
@@ -62,17 +84,30 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public void draw(DrawContext context) {
         if (!this.visible) return;
+        if (this.opacity <= 0.001f) return;
 
-        for (Effect effect : effects) {
-            effect.beforeDraw(context, this);
-        }
+        float[] lastColor = RenderSystem.getShaderColor().clone();
+        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * this.opacity);
 
-        ComponentRenderer renderer = style.getRenderer(this);
-        if (renderer != null) renderer.render(context, this);
-        drawChildren(context);
+        context.getMatrices().push();
+        try {
+            applyTransformations(context);
 
-        for (int i = effects.size() - 1; i >= 0; i--) {
-            effects.get(i).afterDraw(context, this);
+            for (Effect effect : effects) {
+                effect.beforeDraw(context, this);
+            }
+
+            ComponentRenderer renderer = style.getRenderer(this);
+            if (renderer != null) renderer.render(context, this);
+            drawChildren(context);
+
+            for (int i = effects.size() - 1; i >= 0; i--) {
+                effects.get(i).afterDraw(context, this);
+            }
+        } finally {
+            context.getMatrices().pop();
+
+            RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
         }
     }
 
@@ -133,17 +168,17 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getLeft() {
-        return getRawLeft() + margin.left;
+        return getRawLeft() + margin.left();
     }
 
     public float getTop() {
-        return getRawTop() + margin.top;
+        return getRawTop() + margin.top();
     }
 
     public float getWidth() {
         float rawWidth = getRawWidth();
         if (rawWidth == 0) return 0;
-        return rawWidth - margin.left - margin.right;
+        return rawWidth - margin.left() - margin.right();
     }
 
     public T setWidth(WidthConstraint constraint) {
@@ -167,7 +202,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public float getHeight() {
         float rawHeight = getRawHeight();
         if (rawHeight == 0) return 0;
-        return rawHeight - margin.top - margin.bottom;
+        return rawHeight - margin.top() - margin.bottom();
     }
 
     public T setHeight(HeightConstraint constraint) {
@@ -189,19 +224,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getInnerLeft() {
-        return getLeft() + padding.left;
+        return getLeft() + padding.left();
     }
 
     public float getInnerTop() {
-        return getTop() + padding.top;
+        return getTop() + padding.top();
     }
 
     public float getInnerWidth() {
-        return getWidth() - padding.left - padding.right;
+        return getWidth() - padding.left() - padding.right();
     }
 
     public float getInnerHeight() {
-        return getHeight() - padding.top - padding.bottom;
+        return getHeight() - padding.top() - padding.bottom();
     }
 
     public T setX(XConstraint constraint) {
@@ -211,16 +246,24 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     private void handleAutoMargins() {
-        if (Float.isNaN(this.margin.left) && Float.isNaN(this.margin.right)) {
+        float top = this.margin.top(), right = this.margin.right(), bottom = this.margin.bottom(), left = this.margin.left();
+
+        boolean horizontalAuto = Float.isNaN(left) && Float.isNaN(right);
+        boolean verticalAuto = Float.isNaN(top) && Float.isNaN(bottom);
+
+        if (horizontalAuto) {
             this.constraints.setX(Constraints.center());
-            this.margin.left = 0;
-            this.margin.right = 0;
+            left = 0;
+            right = 0;
+        }
+        if (verticalAuto) {
+            this.constraints.setY(Constraints.center());
+            top = 0;
+            bottom = 0;
         }
 
-        if (Float.isNaN(this.margin.top) && Float.isNaN(this.margin.bottom)) {
-            this.constraints.setY(Constraints.center());
-            this.margin.top = 0;
-            this.margin.bottom = 0;
+        if (horizontalAuto || verticalAuto) {
+            this.margin = new EdgeInsets(top, right, bottom, left);
         }
     }
 
@@ -379,9 +422,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public Component<?> hitTest(float x, float y) {
-        for (ListIterator<Component<?>> it = children.listIterator(children.size()); it.hasPrevious(); ) {
-            Component<?> child = it.previous();
-            if (child.isVisible() && child.isPointInside(x, y)) {
+        for (Component<?> child : children.reversed()) {
+            if (child.isVisible() && child.hitTest(x, y) != null) {
                 return child.hitTest(x, y);
             }
         }
@@ -412,6 +454,43 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public float getOpacity() {
+        return this.opacity;
+    }
+
+    public T setOpacity(float opacity) {
+
+        this.opacity = Math.max(0.0f, Math.min(1.0f, opacity));
+        return self();
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public T setRotation(float rotation) {
+        this.rotation = rotation;
+        return self();
+    }
+
+    public T setScale(float scale) {
+        return setScale(scale, scale);
+    }
+
+    public T setScale(float scaleX, float scaleY) {
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+        return self();
+    }
+
+    public float getScaleX() {
+        return scaleX;
+    }
+
+    public float getScaleY() {
+        return scaleY;
+    }
+
     public boolean isFocused() {
         return McUtils.getMc().map(mc -> mc.currentScreen)
                 .flatMap(UIManager::getState)
@@ -434,8 +513,32 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 }).orElse(false);
     }
 
+    private Matrix4f getInverseTransformationMatrix() {
+        Matrix4f matrix = new Matrix4f();
+        float pivotX = getLeft() + getWidth() / 2;
+        float pivotY = getTop() + getHeight() / 2;
+
+        matrix.translate(pivotX, pivotY, 0);
+        matrix.rotateZ((float) Math.toRadians(this.rotation));
+        matrix.scale(this.scaleX, this.scaleY, 1.0f);
+        matrix.translate(-pivotX, -pivotY, 0);
+
+        return matrix.invert();
+    }
+
     public boolean isPointInside(float x, float y) {
-        return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();
+        if (rotation == 0.0f && scaleX == 1.0f && scaleY == 1.0f) {
+            return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();
+        }
+
+        Matrix4f inverse = getInverseTransformationMatrix();
+        Vector4f point = new Vector4f(x, y, 0, 1);
+        inverse.transform(point);
+
+        float tx = point.x;
+        float ty = point.y;
+
+        return tx >= getLeft() && tx <= getLeft() + getWidth() && ty >= getTop() && ty <= getTop() + getHeight();
     }
 
     @Override
@@ -445,8 +548,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             T clone = (T) super.clone();
 
             clone.parent = null;
-
-            clone.layoutDirty = true;
+            clone.invalidateLayout();
 
             clone.constraints = new Constraints(clone);
             clone.constraints.setX(this.constraints.getXConstraint());
@@ -454,8 +556,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clone.constraints.setWidth(this.constraints.getWidthConstraint());
             clone.constraints.setHeight(this.constraints.getHeightConstraint());
 
-            clone.margin = new EdgeInsets(this.margin.top, this.margin.right, this.margin.bottom, this.margin.left);
-            clone.padding = new EdgeInsets(this.padding.top, this.padding.right, this.padding.bottom, this.padding.left);
+            clone.margin = new EdgeInsets(this.margin.top(), this.margin.right(), this.margin.bottom(), this.margin.left());
+            clone.padding = new EdgeInsets(this.padding.top(), this.padding.right(), this.padding.bottom(), this.padding.left());
 
             clone.eventListeners = new HashMap<>();
             for (Map.Entry<EventType<?>, List<Consumer<?>>> entry : this.eventListeners.entrySet()) {
@@ -493,7 +595,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public EdgeInsets getMargin() {
-        return this.margin;
+        return margin;
     }
 
     public T setMargin(float all) {
@@ -537,8 +639,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         boolean heightDependsOnChildren = hc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint || hc instanceof tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
 
         if (widthDependsOnChildren || heightDependsOnChildren) {
-            float horizontalPadding = padding.left + padding.right;
-            float verticalPadding = padding.top + padding.bottom;
+            float horizontalPadding = padding.left() + padding.right();
+            float verticalPadding = padding.top() + padding.bottom();
             for (Component<?> child : children) {
                 child.measure(availableWidth - horizontalPadding, availableHeight - verticalPadding);
             }
@@ -563,8 +665,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         this.measuredHeight = constraints.clampHeight(h);
 
         if (!widthDependsOnChildren && !heightDependsOnChildren) {
-            float horizontalPadding = padding.left + padding.right;
-            float verticalPadding = padding.top + padding.bottom;
+            float horizontalPadding = padding.left() + padding.right();
+            float verticalPadding = padding.top() + padding.bottom();
             for (Component<?> child : children) {
                 child.measure(this.measuredWidth - horizontalPadding, this.measuredHeight - verticalPadding);
             }
@@ -576,16 +678,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         this.finalX = x;
         this.finalY = y;
-        this.finalWidth = this.measuredWidth + this.margin.left + this.margin.right;
-        this.finalHeight = this.measuredHeight + this.margin.top + this.margin.bottom;
+        this.finalWidth = this.measuredWidth + this.margin.left() + this.margin.right();
+        this.finalHeight = this.measuredHeight + this.margin.top() + this.margin.bottom();
 
         if (this.layout != null) {
             this.layout.arrangeChildren(this);
         } else {
             for (Component<?> child : this.children) {
                 if (!child.isVisible()) continue;
-                float childX = child.getConstraints().getXConstraint().calculateX(child, this.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left + child.getMargin().right);
-                float childY = child.getConstraints().getYConstraint().calculateY(child, this.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top + child.getMargin().bottom);
+                float childX = child.getConstraints().getXConstraint().calculateX(child, this.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right());
+                float childY = child.getConstraints().getYConstraint().calculateY(child, this.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom());
                 child.arrange(this.getInnerLeft() + childX, this.getInnerTop() + childY);
             }
         }
