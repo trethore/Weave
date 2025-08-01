@@ -187,7 +187,7 @@ public final class Render2DUtils {
         endRender(buffer);
     }
 
-    public static void drawGradientRect(DrawContext context, float x, float y, float width, float height, ColorWave wave, float offset, float angleDegrees) {
+    public static void drawGradientRect(DrawContext context, float x, float y, float width, float height, ColorWave wave, float cyclicOffset, float angleDegrees) {
         if (wave == null || wave.colors().isEmpty()) return;
 
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
@@ -217,8 +217,10 @@ public final class Render2DUtils {
         BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         int[] quadOrder = {3, 2, 1, 0};
         for (int index : quadOrder) {
-            float progress = (projections[index] - min) / range;
-            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(wave.getColorAt(progress + offset).getRGB());
+            float posCycle = (projections[index] - min) / range;
+            double totalCycle = posCycle + cyclicOffset;
+            float cyclicProgress = (float) (totalCycle % 1.0);
+            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(wave.getColorAt(cyclicProgress).getRGB());
         }
         endRender(buffer);
     }

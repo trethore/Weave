@@ -1,4 +1,3 @@
-// new file: src/client/java/tytoo/weave/style/renderer/RoundedRectangleRenderer.java
 package tytoo.weave.style.renderer;
 
 import net.minecraft.client.gui.DrawContext;

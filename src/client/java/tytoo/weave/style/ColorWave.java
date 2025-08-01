@@ -16,16 +16,16 @@ public record ColorWave(List<Color> colors, float speed) {
         return rainbow;
     }
 
-    public Color getColorAt(float progress) {
+    public Color getColorAt(float cyclicProgress) {
         if (colors.isEmpty()) return Color.WHITE;
         if (colors.size() == 1) return colors.getFirst();
 
-        float scaledProgress = progress * colors.size();
-        int index1 = ((int) Math.floor(scaledProgress)) % colors.size();
-        if (index1 < 0) index1 += colors.size();
+        float scaledProgress = cyclicProgress * colors.size();
+        int index1 = (int) Math.floor(scaledProgress);
+        if (index1 >= colors.size()) index1 = colors.size() - 1;
 
         int index2 = (index1 + 1) % colors.size();
-        float interp = scaledProgress - (float) Math.floor(scaledProgress);
+        float interp = scaledProgress - index1;
 
         return Interpolators.COLOR.interpolate(colors.get(index1), colors.get(index2), interp);
     }

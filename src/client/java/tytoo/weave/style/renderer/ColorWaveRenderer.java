@@ -16,7 +16,7 @@ public class ColorWaveRenderer implements ComponentRenderer {
 
     @Override
     public void render(DrawContext context, Component<?> component) {
-        float offset = (System.currentTimeMillis() / 1000f) * wave.speed();
-        Render2DUtils.drawGradientRect(context, component.getLeft(), component.getTop(), component.getWidth(), component.getHeight(), wave, offset, angle);
+        double timeCycle = ((System.currentTimeMillis() / 1000.0) * wave.speed()) % 1.0;
+        Render2DUtils.drawGradientRect(context, component.getLeft(), component.getTop(), component.getWidth(), component.getHeight(), wave, (float) timeCycle, angle);
     }
 }

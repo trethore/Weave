@@ -47,6 +47,10 @@ public class Animation<T> {
         }
     }
 
+    public void finish() {
+        this.finished = true;
+    }
+
     public boolean isFinished() {
         return finished;
     }

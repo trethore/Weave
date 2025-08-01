@@ -38,3 +38,9 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+.crush/
+CRUSH.md
+GEMINI.md
+AGENTS.md
+CLAUDE.md
+

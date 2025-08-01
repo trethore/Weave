@@ -9,6 +9,7 @@ import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class WeaveClient implements ClientModInitializer {
+    public static String MOD_ID = "weave-ui";
     private static KeyBinding openTestGuiKeybind;
 
     @Override
@@ -25,6 +26,7 @@ public class WeaveClient implements ClientModInitializer {
     }
 
     private void test() {
+
         openTestGuiKeybind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.weave.open_gui",
                 InputUtil.Type.KEYSYM,

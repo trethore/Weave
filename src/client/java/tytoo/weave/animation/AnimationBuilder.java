@@ -33,62 +33,60 @@ public class AnimationBuilder<C extends Component<C>> {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void startAnimation(State<T> state, T toValue, PropertyInterpolator<T> interpolator, Consumer<T> onUpdate) {
+    private <T> void startAnimation(State<T> state, T toValue, PropertyInterpolator<T> interpolator, Consumer<T> onUpdate, String propertyKey) {
         if (onUpdate != null) {
             state.addListener(onUpdate);
         }
         Consumer<Animation<T>> finalOnFinish = onFinish != null ? (Consumer<Animation<T>>) (Consumer<?>) onFinish : null;
         Animation<T> animation = new Animation<>(state, toValue, duration, easing, interpolator, finalOnFinish);
-        Animator.getInstance().add(animation);
+        Animator.getInstance().add(new AnimationKey(component, propertyKey), animation);
     }
 
     public void width(float to) {
-        State<Float> widthState = new State<>(component.getWidth());
+        State<Float> widthState = component.getAnimatedState("width", component.getWidth());
         component.setWidth((c, p) -> widthState.get());
-        startAnimation(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout());
+        startAnimation(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "width");
     }
 
     public void height(float to) {
-        State<Float> heightState = new State<>(component.getHeight());
+        State<Float> heightState = component.getAnimatedState("height", component.getHeight());
         component.setHeight((c, p) -> heightState.get());
-        startAnimation(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout());
+        startAnimation(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "height");
     }
 
     public void x(float to) {
-        State<Float> xState = new State<>(component.getRawLeft());
+        State<Float> xState = component.getAnimatedState("x", component.getRawLeft());
         component.setX((c, pW, cW) -> xState.get());
-        startAnimation(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout());
+        startAnimation(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "x");
     }
 
     public void y(float to) {
-        State<Float> yState = new State<>(component.getRawTop());
+        State<Float> yState = component.getAnimatedState("y", component.getRawTop());
         component.setY((c, pH, cH) -> yState.get());
-        startAnimation(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout());
+        startAnimation(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "y");
     }
 
     public void opacity(float to) {
-        State<Float> opacityState = new State<>(component.getOpacity());
-        startAnimation(opacityState, to, Interpolators.FLOAT, component::setOpacity);
+        startAnimation(component.getOpacityState(), to, Interpolators.FLOAT, null, "opacity");
     }
 
     public void rotation(float to) {
-        State<Float> rotationState = new State<>(component.getRotation());
-        startAnimation(rotationState, to, Interpolators.FLOAT, component::setRotation);
+        startAnimation(component.getRotationState(), to, Interpolators.FLOAT, null, "rotation");
     }
 
     public void scale(float to) {
-        State<Float> scaleState = new State<>(component.getScaleX());
-        startAnimation(scaleState, to, Interpolators.FLOAT, component::setScale);
+        Animator.getInstance().stop(new AnimationKey(component, "scaleX"));
+        Animator.getInstance().stop(new AnimationKey(component, "scaleY"));
+        startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
+        startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
     }
 
     public void scaleX(float to) {
-        State<Float> scaleXState = new State<>(component.getScaleX());
-        startAnimation(scaleXState, to, Interpolators.FLOAT, newScaleX -> component.setScale(newScaleX, component.getScaleY()));
+        startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
     }
 
     public void scaleY(float to) {
-        State<Float> scaleYState = new State<>(component.getScaleY());
-        startAnimation(scaleYState, to, Interpolators.FLOAT, newScaleY -> component.setScale(component.getScaleX(), newScaleY));
+        startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
     }
 
     public void color(Color to) {
@@ -102,6 +100,9 @@ public class AnimationBuilder<C extends Component<C>> {
         State<Color> colorState = new State<>(startColor);
 
         component.getStyle().setBaseRenderer(animatedRenderer);
-        startAnimation(colorState, to, Interpolators.COLOR, animatedRenderer::setColor);
+        startAnimation(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
+    }
+
+    private record AnimationKey(Component<?> component, String property) {
     }
 }

@@ -1,11 +1,11 @@
 package tytoo.weave.animation;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Animator {
     private static final Animator INSTANCE = new Animator();
-    private final List<Animation<?>> animations = new CopyOnWriteArrayList<>();
+    private final Map<Object, Animation<?>> animations = new ConcurrentHashMap<>();
 
     private Animator() {
     }
@@ -14,19 +14,32 @@ public class Animator {
         return INSTANCE;
     }
 
-    public void add(Animation<?> animation) {
+    public void add(Object key, Animation<?> animation) {
+        Animation<?> oldAnimation = animations.put(key, animation);
+        if (oldAnimation != null) {
+            oldAnimation.finish();
+        }
         animation.start();
-        this.animations.add(animation);
     }
 
     public void update() {
         if (animations.isEmpty()) return;
 
-        for (Animation<?> animation : animations) {
+        var iterator = animations.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            var animation = entry.getValue();
             animation.update();
             if (animation.isFinished()) {
-                animations.remove(animation);
+                iterator.remove();
             }
+        }
+    }
+
+    public void stop(Object key) {
+        Animation<?> animation = animations.remove(key);
+        if (animation != null) {
+            animation.finish();
         }
     }
 }

@@ -26,4 +26,5 @@ public final class Effects {
     public static Effect shadow(Color color, float offsetX, float offsetY, float size, float cornerRadius) {
         return new ShadowEffect(color, offsetX, offsetY, size, cornerRadius);
     }
+
 }

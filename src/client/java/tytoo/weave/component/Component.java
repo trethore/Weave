@@ -37,6 +37,10 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
+    protected final State<Float> rotation = new State<>(0.0f); // degrees
+    protected final State<Float> scaleX = new State<>(1.0f);
+    protected final State<Float> scaleY = new State<>(1.0f);
+    protected final State<Float> opacity = new State<>(1.0f);
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
@@ -50,10 +54,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected List<Effect> effects = new ArrayList<>();
     @Nullable
     protected TextRenderer textRenderer;
-    protected float rotation = 0.0f; // degrees
-    protected float scaleX = 1.0f;
-    protected float scaleY = 1.0f;
-    protected float opacity = 1.0f;
+    private Map<String, State<?>> animatedProperties;
     private float measuredWidth, measuredHeight;
     private float finalX, finalY, finalWidth, finalHeight;
     private boolean layoutDirty = true;
@@ -66,14 +67,14 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     protected void applyTransformations(DrawContext context) {
-        if (this.rotation == 0.0f && this.scaleX == 1.0f && this.scaleY == 1.0f) return;
+        if (getRotation() == 0.0f && getScaleX() == 1.0f && getScaleY() == 1.0f) return;
 
         float pivotX = getLeft() + getWidth() / 2;
         float pivotY = getTop() + getHeight() / 2;
 
         context.getMatrices().translate(pivotX, pivotY, 0);
-        context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(this.rotation));
-        context.getMatrices().scale(this.scaleX, this.scaleY, 1.0f);
+        context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(getRotation()));
+        context.getMatrices().scale(getScaleX(), getScaleY(), 1.0f);
         context.getMatrices().translate(-pivotX, -pivotY, 0);
     }
 
@@ -84,10 +85,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public void draw(DrawContext context) {
         if (!this.visible) return;
-        if (this.opacity <= 0.001f) return;
+        if (getOpacity() <= 0.001f) return;
 
         float[] lastColor = RenderSystem.getShaderColor().clone();
-        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * this.opacity);
+        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * getOpacity());
 
         context.getMatrices().push();
         try {
@@ -458,22 +459,29 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getOpacity() {
-        return this.opacity;
+        return this.opacity.get();
     }
 
     public T setOpacity(float opacity) {
-
-        this.opacity = Math.max(0.0f, Math.min(1.0f, opacity));
+        this.opacity.set(Math.max(0.0f, Math.min(1.0f, opacity)));
         return self();
+    }
+
+    public State<Float> getOpacityState() {
+        return this.opacity;
     }
 
     public float getRotation() {
-        return rotation;
+        return rotation.get();
     }
 
     public T setRotation(float rotation) {
-        this.rotation = rotation;
+        this.rotation.set(rotation);
         return self();
+    }
+
+    public State<Float> getRotationState() {
+        return this.rotation;
     }
 
     public T setScale(float scale) {
@@ -481,17 +489,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public T setScale(float scaleX, float scaleY) {
-        this.scaleX = scaleX;
-        this.scaleY = scaleY;
+        this.scaleX.set(scaleX);
+        this.scaleY.set(scaleY);
         return self();
     }
 
     public float getScaleX() {
-        return scaleX;
+        return scaleX.get();
+    }
+
+    public State<Float> getScaleXState() {
+        return this.scaleX;
     }
 
     public float getScaleY() {
-        return scaleY;
+        return scaleY.get();
+    }
+
+    public State<Float> getScaleYState() {
+        return this.scaleY;
     }
 
     public boolean isFocused() {
@@ -522,15 +538,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         float pivotY = getTop() + getHeight() / 2;
 
         matrix.translate(pivotX, pivotY, 0);
-        matrix.rotateZ((float) Math.toRadians(this.rotation));
-        matrix.scale(this.scaleX, this.scaleY, 1.0f);
+        matrix.rotateZ((float) Math.toRadians(getRotation()));
+        matrix.scale(getScaleX(), getScaleY(), 1.0f);
         matrix.translate(-pivotX, -pivotY, 0);
 
         return matrix.invert();
     }
 
+    @SuppressWarnings("unchecked")
+    public <V> State<V> getAnimatedState(String property, V initialValue) {
+        if (animatedProperties == null) {
+            animatedProperties = new HashMap<>();
+        }
+        //computeIfAbsent ensures that the state is created only once with the initial value.
+        //Subsequent calls will return the existing state, ignoring the initialValue parameter.
+        return (State<V>) animatedProperties.computeIfAbsent(property, k -> new State<>(initialValue));
+    }
+
     public boolean isPointInside(float x, float y) {
-        if (rotation == 0.0f && scaleX == 1.0f && scaleY == 1.0f) {
+        if (getRotation() == 0.0f && getScaleX() == 1.0f && getScaleY() == 1.0f) {
             return x >= getLeft() && x <= getLeft() + getWidth() && y >= getTop() && y <= getTop() + getHeight();
         }
 
@@ -571,6 +597,20 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             for (Component<?> child : this.children) {
                 Component<?> childClone = child.clone();
                 clone.addChild(childClone);
+            }
+
+            clone.rotation.set(this.rotation.get());
+            clone.opacity.set(this.opacity.get());
+            clone.scaleX.set(this.scaleX.get());
+            clone.scaleY.set(this.scaleY.get());
+
+            if (this.animatedProperties != null) {
+                Component<?> aClone = clone;
+                aClone.animatedProperties = new HashMap<>();
+                for (Map.Entry<String, State<?>> entry : this.animatedProperties.entrySet()) {
+                    State<Object> clonedState = new State<>(entry.getValue().get());
+                    aClone.animatedProperties.put(entry.getKey(), clonedState);
+                }
             }
 
             clone.setVisible(this.isVisible());

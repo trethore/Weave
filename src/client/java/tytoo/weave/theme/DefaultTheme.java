@@ -31,9 +31,9 @@ public class DefaultTheme implements Theme {
         stylesheet.setStyleFor(Separator.class, new ComponentStyle().setColor(new Color(128, 128, 128)));
 
         // Button
-        stylesheet.setProperty(Button.class, "color.normal", new Color(0, 255, 0));
-        stylesheet.setProperty(Button.class, "color.hovered", new Color(255, 0, 0));
-        stylesheet.setProperty(Button.class, "color.focused", new Color(0, 140, 255));
+        stylesheet.setProperty(Button.class, "color.normal", new Color(80, 80, 80));
+        stylesheet.setProperty(Button.class, "color.hovered", new Color(100, 100, 100));
+        stylesheet.setProperty(Button.class, "color.focused", new Color(120, 120, 120));
         stylesheet.setProperty(Button.class, "animation.duration", 150L);
         stylesheet.setStyleFor(Button.class, new ComponentStyle().setColor(stylesheet.getProperty(Button.class, "color.normal")));
 
