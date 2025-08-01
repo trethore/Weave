@@ -107,7 +107,7 @@ public class ImageManager {
         try {
             return NativeImage.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
-            LOGGER.debug("Could not read image as PNG, falling back to ImageIO.", e);
+            LOGGER.debug("Could not read image as PNG, falling back to ImageIO. Reason: {}", e.getMessage());
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
             if (bufferedImage == null) {
                 throw new IOException("Failed to read image using ImageIO. Unsupported format?");

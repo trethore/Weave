@@ -32,9 +32,8 @@ public class Stylesheet {
         properties.computeIfAbsent(componentClass, k -> new HashMap<>()).put(key, value);
     }
 
-    @Nullable
     @SuppressWarnings("unchecked")
-    public <T> T getProperty(Class<?> componentClass, String key) {
+    public <T> T getProperty(Class<?> componentClass, String key, T defaultValue) {
         Class<?> currentClass = componentClass;
         while (currentClass != null && Component.class.isAssignableFrom(currentClass)) {
             Map<String, Object> classProperties = properties.get(currentClass);
@@ -43,11 +42,6 @@ public class Stylesheet {
             }
             currentClass = currentClass.getSuperclass();
         }
-        return null;
-    }
-
-    public <T> T getProperty(Class<?> componentClass, String key, T defaultValue) {
-        T value = getProperty(componentClass, key);
-        return value != null ? value : defaultValue;
+        return defaultValue;
     }
 }

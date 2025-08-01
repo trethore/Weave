@@ -1,12 +1,14 @@
 package tytoo.weave.component;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
+import org.slf4j.Logger;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
@@ -29,15 +31,13 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
-    protected final State<Float> rotation = new State<>(0.0f); // degrees
+    private static final Logger LOGGER = LogUtils.getLogger();
+    protected final State<Float> rotation = new State<>(0.0f);
     protected final State<Float> scaleX = new State<>(1.0f);
     protected final State<Float> scaleY = new State<>(1.0f);
     protected final State<Float> opacity = new State<>(1.0f);
@@ -54,16 +54,56 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected List<Effect> effects = new ArrayList<>();
     @Nullable
     protected TextRenderer textRenderer;
+    @Nullable
+    private Map<String, Object> customProperties;
+    @Nullable
     private Map<String, State<?>> animatedProperties;
     private float measuredWidth, measuredHeight;
     private float finalX, finalY, finalWidth, finalHeight;
     private boolean layoutDirty = true;
     private boolean focusable = false;
     private boolean visible = true;
+    @Nullable
+    private Set<String> finalProperties;
 
     public Component() {
         ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
         this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
+    }
+
+    public <V> T setProperty(String key, V value) {
+        if (this.finalProperties != null && this.finalProperties.contains(key)) {
+            LOGGER.warn("Attempted to modify final property '{}' on component {}. Operation ignored.", key, this.getClass().getSimpleName());
+            return self();
+        }
+        if (this.customProperties == null) {
+            this.customProperties = new HashMap<>();
+        }
+        this.customProperties.put(key, value);
+        return self();
+    }
+
+    public <V> T setFinalProperty(String key, V value) {
+        setProperty(key, value);
+        if (this.finalProperties == null) {
+            this.finalProperties = new HashSet<>();
+        }
+        this.finalProperties.add(key);
+        return self();
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public <V> V getProperty(String key) {
+        if (this.customProperties == null) {
+            return null;
+        }
+        return (V) this.customProperties.get(key);
+    }
+
+    public <V> V getProperty(String key, V defaultValue) {
+        V value = getProperty(key);
+        return value != null ? value : defaultValue;
     }
 
     protected void applyTransformations(DrawContext context) {
@@ -131,6 +171,14 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 parent.invalidateLayout();
             }
         }
+    }
+
+    public void removeAllChildren() {
+        for (Component<?> child : new ArrayList<>(this.children)) {
+            child.parent = null;
+        }
+        this.children.clear();
+        invalidateLayout();
     }
 
     public void removeChild(Component<?> child) {
@@ -550,8 +598,6 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         if (animatedProperties == null) {
             animatedProperties = new HashMap<>();
         }
-        //computeIfAbsent ensures that the state is created only once with the initial value.
-        //Subsequent calls will return the existing state, ignoring the initialValue parameter.
         return (State<V>) animatedProperties.computeIfAbsent(property, k -> new State<>(initialValue));
     }
 
@@ -611,6 +657,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                     State<Object> clonedState = new State<>(entry.getValue().get());
                     aClone.animatedProperties.put(entry.getKey(), clonedState);
                 }
+            }
+
+            if (this.customProperties != null) {
+                Component<?> aClone = clone;
+                aClone.customProperties = new HashMap<>(this.customProperties);
+            }
+
+            if (this.finalProperties != null) {
+                Component<?> aClone = clone;
+                aClone.finalProperties = new HashSet<>(this.finalProperties);
             }
 
             clone.setVisible(this.isVisible());

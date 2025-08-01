@@ -4,46 +4,35 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
-import tytoo.weave.constraint.HeightConstraint;
-import tytoo.weave.constraint.WidthConstraint;
+import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.layout.LinearLayout;
+import tytoo.weave.layout.LinearLayout.Alignment;
+import tytoo.weave.layout.LinearLayout.CrossAxisAlignment;
+import tytoo.weave.layout.LinearLayout.Orientation;
 import tytoo.weave.style.Styling;
 import tytoo.weave.utils.ImageManager;
+import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
 
-public class Image extends Component<Image> {
+public class Image extends BasePanel<Image> {
     private BaseImage<?> imagePart;
     private TextComponent labelPart;
     private float gap = 2;
 
-    public Image(Identifier imageId) {
-        this.imagePart = new BaseImage<>(imageId)
-                .setX(Constraints.center())
-                .setY(Constraints.pixels(0))
-                .setWidth(Constraints.pixels(16))
-                .setHeight(Constraints.pixels(16))
-                .setParent(this);
-
-        super.setWidth((c, p) -> {
-            float imageW = imagePart.getMeasuredWidth();
-            float labelW = labelPart != null ? labelPart.getMeasuredWidth() : 0;
-            return Math.max(imageW, labelW);
-        });
-
-        super.setHeight((c, p) -> {
-            float imageH = imagePart.getMeasuredHeight();
-            if (labelPart == null) return imageH;
-            return imageH + gap + labelPart.getMeasuredHeight();
-        });
+    protected Image(Identifier imageId) {
+        this.setLayout(LinearLayout.of(Orientation.VERTICAL, Alignment.CENTER, CrossAxisAlignment.STRETCH, gap));
+        this.setHeight(Constraints.childBased());
+        this.imagePart = BaseImage.of(imageId).setLayoutData(LinearLayout.Data.grow(1));
+        this.addChild(imagePart);
     }
 
     public static Image from(Identifier imageId) {
         return new Image(imageId);
     }
-
     public static Image from(File file) {
         return ImageManager.getIdentifierForFile(file)
                 .map(Image::from)
@@ -51,13 +40,16 @@ public class Image extends Component<Image> {
     }
 
     public static Image from(URL url) {
-        Image image = Image.from(ImageManager.getPlaceholder()).setColor(new Color(128, 0, 128));
-        ImageManager.getIdentifierForUrl(url)
-                .thenAccept(id -> image.setImage(id).setColor(Color.WHITE))
-                .exceptionally(t -> {
-                    image.setColor(new Color(200, 0, 0));
-                    return null;
-                });
+        Image image = Image.from(ImageManager.getPlaceholder()).setColor(new Color(128, 0, 128)); // Start with a placeholder
+        ImageManager.getIdentifierForUrl(url).whenCompleteAsync((id, throwable) -> {
+            if (throwable != null) {
+                System.err.println("Weave: Failed to load image from URL " + url + ". Cause: " + throwable);
+                image.setColor(new Color(200, 0, 0));
+            } else {
+                image.setImage(id).setColor(Color.WHITE);
+                System.out.println("Weave: Loaded image from URL " + url + " with ID " + id);
+            }
+        }, McUtils.getMc().orElseThrow());
         return image;
     }
 
@@ -66,31 +58,15 @@ public class Image extends Component<Image> {
         super.updateClonedChildReferences(original);
         Image originalImage = (Image) original;
 
-        if (originalImage.imagePart != null) {
-            int imageIndex = originalImage.getChildren().indexOf(originalImage.imagePart);
-            if (imageIndex != -1) {
-                this.imagePart = (BaseImage<?>) this.getChildren().get(imageIndex);
-            }
+        int imageIndex = original.getChildren().indexOf(originalImage.imagePart);
+        if (imageIndex != -1) {
+            this.imagePart = (BaseImage<?>) this.getChildren().get(imageIndex);
         }
 
-        if (originalImage.labelPart != null) {
-            int labelIndex = originalImage.getChildren().indexOf(originalImage.labelPart);
-            if (labelIndex != -1) {
-                this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
-            }
+        int labelIndex = original.getChildren().indexOf(originalImage.labelPart);
+        if (labelIndex != -1) {
+            this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
         }
-    }
-
-    @Override
-    public Image setWidth(WidthConstraint constraint) {
-        this.imagePart.setWidth(constraint);
-        return this;
-    }
-
-    @Override
-    public Image setHeight(HeightConstraint constraint) {
-        this.imagePart.setHeight(constraint);
-        return this;
     }
 
     public Image setLabel(String text, Styling style) {
@@ -123,9 +99,7 @@ public class Image extends Component<Image> {
         }
         this.labelPart = label;
         if (this.labelPart != null) {
-            this.labelPart.setX(Constraints.center());
-            this.labelPart.setY((c, parentHeight, componentHeight) -> imagePart.getMeasuredHeight() + gap);
-            this.labelPart.setParent(this);
+            this.addChild(this.labelPart);
         }
         return this;
     }
@@ -140,6 +114,7 @@ public class Image extends Component<Image> {
 
     public Image setGap(float gap) {
         this.gap = gap;
+        this.setLayout(LinearLayout.of(Orientation.VERTICAL, Alignment.CENTER, CrossAxisAlignment.STRETCH, gap));
         return this;
     }
 

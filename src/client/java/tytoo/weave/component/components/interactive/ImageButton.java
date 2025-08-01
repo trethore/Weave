@@ -4,22 +4,18 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.TextComponent;
-import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
-import java.util.function.Consumer;
 
-public class ImageButton extends BasePanel<ImageButton> {
+public class ImageButton extends InteractiveComponent<ImageButton> {
     private final float padding = 5;
     private final float gap = 4;
     protected BaseImage<?> image;
     protected TextComponent label;
 
-    public ImageButton() {
-        this.setFocusable(true);
-
+    protected ImageButton() {
         this.setWidth((c, p) -> {
             float contentWidth = 0;
             if (image != null) contentWidth += image.getMeasuredWidth();
@@ -39,11 +35,6 @@ public class ImageButton extends BasePanel<ImageButton> {
             }
             return contentHeight + padding * 2;
         });
-
-        this.onMouseEnter(e -> updateVisualState());
-        this.onMouseLeave(e -> updateVisualState());
-        this.onFocusGained(e -> updateVisualState());
-        this.onFocusLost(e -> updateVisualState());
     }
 
     public static ImageButton of(Identifier imageId) {
@@ -58,7 +49,8 @@ public class ImageButton extends BasePanel<ImageButton> {
         return new ImageButton().setImage(imageId).setLabel(text);
     }
 
-    private void updateVisualState() {
+    @Override
+    protected void updateVisualState() {
         var stylesheet = ThemeManager.getStylesheet();
         long duration = stylesheet.getProperty(this.getClass(), "animation.duration", 150L);
 
@@ -69,13 +61,6 @@ public class ImageButton extends BasePanel<ImageButton> {
         Color targetColor = isFocused() ? focusedColor : (isHovered() ? hoveredColor : normalColor);
 
         this.animate().duration(duration).color(targetColor);
-    }
-
-    public ImageButton onClick(Consumer<ImageButton> action) {
-        this.onMouseClick(e -> {
-            if (e.getButton() == 0) action.accept(this);
-        });
-        return this;
     }
 
     private void updateLayout() {
@@ -102,7 +87,7 @@ public class ImageButton extends BasePanel<ImageButton> {
 
     public ImageButton setImage(Identifier imageId) {
         if (this.image != null) this.removeChild(this.image);
-        this.image = new BaseImage<>(imageId)
+        this.image = BaseImage.of(imageId)
                 .setWidth(Constraints.pixels(16))
                 .setHeight(Constraints.pixels(16));
         this.addChild(this.image);

@@ -106,29 +106,40 @@ public final class Render2DUtils {
         endRender(bufferbuilder);
     }
 
+
     public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, Color color) {
         drawCircle(context, centerX, centerY, radius, 0, 360, color);
     }
 
     public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, int startAngle, int endAngle, Color color) {
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
-        int segments = Math.max(1, (int) (radius / 1.5 * Math.abs(endAngle - startAngle) / 90.0));
 
-        BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+        int angleRange = Math.abs(endAngle - startAngle);
+        int segments = Math.max(8, (int) Math.ceil(angleRange / 10.0));
 
-        buffer.vertex(matrix, centerX, centerY, 0).color(color.getRGB());
+        BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 
         double startRad = Math.toRadians(startAngle);
         double endRad = Math.toRadians(endAngle);
+        int argb = color.getRGB();
 
-        for (int i = 0; i <= segments; i++) {
-            double angle = startRad + (i / (double) segments) * (endRad - startRad);
-            float x = centerX + (float) (Math.cos(angle) * radius);
-            float y = centerY + (float) (Math.sin(angle) * radius);
-            buffer.vertex(matrix, x, y, 0).color(color.getRGB());
+        for (int i = 0; i < segments; i++) {
+            double angle1 = startRad + (i / (double) segments) * (endRad - startRad);
+            double angle2 = startRad + ((i + 1) / (double) segments) * (endRad - startRad);
+
+            float x1 = centerX + (float) (Math.cos(angle1) * radius);
+            float y1 = centerY + (float) (Math.sin(angle1) * radius);
+            float x2 = centerX + (float) (Math.cos(angle2) * radius);
+            float y2 = centerY + (float) (Math.sin(angle2) * radius);
+
+            buffer.vertex(matrix, centerX, centerY, 0).color(argb);
+            buffer.vertex(matrix, x2, y2, 0).color(argb);
+            buffer.vertex(matrix, x1, y1, 0).color(argb);
         }
+
         endRender(buffer);
     }
+
 
     public static void drawRoundedRect(DrawContext context, float x, float y, float width, float height, float radius, Color color) {
         if (radius <= 0) {

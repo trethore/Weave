@@ -6,7 +6,7 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class SolidColorRenderer implements ComponentRenderer {
+public class SolidColorRenderer implements ColorableRenderer {
     private Color color;
 
     public SolidColorRenderer(Color color) {

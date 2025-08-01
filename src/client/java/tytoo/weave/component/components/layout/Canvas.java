@@ -8,6 +8,9 @@ import java.util.function.BiConsumer;
 public class Canvas extends Component<Canvas> {
     private BiConsumer<DrawContext, Canvas> onDrawCallback;
 
+    protected Canvas() {
+    }
+
     public static Canvas create() {
         return new Canvas();
     }

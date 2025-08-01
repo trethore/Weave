@@ -31,18 +31,20 @@ public class DefaultTheme implements Theme {
         stylesheet.setStyleFor(Separator.class, new ComponentStyle().setColor(new Color(128, 128, 128)));
 
         // Button
-        stylesheet.setProperty(Button.class, "color.normal", new Color(80, 80, 80));
+        Color buttonNormalColor = new Color(80, 80, 80);
+        stylesheet.setProperty(Button.class, "color.normal", buttonNormalColor);
         stylesheet.setProperty(Button.class, "color.hovered", new Color(100, 100, 100));
         stylesheet.setProperty(Button.class, "color.focused", new Color(120, 120, 120));
         stylesheet.setProperty(Button.class, "animation.duration", 150L);
-        stylesheet.setStyleFor(Button.class, new ComponentStyle().setColor(stylesheet.getProperty(Button.class, "color.normal")));
+        stylesheet.setStyleFor(Button.class, new ComponentStyle().setColor(buttonNormalColor));
 
         // ImageButton
-        stylesheet.setProperty(ImageButton.class, "color.normal", new Color(100, 100, 100, 180));
+        Color imageButtonNormalColor = new Color(100, 100, 100, 180);
+        stylesheet.setProperty(ImageButton.class, "color.normal", imageButtonNormalColor);
         stylesheet.setProperty(ImageButton.class, "color.hovered", new Color(120, 120, 120, 180));
         stylesheet.setProperty(ImageButton.class, "color.focused", new Color(140, 140, 140, 180));
         stylesheet.setProperty(ImageButton.class, "animation.duration", 150L);
-        stylesheet.setStyleFor(ImageButton.class, new ComponentStyle().setColor(stylesheet.getProperty(ImageButton.class, "color.normal")));
+        stylesheet.setStyleFor(ImageButton.class, new ComponentStyle().setColor(imageButtonNormalColor));
 
         // TextField properties
         stylesheet.setStyleFor(TextField.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
@@ -53,6 +55,7 @@ public class DefaultTheme implements Theme {
         stylesheet.setProperty(TextField.class, "borderColor.unfocused", new Color(80, 80, 80));
         stylesheet.setProperty(TextField.class, "placeholderColor", new Color(150, 150, 150));
         stylesheet.setProperty(TextField.class, "cursorColor", Color.LIGHT_GRAY);
+        stylesheet.setProperty(TextField.class, "cursor.blink-interval", 500L);
     }
 
     @Override

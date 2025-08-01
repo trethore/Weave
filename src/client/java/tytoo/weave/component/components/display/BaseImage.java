@@ -11,7 +11,7 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
     protected int rotation = 0;
     protected boolean parity = false;
 
-    public BaseImage(Identifier imageId) {
+    protected BaseImage(Identifier imageId) {
         this.imageId = imageId;
         this.style.setBaseRenderer((context, component) -> tytoo.weave.utils.render.Render2DUtils.drawImage(
                 context, this.imageId,
@@ -20,10 +20,15 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
                 this.rotation, this.parity, this.color
         ));
     }
+    
+    public static BaseImage<?> of(Identifier imageId) {
+        return new BaseImage<>(imageId);
+    }
 
     @SuppressWarnings("unchecked")
     public T setColor(Color color) {
         this.color = color;
+        invalidateLayout();
         return (T) this;
     }
 
@@ -42,6 +47,7 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
     @SuppressWarnings("unchecked")
     public T setImage(Identifier imageId) {
         this.imageId = imageId;
+        invalidateLayout();
         return (T) this;
     }
 }

@@ -6,7 +6,7 @@ import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.ui.UIManager;
 
 public abstract class WeaveScreen extends Screen {
-    protected final Window window = new Window();
+    protected final Window window = Window.create();
 
     protected WeaveScreen(Text title) {
         super(title);

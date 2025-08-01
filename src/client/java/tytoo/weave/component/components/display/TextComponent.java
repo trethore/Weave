@@ -24,7 +24,7 @@ public class TextComponent extends Component<TextComponent> {
     private Text cachedText = null;
     private int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
 
-    public TextComponent(Text text) {
+    protected TextComponent(Text text) {
         parseText(text);
 
         this.constraints.setWidth((component, parentWidth) ->

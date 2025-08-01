@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 import java.util.List;
 
 public class WrappedTextComponent extends TextComponent {
-    public WrappedTextComponent(Text text) {
+    protected WrappedTextComponent(Text text) {
         super(text);
 
         this.constraints.setHeight((c, parentHeight) -> {

@@ -3,7 +3,7 @@ package tytoo.weave.component.components.layout;
 import tytoo.weave.constraint.constraints.Constraints;
 
 public class Separator extends BasePanel<Separator> {
-    public Separator(Orientation orientation) {
+    protected Separator(Orientation orientation) {
         if (orientation == Orientation.HORIZONTAL) {
             this.setHeight(Constraints.pixels(1));
             this.setWidth(Constraints.relative(1.0f));

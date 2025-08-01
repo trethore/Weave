@@ -8,7 +8,6 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.component.Component;
-import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.event.keyboard.CharTypeEvent;
@@ -26,15 +25,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class TextField extends BasePanel<TextField> {
-    private static final long CURSOR_BLINK_INTERVAL_MS = 500;
-    private static final Color DEFAULT_VALID_BORDER_COLOR = new Color(0, 180, 0);
-    private static final Color DEFAULT_INVALID_BORDER_COLOR = new Color(180, 0, 0);
-    private static final Color DEFAULT_FOCUSED_BORDER_COLOR = new Color(160, 160, 160);
-    private static final Color DEFAULT_UNFOCUSED_BORDER_COLOR = new Color(80, 80, 80);
-    private static final Color DEFAULT_SELECTION_COLOR = new Color(50, 100, 200, 128);
-    private static final Color DEFAULT_PLACEHOLDER_COLOR = new Color(150, 150, 150);
-    private static final Color DEFAULT_CURSOR_COLOR = Color.LIGHT_GRAY;
+public class TextField extends InteractiveComponent<TextField> {
     private final List<Consumer<String>> textChangeListeners = new ArrayList<>();
     private final State<ValidationState> validationState = new State<>(ValidationState.NEUTRAL);
     private String text = "";
@@ -42,6 +33,7 @@ public class TextField extends BasePanel<TextField> {
     private int selectionAnchor = 0;
     private int firstCharacterIndex = 0;
     private long lastActionTime = 0;
+    private final long cursorBlinkInterval;
     private int maxLength = -1;
     @Nullable
     private Predicate<String> charFilter = null;
@@ -50,8 +42,7 @@ public class TextField extends BasePanel<TextField> {
     @Nullable
     private Text placeholder = null;
 
-    public TextField() {
-        this.setFocusable(true);
+    protected TextField() {
         this.setHeight(Constraints.pixels(20));
         this.setWidth(Constraints.pixels(150));
         this.setPadding(4);
@@ -61,33 +52,32 @@ public class TextField extends BasePanel<TextField> {
         Effect outlineEffect = new Effect() {
             @Override
             public void afterDraw(DrawContext context, Component<?> component) {
-                Color outlineColor = getCurrentOutlineColor();
-                Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), 1.0f, outlineColor);
+                updateVisualState();
             }
         };
 
-        this.onFocusGained(e -> this.lastActionTime = System.currentTimeMillis());
         this.onMouseClick(this::onMouseClick);
         this.onCharTyped(this::onCharTyped);
         this.onKeyPress(this::onKeyPressed);
 
         this.addEffect(outlineEffect);
+        this.cursorBlinkInterval = ThemeManager.getStylesheet().getProperty(this.getClass(), "cursor.blink-interval", 500L);
     }
 
+    @Override
+    protected void updateVisualState() {
+        Color outlineColor = switch (validationState.get()) {
+            case VALID -> ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.valid", new Color(0, 180, 0));
+            case INVALID -> ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.invalid", new Color(180, 0, 0));
+            default -> isFocused()
+                    ? ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.focused", new Color(160, 160, 160))
+                    : ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.unfocused", new Color(80, 80, 80));
+        };
+        this.setProperty("outline.color", outlineColor);
+        if (isFocused()) this.lastActionTime = System.currentTimeMillis();
+    }
     public static TextField create() {
         return new TextField();
-    }
-
-    private Color getCurrentOutlineColor() {
-        var stylesheet = ThemeManager.getStylesheet();
-        return switch (validationState.get()) {
-            case VALID -> stylesheet.getProperty(this.getClass(), "borderColor.valid", DEFAULT_VALID_BORDER_COLOR);
-            case INVALID ->
-                    stylesheet.getProperty(this.getClass(), "borderColor.invalid", DEFAULT_INVALID_BORDER_COLOR);
-            default -> isFocused()
-                    ? stylesheet.getProperty(this.getClass(), "borderColor.focused", DEFAULT_FOCUSED_BORDER_COLOR)
-                    : stylesheet.getProperty(this.getClass(), "borderColor.unfocused", DEFAULT_UNFOCUSED_BORDER_COLOR);
-        };
     }
 
     public TextField setMaxLength(int maxLength) {
@@ -261,11 +251,13 @@ public class TextField extends BasePanel<TextField> {
 
                     String selected = visibleText.substring(visibleSelectionStart, visibleSelectionEnd);
                     float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
-                    Color selectionColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "selectionColor", DEFAULT_SELECTION_COLOR);
+                    Color selectionColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "selectionColor", new Color(50, 100, 200, 128));
 
                     float highlightY = textY - 2;
                     float highlightHeight = fontHeight + 1;
-                    Render2DUtils.drawRect(context, highlightX1, highlightY, highlightX2 - highlightX1, highlightHeight, selectionColor);
+                    if (selectionColor != null) {
+                        Render2DUtils.drawRect(context, highlightX1, highlightY, highlightX2 - highlightX1, highlightHeight, selectionColor);
+                    }
                 }
             }
 
@@ -277,18 +269,20 @@ public class TextField extends BasePanel<TextField> {
 
         } else {
             if (this.placeholder != null) {
-                Color placeholderColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "placeholderColor", DEFAULT_PLACEHOLDER_COLOR);
-                context.drawText(textRenderer, this.placeholder, (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
+                Color placeholderColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "placeholderColor", new Color(150, 150, 150));
+                if (placeholderColor != null) {
+                    context.drawText(textRenderer, this.placeholder, (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
+                }
             }
         }
     }
 
     private void drawCursor(DrawContext context, TextRenderer textRenderer, float textY) {
         long timeSinceLastAction = System.currentTimeMillis() - this.lastActionTime;
-        boolean shouldBlink = (System.currentTimeMillis() / CURSOR_BLINK_INTERVAL_MS) % 2 == 0;
+        boolean shouldBlink = (System.currentTimeMillis() / this.cursorBlinkInterval) % 2 == 0;
         boolean hasSelection = this.cursorPos != this.selectionAnchor;
 
-        if (!hasSelection && this.isFocused() && (timeSinceLastAction < CURSOR_BLINK_INTERVAL_MS || shouldBlink)) {
+        if (!hasSelection && this.isFocused() && (timeSinceLastAction < this.cursorBlinkInterval || shouldBlink)) {
             String visibleText = textRenderer.trimToWidth(this.text.substring(this.firstCharacterIndex), (int) getInnerWidth());
             int visibleCursorPos = this.cursorPos - this.firstCharacterIndex;
 
@@ -298,8 +292,18 @@ public class TextField extends BasePanel<TextField> {
             float cursorX = this.getInnerLeft() + textRenderer.getWidth(textBeforeCursor);
             float cursorY = textY - 2;
             float cursorHeight = textRenderer.fontHeight + 1;
-            Color cursorColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "cursorColor", DEFAULT_CURSOR_COLOR);
-            Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, cursorColor);
+            Color cursorColor = ThemeManager.getStylesheet().getProperty(this.getClass(), "cursorColor", Color.LIGHT_GRAY);
+            if (cursorColor != null) {
+                Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, cursorColor);
+            }
+        }
+    }
+
+    @Override
+    public void drawChildren(DrawContext context) {
+        super.drawChildren(context);
+        if (this.getProperty("outline.color") instanceof Color c) {
+            Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), 1.0f, c);
         }
     }
 

@@ -56,9 +56,9 @@ public class Styling {
                 iStyle.weave$getUnderlinedRaw(),
                 iStyle.weave$getStrikethroughRaw(),
                 iStyle.weave$getObfuscatedRaw(),
-                null, // shadow
+                null,
                 shadowColor,
-                null // colorWave
+                null
         );
     }
 

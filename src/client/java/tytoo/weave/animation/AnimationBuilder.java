@@ -2,6 +2,7 @@ package tytoo.weave.animation;
 
 import tytoo.weave.component.Component;
 import tytoo.weave.state.State;
+import tytoo.weave.style.renderer.ColorableRenderer;
 
 import java.awt.*;
 import java.util.function.Consumer;
@@ -90,14 +91,17 @@ public class AnimationBuilder<C extends Component<C>> {
     }
 
     public void color(Color to) {
-        Color startColor = new Color(0, 0, 0, 0);
         var base = component.getStyle().getBaseRenderer();
-        if (base instanceof tytoo.weave.style.renderer.SolidColorRenderer scr) {
-            startColor = scr.getColor();
+
+        if (base instanceof ColorableRenderer colorable) {
+            State<Color> colorState = component.getAnimatedState("color", colorable.getColor());
+            startAnimation(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
+            return;
         }
 
+        Color startColor = (base instanceof tytoo.weave.style.renderer.SolidColorRenderer scr) ? scr.getColor() : new Color(0, 0, 0, 0);
         var animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
-        State<Color> colorState = new State<>(startColor);
+        State<Color> colorState = component.getAnimatedState("color", startColor);
 
         component.getStyle().setBaseRenderer(animatedRenderer);
         startAnimation(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
