@@ -3,11 +3,9 @@ package tytoo.weave.component;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import tytoo.weave.WeaveClient;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.animation.Animator;
 import tytoo.weave.constraint.HeightConstraint;
@@ -37,87 +35,40 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
-    protected final State<Float> rotation = new State<>(0.0f);
-    protected final State<Float> scaleX = new State<>(1.0f);
-    protected final State<Float> scaleY = new State<>(1.0f);
-    protected final State<Float> opacity = new State<>(1.0f);
+    protected final LayoutState layoutState;
+    protected final RenderState renderState;
+    protected final EventState eventState;
+
     private final Set<StyleState> activeStyleStates = new HashSet<>();
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
-    protected Constraints constraints = new Constraints(this);
-    protected EdgeInsets margin = EdgeInsets.zero();
-    protected EdgeInsets padding = EdgeInsets.zero();
-    @Nullable
-    protected Layout layout;
-    protected Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
-    protected Object layoutData;
     protected ComponentStyle style;
-    protected List<Effect> effects = new ArrayList<>();
     @Nullable
     protected TextRenderer textRenderer;
-    @Nullable
-    private Map<String, Object> customProperties;
-    @Nullable
-    private Map<String, State<?>> animatedProperties;
-    private float measuredWidth, measuredHeight;
-    private float finalX, finalY, finalWidth, finalHeight;
-    private boolean layoutDirty = true;
-    private boolean focusable = false;
-    private boolean visible = true;
-    @Nullable
-    private Set<String> finalProperties;
 
     public Component() {
+        this.layoutState = new LayoutState(this);
+        this.renderState = new RenderState(this);
+        this.eventState = new EventState();
+
         ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
         this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
     }
 
-
-    public <V> T setProperty(String key, V value) {
-        if (this.finalProperties != null && this.finalProperties.contains(key)) {
-            WeaveClient.LOGGER.warn("Attempted to modify final property '{}' on component {}. Operation ignored.", key, this.getClass().getSimpleName());
-            return self();
-        }
-        if (this.customProperties == null) {
-            this.customProperties = new HashMap<>();
-        }
-        this.customProperties.put(key, value);
-        return self();
+    public LayoutState getLayoutState() {
+        return layoutState;
     }
 
-    public <V> T setFinalProperty(String key, V value) {
-        setProperty(key, value);
-        if (this.finalProperties == null) {
-            this.finalProperties = new HashSet<>();
-        }
-        this.finalProperties.add(key);
-        return self();
+    public RenderState getRenderState() {
+        return renderState;
     }
 
-    @Nullable
-    @SuppressWarnings("unchecked")
-    public <V> V getProperty(String key) {
-        if (this.customProperties == null) {
-            return null;
-        }
-        return (V) this.customProperties.get(key);
-    }
-
-    public <V> V getProperty(String key, V defaultValue) {
-        V value = getProperty(key);
-        return value != null ? value : defaultValue;
+    public EventState getEventState() {
+        return eventState;
     }
 
     protected void applyTransformations(DrawContext context) {
-        if (getRotation() == 0.0f && getScaleX() == 1.0f && getScaleY() == 1.0f) return;
-
-        float pivotX = getLeft() + getWidth() / 2;
-        float pivotY = getTop() + getHeight() / 2;
-
-        context.getMatrices().translate(pivotX, pivotY, 0);
-        context.getMatrices().multiply(RotationAxis.POSITIVE_Z.rotationDegrees(getRotation()));
-        context.getMatrices().scale(getScaleX(), getScaleY(), 1.0f);
-        context.getMatrices().translate(-pivotX, -pivotY, 0);
+        this.renderState.applyTransformations(context);
     }
 
     @SuppressWarnings("unchecked")
@@ -126,17 +77,17 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void draw(DrawContext context) {
-        if (!this.visible) return;
-        if (getOpacity() <= 0.001f) return;
+        if (!this.renderState.visible) return;
+        if (this.renderState.opacity.get() <= 0.001f) return;
 
         float[] lastColor = RenderSystem.getShaderColor().clone();
-        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * getOpacity());
+        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * this.renderState.opacity.get());
 
         context.getMatrices().push();
         try {
-            applyTransformations(context);
+            this.renderState.applyTransformations(context);
 
-            for (Effect effect : effects) {
+            for (Effect effect : this.renderState.effects) {
                 effect.beforeDraw(context, this);
             }
 
@@ -144,8 +95,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             if (renderer != null) renderer.render(context, this);
             drawChildren(context);
 
-            for (int i = effects.size() - 1; i >= 0; i--) {
-                effects.get(i).afterDraw(context, this);
+            for (int i = this.renderState.effects.size() - 1; i >= 0; i--) {
+                this.renderState.effects.get(i).afterDraw(context, this);
             }
         } finally {
             context.getMatrices().pop();
@@ -167,12 +118,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void invalidateLayout() {
-        if (!this.layoutDirty) {
-            this.layoutDirty = true;
-            if (parent != null) {
-                parent.invalidateLayout();
-            }
-        }
+        this.layoutState.invalidateLayout();
     }
 
     public void removeAllChildren() {
@@ -203,155 +149,151 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getRawLeft() {
-        return this.finalX;
+        return this.layoutState.finalX;
     }
 
     public float getRawTop() {
-        return this.finalY;
+        return this.layoutState.finalY;
     }
 
     public float getRawWidth() {
-        return this.finalWidth;
+        return this.layoutState.finalWidth;
     }
 
     public float getRawHeight() {
-        return this.finalHeight;
+        return this.layoutState.finalHeight;
     }
 
     public float getLeft() {
-        return getRawLeft() + margin.left();
+        return this.layoutState.getLeft();
     }
 
     public float getTop() {
-        return getRawTop() + margin.top();
+        return this.layoutState.getTop();
     }
 
     public float getWidth() {
-        float rawWidth = getRawWidth();
-        if (rawWidth == 0) return 0;
-        return rawWidth - margin.left() - margin.right();
+        return this.layoutState.getWidth();
     }
 
     public T setWidth(WidthConstraint constraint) {
-        this.constraints.setWidth(constraint);
+        this.layoutState.constraints.setWidth(constraint);
         invalidateLayout();
         return self();
     }
 
     public T setMinWidth(float minWidth) {
-        this.constraints.setMinWidth(minWidth);
+        this.layoutState.constraints.setMinWidth(minWidth);
         invalidateLayout();
         return self();
     }
 
     public T setMaxWidth(float maxWidth) {
-        this.constraints.setMaxWidth(maxWidth);
+        this.layoutState.constraints.setMaxWidth(maxWidth);
         invalidateLayout();
         return self();
     }
 
     public float getHeight() {
-        float rawHeight = getRawHeight();
-        if (rawHeight == 0) return 0;
-        return rawHeight - margin.top() - margin.bottom();
+        return this.layoutState.getHeight();
     }
 
     public T setHeight(HeightConstraint constraint) {
-        this.constraints.setHeight(constraint);
+        this.layoutState.constraints.setHeight(constraint);
         invalidateLayout();
         return self();
     }
 
     public T setMinHeight(float minHeight) {
-        this.constraints.setMinHeight(minHeight);
+        this.layoutState.constraints.setMinHeight(minHeight);
         invalidateLayout();
         return self();
     }
 
     public T setMaxHeight(float maxHeight) {
-        this.constraints.setMaxHeight(maxHeight);
+        this.layoutState.constraints.setMaxHeight(maxHeight);
         invalidateLayout();
         return self();
     }
 
     public float getInnerLeft() {
-        return getLeft() + padding.left();
+        return this.layoutState.getInnerLeft();
     }
 
     public float getInnerTop() {
-        return getTop() + padding.top();
+        return this.layoutState.getInnerTop();
     }
 
     public float getInnerWidth() {
-        return getWidth() - padding.left() - padding.right();
+        return this.layoutState.getInnerWidth();
     }
 
     public float getInnerHeight() {
-        return getHeight() - padding.top() - padding.bottom();
+        return this.layoutState.getInnerHeight();
     }
 
     public T setX(XConstraint constraint) {
-        this.constraints.setX(constraint);
+        this.layoutState.constraints.setX(constraint);
         invalidateLayout();
         return self();
     }
 
     private void handleAutoMargins() {
-        float top = this.margin.top(), right = this.margin.right(), bottom = this.margin.bottom(), left = this.margin.left();
+        float top = this.layoutState.margin.top(), right = this.layoutState.margin.right(), bottom = this.layoutState.margin.bottom(), left = this.layoutState.margin.left();
 
         boolean horizontalAuto = Float.isNaN(left) && Float.isNaN(right);
         boolean verticalAuto = Float.isNaN(top) && Float.isNaN(bottom);
 
         if (horizontalAuto) {
-            this.constraints.setX(Constraints.center());
+            this.layoutState.constraints.setX(Constraints.center());
             left = 0;
             right = 0;
         }
         if (verticalAuto) {
-            this.constraints.setY(Constraints.center());
+            this.layoutState.constraints.setY(Constraints.center());
             top = 0;
             bottom = 0;
         }
 
         if (horizontalAuto || verticalAuto) {
-            this.margin = new EdgeInsets(top, right, bottom, left);
+            this.layoutState.margin = new EdgeInsets(top, right, bottom, left);
         }
     }
 
     public T setMargin(float vertical, float horizontal) {
-        this.margin = new EdgeInsets(vertical, horizontal);
+        this.layoutState.margin = new EdgeInsets(vertical, horizontal);
         invalidateLayout();
         handleAutoMargins();
         return self();
     }
 
     public T setMargin(float top, float right, float bottom, float left) {
-        this.margin = new EdgeInsets(top, right, bottom, left);
+        this.layoutState.margin = new EdgeInsets(top, right, bottom, left);
         invalidateLayout();
         handleAutoMargins();
         return self();
     }
 
     public T setPadding(float all) {
-        this.padding = new EdgeInsets(all);
+        this.layoutState.padding = new EdgeInsets(all);
         invalidateLayout();
         return self();
     }
 
     public T setPadding(float vertical, float horizontal) {
-        this.padding = new EdgeInsets(vertical, horizontal);
+        this.layoutState.padding = new EdgeInsets(vertical, horizontal);
         invalidateLayout();
         return self();
     }
 
     public T setPadding(float top, float right, float bottom, float left) {
-        this.padding = new EdgeInsets(top, right, bottom, left);
+        this.layoutState.padding = new EdgeInsets(top, right, bottom, left);
         invalidateLayout();
         return self();
     }
 
     public T setY(YConstraint constraint) {
-        this.constraints.setY(constraint);
+        this.layoutState.constraints.setY(constraint);
         invalidateLayout();
         return self();
     }
@@ -408,26 +350,26 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public <E extends tytoo.weave.event.Event> T onEvent(EventType<E> type, Consumer<E> listener) {
-        this.eventListeners.computeIfAbsent(type, k -> new ArrayList<>()).add(listener);
+        this.eventState.eventListeners.computeIfAbsent(type, k -> new ArrayList<>()).add(listener);
         return self();
     }
 
     public @Nullable Layout getLayout() {
-        return this.layout;
+        return this.layoutState.layout;
     }
 
     public T setLayout(@Nullable Layout layout) {
-        this.layout = layout;
+        this.layoutState.layout = layout;
         invalidateLayout();
         return self();
     }
 
     public Object getLayoutData() {
-        return layoutData;
+        return this.layoutState.layoutData;
     }
 
     public T setLayoutData(Object layoutData) {
-        this.layoutData = layoutData;
+        this.layoutState.layoutData = layoutData;
         invalidateLayout();
         return self();
     }
@@ -450,30 +392,13 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public T addEffect(Effect effect) {
-        this.effects.add(effect);
+        this.renderState.effects.add(effect);
         invalidateLayout();
         return self();
     }
 
-    @SuppressWarnings("unchecked")
     public <E extends tytoo.weave.event.Event> void fireEvent(E event) {
-        EventType<E> type = (EventType<E>) event.getType();
-
-        List<Consumer<?>> listeners = eventListeners.get(type);
-        if (listeners != null) {
-            for (Consumer<?> listener : new ArrayList<>(listeners)) {
-                ((Consumer<E>) listener).accept(event);
-            }
-        }
-
-        if (!event.isCancelled()) {
-            List<Consumer<?>> anyListeners = eventListeners.get(tytoo.weave.event.Event.ANY);
-            if (anyListeners != null) {
-                for (Consumer<?> listener : new ArrayList<>(anyListeners)) {
-                    ((Consumer<tytoo.weave.event.Event>) listener).accept(event);
-                }
-            }
-        }
+        this.eventState.fireEvent(event);
     }
 
     public Component<?> hitTest(float x, float y) {
@@ -489,20 +414,20 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public boolean isFocusable() {
-        return focusable;
+        return this.eventState.focusable;
     }
 
     public T setFocusable(boolean focusable) {
-        this.focusable = focusable;
+        this.eventState.focusable = focusable;
         return self();
     }
 
     public boolean isVisible() {
-        return this.visible;
+        return this.renderState.visible;
     }
 
     public T setVisible(boolean visible) {
-        this.visible = visible;
+        this.renderState.visible = visible;
         if (parent != null) parent.invalidateLayout();
         return self();
     }
@@ -513,29 +438,29 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public float getOpacity() {
-        return this.opacity.get();
+        return this.renderState.opacity.get();
     }
 
     public T setOpacity(float opacity) {
-        this.opacity.set(Math.max(0.0f, Math.min(1.0f, opacity)));
+        this.renderState.opacity.set(Math.max(0.0f, Math.min(1.0f, opacity)));
         return self();
     }
 
     public State<Float> getOpacityState() {
-        return this.opacity;
+        return this.renderState.opacity;
     }
 
     public float getRotation() {
-        return rotation.get();
+        return this.renderState.rotation.get();
     }
 
     public T setRotation(float rotation) {
-        this.rotation.set(rotation);
+        this.renderState.rotation.set(rotation);
         return self();
     }
 
     public State<Float> getRotationState() {
-        return this.rotation;
+        return this.renderState.rotation;
     }
 
     public T setScale(float scale) {
@@ -543,25 +468,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public T setScale(float scaleX, float scaleY) {
-        this.scaleX.set(scaleX);
-        this.scaleY.set(scaleY);
+        this.renderState.scaleX.set(scaleX);
+        this.renderState.scaleY.set(scaleY);
         return self();
     }
 
     public float getScaleX() {
-        return scaleX.get();
+        return this.renderState.scaleX.get();
     }
 
     public State<Float> getScaleXState() {
-        return this.scaleX;
+        return this.renderState.scaleX;
     }
 
     public float getScaleY() {
-        return scaleY.get();
+        return this.renderState.scaleY.get();
     }
 
     public State<Float> getScaleYState() {
-        return this.scaleY;
+        return this.renderState.scaleY;
     }
 
     public boolean isFocused() {
@@ -605,24 +530,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     private Matrix4f getInverseTransformationMatrix() {
-        Matrix4f matrix = new Matrix4f();
-        float pivotX = getLeft() + getWidth() / 2;
+        Matrix4f matrix = new Matrix4f(); // Start with identity
+        float pivotX = getLeft() + getWidth() / 2; // Use public API for position
         float pivotY = getTop() + getHeight() / 2;
 
-        matrix.translate(pivotX, pivotY, 0);
-        matrix.rotateZ((float) Math.toRadians(getRotation()));
-        matrix.scale(getScaleX(), getScaleY(), 1.0f);
-        matrix.translate(-pivotX, -pivotY, 0);
+        matrix.translate(pivotX, pivotY, 0); // Translate to pivot
+        matrix.rotateZ((float) Math.toRadians(getRotation())); // Rotate
+        matrix.scale(getScaleX(), getScaleY(), 1.0f); // Scale
+        matrix.translate(-pivotX, -pivotY, 0); // Translate back
 
-        return matrix.invert();
-    }
-
-    @SuppressWarnings("unchecked")
-    public <V> State<V> getAnimatedState(String property, V initialValue) {
-        if (animatedProperties == null) {
-            animatedProperties = new HashMap<>();
-        }
-        return (State<V>) animatedProperties.computeIfAbsent(property, k -> new State<>(initialValue));
+        return matrix.invert(); // Return the inverse
     }
 
     public boolean isPointInside(float x, float y) {
@@ -644,65 +561,52 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     @SuppressWarnings("unchecked")
     public T clone() {
         try {
-            T clone = (T) super.clone();
+            T clonedComponent = (T) super.clone();
 
-            clone.parent = null;
-            clone.invalidateLayout();
+            clonedComponent.parent = null;
+            clonedComponent.invalidateLayout();
 
-            clone.constraints = new Constraints(clone);
-            clone.constraints.setX(this.constraints.getXConstraint());
-            clone.constraints.setY(this.constraints.getYConstraint());
-            clone.constraints.setWidth(this.constraints.getWidthConstraint());
-            clone.constraints.setHeight(this.constraints.getHeightConstraint());
+            // Get the state objects that were created by the cloned component's constructor
+            LayoutState clonedLayoutState = clonedComponent.getLayoutState();
+            EventState clonedEventState = clonedComponent.getEventState();
+            RenderState clonedRenderState = clonedComponent.getRenderState();
 
-            clone.margin = new EdgeInsets(this.margin.top(), this.margin.right(), this.margin.bottom(), this.margin.left());
-            clone.padding = new EdgeInsets(this.padding.top(), this.padding.right(), this.padding.bottom(), this.padding.left());
+            // Copy LayoutState properties
+            clonedLayoutState.constraints.setX(this.layoutState.constraints.getXConstraint());
+            clonedLayoutState.constraints.setY(this.layoutState.constraints.getYConstraint());
+            clonedLayoutState.constraints.setWidth(this.layoutState.constraints.getWidthConstraint());
+            clonedLayoutState.constraints.setHeight(this.layoutState.constraints.getHeightConstraint());
+            clonedLayoutState.margin = new EdgeInsets(this.layoutState.margin.top(), this.layoutState.margin.right(), this.layoutState.margin.bottom(), this.layoutState.margin.left());
+            clonedLayoutState.padding = new EdgeInsets(this.layoutState.padding.top(), this.layoutState.padding.right(), this.layoutState.padding.bottom(), this.layoutState.padding.left());
+            clonedLayoutState.setLayoutData(this.getLayoutData());
 
-            clone.eventListeners = new HashMap<>();
-            for (Map.Entry<EventType<?>, List<Consumer<?>>> entry : this.eventListeners.entrySet()) {
-                clone.eventListeners.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            // Copy EventState properties
+            for (Map.Entry<EventType<?>, List<Consumer<?>>> entry : this.eventState.eventListeners.entrySet()) {
+                clonedEventState.eventListeners.put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
 
-            clone.children = new ArrayList<>();
+            // Clone children
+            clonedComponent.children = new ArrayList<>();
             for (Component<?> child : this.children) {
                 Component<?> childClone = child.clone();
-                clone.addChild(childClone);
+                clonedComponent.addChild(childClone);
             }
 
-            clone.rotation.set(this.rotation.get());
-            clone.opacity.set(this.opacity.get());
-            clone.scaleX.set(this.scaleX.get());
-            clone.scaleY.set(this.scaleY.get());
+            // Copy RenderState properties
+            clonedRenderState.rotation.set(this.getRotation());
+            clonedRenderState.opacity.set(this.getOpacity());
+            clonedRenderState.scaleX.set(this.getScaleX());
+            clonedRenderState.scaleY.set(this.getScaleY());
+            clonedRenderState.visible = this.renderState.visible;
+            clonedRenderState.effects = new ArrayList<>(this.renderState.effects);
 
-            if (this.animatedProperties != null) {
-                Component<?> aClone = clone;
-                aClone.animatedProperties = new HashMap<>();
-                for (Map.Entry<String, State<?>> entry : this.animatedProperties.entrySet()) {
-                    State<Object> clonedState = new State<>(entry.getValue().get());
-                    aClone.animatedProperties.put(entry.getKey(), clonedState);
-                }
-            }
+            // Copy other properties
+            clonedComponent.style = this.style.clone();
+            clonedComponent.updateClonedChildReferences(this);
 
-            if (this.customProperties != null) {
-                Component<?> aClone = clone;
-                aClone.customProperties = new HashMap<>(this.customProperties);
-            }
-
-            if (this.finalProperties != null) {
-                Component<?> aClone = clone;
-                aClone.finalProperties = new HashSet<>(this.finalProperties);
-            }
-
-            clone.setVisible(this.isVisible());
-            clone.style = this.style.clone();
-            clone.setLayoutData(this.layoutData);
-            clone.updateClonedChildReferences(this);
-            clone.effects = new ArrayList<>(this.effects);
-
-            return clone;
+            return clonedComponent;
         } catch (CloneNotSupportedException e) {
-            WeaveClient.LOGGER.error("Component is Cloneable but clone() failed for {}", this.getClass().getName(), e);
-            throw new AssertionError("Component is Cloneable but clone() failed", e);
+            throw new AssertionError("Component is Cloneable but clone() failed", e); // Should not happen
         }
     }
 
@@ -715,56 +619,56 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public Constraints getConstraints() {
-        return this.constraints;
+        return this.layoutState.constraints;
     }
 
     public EdgeInsets getMargin() {
-        return margin;
+        return this.layoutState.margin;
     }
 
     public T setMargin(float all) {
-        this.margin = new EdgeInsets(all);
+        this.layoutState.margin = new EdgeInsets(all);
         invalidateLayout();
         handleAutoMargins();
         return self();
     }
 
     public float getMeasuredWidth() {
-        return measuredWidth;
+        return this.layoutState.measuredWidth;
     }
 
     public float getMeasuredHeight() {
-        return measuredHeight;
+        return this.layoutState.measuredHeight;
     }
 
     public float getFinalWidth() {
-        return finalWidth;
+        return this.layoutState.finalWidth;
     }
 
     public float getFinalHeight() {
-        return finalHeight;
+        return this.layoutState.finalHeight;
     }
 
     public boolean isLayoutDirty() {
-        return layoutDirty;
+        return this.layoutState.layoutDirty;
     }
 
     public void measure(float availableWidth, float availableHeight) {
-        if (!this.visible) {
-            this.measuredWidth = 0;
-            this.measuredHeight = 0;
+        if (!this.renderState.visible) {
+            this.layoutState.measuredWidth = 0;
+            this.layoutState.measuredHeight = 0;
             return;
         }
 
-        WidthConstraint wc = constraints.getWidthConstraint();
-        HeightConstraint hc = constraints.getHeightConstraint();
+        WidthConstraint wc = this.layoutState.constraints.getWidthConstraint();
+        HeightConstraint hc = this.layoutState.constraints.getHeightConstraint();
 
         boolean widthDependsOnChildren = wc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
         boolean heightDependsOnChildren = hc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint || hc instanceof tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
 
         if (widthDependsOnChildren || heightDependsOnChildren) {
-            float horizontalPadding = padding.left() + padding.right();
-            float verticalPadding = padding.top() + padding.bottom();
+            float horizontalPadding = this.layoutState.padding.left() + this.layoutState.padding.right();
+            float verticalPadding = this.layoutState.padding.top() + this.layoutState.padding.bottom();
             for (Component<?> child : children) {
                 child.measure(availableWidth - horizontalPadding, availableHeight - verticalPadding);
             }
@@ -774,49 +678,49 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         if (wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
             h = hc.calculateHeight(this, availableHeight);
-            this.measuredHeight = h;
+            this.layoutState.measuredHeight = h;
             w = wc.calculateWidth(this, availableWidth);
         } else if (hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
             w = wc.calculateWidth(this, availableWidth);
-            this.measuredWidth = w;
+            this.layoutState.measuredWidth = w;
             h = hc.calculateHeight(this, availableHeight);
         } else {
             w = wc.calculateWidth(this, availableWidth);
             h = hc.calculateHeight(this, availableHeight);
         }
 
-        this.measuredWidth = constraints.clampWidth(w);
-        this.measuredHeight = constraints.clampHeight(h);
+        this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
+        this.layoutState.measuredHeight = this.layoutState.constraints.clampHeight(h);
 
         if (!widthDependsOnChildren && !heightDependsOnChildren) {
-            float horizontalPadding = padding.left() + padding.right();
-            float verticalPadding = padding.top() + padding.bottom();
+            float horizontalPadding = this.layoutState.padding.left() + this.layoutState.padding.right();
+            float verticalPadding = this.layoutState.padding.top() + this.layoutState.padding.bottom();
             for (Component<?> child : children) {
-                child.measure(this.measuredWidth - horizontalPadding, this.measuredHeight - verticalPadding);
+                child.measure(this.layoutState.measuredWidth - horizontalPadding, this.layoutState.measuredHeight - verticalPadding);
             }
         }
     }
 
     public void arrange(float x, float y) {
-        if (!this.visible) return;
+        if (!this.renderState.visible) return;
 
-        this.finalX = x;
-        this.finalY = y;
-        this.finalWidth = this.measuredWidth + this.margin.left() + this.margin.right();
-        this.finalHeight = this.measuredHeight + this.margin.top() + this.margin.bottom();
+        this.layoutState.finalX = x;
+        this.layoutState.finalY = y;
+        this.layoutState.finalWidth = this.layoutState.measuredWidth + this.layoutState.margin.left() + this.layoutState.margin.right();
+        this.layoutState.finalHeight = this.layoutState.measuredHeight + this.layoutState.margin.top() + this.layoutState.margin.bottom();
 
-        if (this.layout != null) {
-            this.layout.arrangeChildren(this);
+        if (this.layoutState.layout != null) {
+            this.layoutState.layout.arrangeChildren(this);
         } else {
             for (Component<?> child : this.children) {
                 if (!child.isVisible()) continue;
-                float childX = child.getConstraints().getXConstraint().calculateX(child, this.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right());
-                float childY = child.getConstraints().getYConstraint().calculateY(child, this.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom());
+                float childX = child.getConstraints().getXConstraint().calculateX(child, getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right());
+                float childY = child.getConstraints().getYConstraint().calculateY(child, getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom());
                 child.arrange(this.getInnerLeft() + childX, this.getInnerTop() + childY);
             }
         }
 
-        this.layoutDirty = false;
+        this.layoutState.layoutDirty = false;
     }
 
     public T bringToFront() {

@@ -11,16 +11,15 @@ public class WrappedTextComponent extends TextComponent {
     protected WrappedTextComponent(Text text) {
         super(text);
 
-        this.constraints.setHeight((c, parentHeight) -> {
+        this.getLayoutState().constraints.setHeight((c, parentHeight) -> {
             TextRenderer textRenderer = getEffectiveTextRenderer();
-            WrappedTextComponent self = (WrappedTextComponent) c;
 
-            if (self.getWidth() <= 0 || self.scale <= 0) return 0f;
+            if (this.getWidth() <= 0 || this.scale <= 0) return 0f;
 
-            Text textToWrap = self.getDrawableText();
-            int wrapWidth = (int) (self.getWidth() / self.scale);
+            Text textToWrap = this.getDrawableText();
+            int wrapWidth = (int) (this.getWidth() / this.scale);
             int lines = textRenderer.wrapLines(textToWrap, wrapWidth).size();
-            return (float) lines * textRenderer.fontHeight * self.scale;
+            return (float) lines * textRenderer.fontHeight * this.scale;
         });
     }
 

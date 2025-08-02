@@ -67,6 +67,13 @@ public final class InputHelper {
         };
     }
 
+    public static boolean isUndo() {
+        return isKeyPressed(GLFW.GLFW_KEY_Z) && isControl() && !isShift() && !isAlt();
+    }
+
+    public static boolean isRedo() {
+        return isKeyPressed(GLFW.GLFW_KEY_Y) && isControl() && !isShift() && !isAlt();
+    }
 
     public static boolean isSelectAll() {
         return isKeyPressed(GLFW.GLFW_KEY_A) && isControl() && !isShift() && !isAlt();

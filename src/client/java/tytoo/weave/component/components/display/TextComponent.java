@@ -27,10 +27,10 @@ public class TextComponent extends Component<TextComponent> {
     protected TextComponent(Text text) {
         parseText(text);
 
-        this.constraints.setWidth((component, parentWidth) ->
+        this.getLayoutState().constraints.setWidth((component, parentWidth) ->
                 getEffectiveTextRenderer().getWidth(getDrawableText()) * scale
         );
-        this.constraints.setHeight((component, parentHeight) ->
+        this.getLayoutState().constraints.setHeight((component, parentHeight) ->
                 (float) getEffectiveTextRenderer().fontHeight * scale
         );
     }

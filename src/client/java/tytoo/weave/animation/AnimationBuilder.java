@@ -38,30 +38,6 @@ public class AnimationBuilder<C extends Component<C>> {
         return this;
     }
 
-    public AnimationBuilder<C> width(float to) {
-        State<Float> widthState = component.getAnimatedState("width", component.getWidth());
-        component.setWidth((c, p) -> widthState.get());
-        return animateProperty(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "width");
-    }
-
-    public AnimationBuilder<C> height(float to) {
-        State<Float> heightState = component.getAnimatedState("height", component.getHeight());
-        component.setHeight((c, p) -> heightState.get());
-        return animateProperty(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "height");
-    }
-
-    public AnimationBuilder<C> x(float to) {
-        State<Float> xState = component.getAnimatedState("x", component.getRawLeft());
-        component.setX((c, pW, cW) -> xState.get());
-        return animateProperty(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "x");
-    }
-
-    public AnimationBuilder<C> y(float to) {
-        State<Float> yState = component.getAnimatedState("y", component.getRawTop());
-        component.setY((c, pH, cH) -> yState.get());
-        return animateProperty(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "y");
-    }
-
     public AnimationBuilder<C> opacity(float to) {
         return animateProperty(component.getOpacityState(), to, Interpolators.FLOAT, null, "opacity");
     }
@@ -89,20 +65,15 @@ public class AnimationBuilder<C extends Component<C>> {
         var base = style.getBaseRenderer();
 
         if (base instanceof ColorableRenderer colorable) {
-            State<Color> colorState = component.getAnimatedState("color", colorable.getColor());
+            State<Color> colorState = new State<>(colorable.getColor());
             return animateProperty(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
         }
 
-        if (base == null) {
-            Color startColor = new Color(0, 0, 0, 0);
-            tytoo.weave.style.renderer.SolidColorRenderer animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
-            State<Color> colorState = component.getAnimatedState("color", startColor);
-
-            style.setBaseRenderer(animatedRenderer);
-            return animateProperty(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
-        }
-
-        return this;
+        Color startColor = new Color(0, 0, 0, 0);
+        tytoo.weave.style.renderer.SolidColorRenderer animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
+        State<Color> colorState = new State<>(startColor);
+        style.setBaseRenderer(animatedRenderer);
+        return animateProperty(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
     }
 
     public void then(Runnable onFinish) {

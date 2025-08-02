@@ -9,8 +9,6 @@ import tytoo.weave.style.StyleProperty;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
-import java.awt.*;
-
 public class ImageButton extends InteractiveComponent<ImageButton> {
     protected float padding;
     protected float gap;
@@ -19,8 +17,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     protected ImageButton() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        this.padding = stylesheet.get(this.getClass(), StyleProps.PADDING, 5f);
-        this.gap = stylesheet.get(this.getClass(), StyleProps.GAP, 4f);
+        this.padding = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_PADDING, 5f);
+        this.gap = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_GAP, 4f);
 
         this.setWidth((c, p) -> {
             float contentWidth = 0;
@@ -53,20 +51,6 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     public static ImageButton of(Identifier imageId, Text text) {
         return new ImageButton().setImage(imageId).setLabel(text);
-    }
-
-    @Override
-    protected void updateVisualState() {
-        Stylesheet stylesheet = ThemeManager.getStylesheet();
-        long duration = stylesheet.get(this.getClass(), StyleProps.ANIMATION_DURATION, 150L);
-
-        Color normalColor = stylesheet.get(this.getClass(), StyleProps.COLOR_NORMAL, new Color(100, 100, 100, 180));
-        Color hoveredColor = stylesheet.get(this.getClass(), StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
-        Color focusedColor = stylesheet.get(this.getClass(), StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
-
-        Color targetColor = isFocused() ? focusedColor : (isHovered() ? hoveredColor : normalColor);
-
-        this.animate().duration(duration).color(targetColor);
     }
 
     private void updateLayout() {
@@ -154,12 +138,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Long> ANIMATION_DURATION = new StyleProperty<>("animation.duration", Long.class);
-        public static final StyleProperty<Color> COLOR_NORMAL = new StyleProperty<>("color.normal", Color.class);
-        public static final StyleProperty<Color> COLOR_HOVERED = new StyleProperty<>("color.hovered", Color.class);
-        public static final StyleProperty<Color> COLOR_FOCUSED = new StyleProperty<>("color.focused", Color.class);
-        public static final StyleProperty<Float> PADDING = new StyleProperty<>("padding", Float.class);
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("gap", Float.class);
+        public static final StyleProperty<Float> IMAGE_BUTTON_PADDING = new StyleProperty<>("imageButton.padding", Float.class);
+        public static final StyleProperty<Float> IMAGE_BUTTON_GAP = new StyleProperty<>("imageButton.gap", Float.class);
 
         private StyleProps() {
         }

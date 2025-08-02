@@ -2,8 +2,9 @@ package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
 import tytoo.weave.component.components.interactive.Button;
-import tytoo.weave.component.components.interactive.Button.StyleProps;
 import tytoo.weave.component.components.interactive.ImageButton;
+import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
+import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
@@ -13,6 +14,7 @@ import tytoo.weave.style.Styling;
 import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
+
 
 public class DefaultTheme implements Theme {
     private static final Styling DEFAULT_TEXT_STYLE = Styling.create().color(Color.WHITE).shadow(true);
@@ -38,18 +40,18 @@ public class DefaultTheme implements Theme {
         stylesheet.set(Button.class, StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
         stylesheet.set(Button.class, StyleProps.ANIMATION_DURATION, 150L);
         stylesheet.setStyleFor(Button.class, new ComponentStyle()
-                .setColor(buttonNormalColor)
+                .setColor(stylesheet.get(Button.class, StyleProps.COLOR_NORMAL, buttonNormalColor))
         );
 
         Color imageButtonNormalColor = new Color(100, 100, 100, 180);
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_NORMAL, imageButtonNormalColor);
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.ANIMATION_DURATION, 150L);
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.PADDING, 5f);
-        stylesheet.set(ImageButton.class, ImageButton.StyleProps.GAP, 4f);
+        stylesheet.set(ImageButton.class, StyleProps.COLOR_NORMAL, imageButtonNormalColor);
+        stylesheet.set(ImageButton.class, StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
+        stylesheet.set(ImageButton.class, StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
+        stylesheet.set(ImageButton.class, StyleProps.ANIMATION_DURATION, 150L);
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.IMAGE_BUTTON_PADDING, 5f);
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.IMAGE_BUTTON_GAP, 4f);
         stylesheet.setStyleFor(ImageButton.class, new ComponentStyle()
-                .setColor(imageButtonNormalColor)
+                .setColor(stylesheet.get(ImageButton.class, StyleProps.COLOR_NORMAL, imageButtonNormalColor))
         );
 
         stylesheet.setStyleFor(TextField.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
@@ -61,6 +63,17 @@ public class DefaultTheme implements Theme {
         stylesheet.set(TextField.class, TextField.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
         stylesheet.set(TextField.class, TextField.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
         stylesheet.set(TextField.class, TextField.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
+
+        // TextArea
+        stylesheet.setStyleFor(TextArea.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
+        stylesheet.set(TextArea.class, TextArea.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+        stylesheet.set(TextArea.class, TextArea.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
     }
 
     @Override

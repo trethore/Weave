@@ -9,8 +9,6 @@ import tytoo.weave.utils.render.Render2DUtils;
 import java.awt.*;
 
 public class DefaultCursorRenderer implements CursorRenderer {
-    private long lastActionTime = 0;
-
     @Override
     public void render(DrawContext context, TextField textField) {
         if (!textField.isFocused()) return;
@@ -18,11 +16,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
         long cursorBlinkInterval = ThemeManager.getStylesheet().get(textField.getClass(), TextField.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
         if (textField.hasSelection()) return;
 
-        if (textField.getLastActionTime() > this.lastActionTime) {
-            this.lastActionTime = textField.getLastActionTime();
-        }
-
-        long timeSinceLastAction = System.currentTimeMillis() - this.lastActionTime;
+        long timeSinceLastAction = System.currentTimeMillis() - textField.getLastActionTime();
         boolean shouldDrawCursor = (timeSinceLastAction < cursorBlinkInterval) || (System.currentTimeMillis() / cursorBlinkInterval) % 2 == 0;
 
         if (shouldDrawCursor) {
