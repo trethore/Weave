@@ -101,7 +101,7 @@ public class ImageManager {
         CompletableFuture<Identifier> future = CompletableFuture.supplyAsync(() -> {
             try {
                 URLConnection connection = url.openConnection();
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; Weave-UI-Client/1.0)");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
                 try (InputStream inputStream = connection.getInputStream()) {
                     return loadImage(inputStream);
                 }

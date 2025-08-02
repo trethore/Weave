@@ -5,17 +5,23 @@ import net.minecraft.util.Identifier;
 import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.StyleProperty;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
 
 public class ImageButton extends InteractiveComponent<ImageButton> {
-    private final float padding = 5;
-    private final float gap = 4;
+    protected float padding;
+    protected float gap;
     protected BaseImage<?> image;
     protected TextComponent label;
 
     protected ImageButton() {
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        this.padding = stylesheet.get(this.getClass(), StyleProps.PADDING, 5f);
+        this.gap = stylesheet.get(this.getClass(), StyleProps.GAP, 4f);
+
         this.setWidth((c, p) -> {
             float contentWidth = 0;
             if (image != null) contentWidth += image.getMeasuredWidth();
@@ -51,12 +57,12 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     @Override
     protected void updateVisualState() {
-        var stylesheet = ThemeManager.getStylesheet();
-        long duration = stylesheet.getProperty(this.getClass(), "animation.duration", 150L);
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        long duration = stylesheet.get(this.getClass(), StyleProps.ANIMATION_DURATION, 150L);
 
-        Color normalColor = stylesheet.getProperty(this.getClass(), "color.normal", new Color(100, 100, 100, 180));
-        Color hoveredColor = stylesheet.getProperty(this.getClass(), "color.hovered", new Color(120, 120, 120, 180));
-        Color focusedColor = stylesheet.getProperty(this.getClass(), "color.focused", new Color(140, 140, 140, 180));
+        Color normalColor = stylesheet.get(this.getClass(), StyleProps.COLOR_NORMAL, new Color(100, 100, 100, 180));
+        Color hoveredColor = stylesheet.get(this.getClass(), StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
+        Color focusedColor = stylesheet.get(this.getClass(), StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
 
         Color targetColor = isFocused() ? focusedColor : (isHovered() ? hoveredColor : normalColor);
 
@@ -86,19 +92,43 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     }
 
     public ImageButton setImage(Identifier imageId) {
-        if (this.image != null) this.removeChild(this.image);
-        this.image = BaseImage.of(imageId)
-                .setWidth(Constraints.pixels(16))
-                .setHeight(Constraints.pixels(16));
-        this.addChild(this.image);
+        if (this.image == null) {
+            return setImageComponent(BaseImage.of(imageId)
+                    .setWidth(Constraints.pixels(16))
+                    .setHeight(Constraints.pixels(16)));
+        } else {
+            this.image.setImage(imageId);
+            invalidateLayout();
+        }
+        return this;
+    }
+
+    public ImageButton setImageComponent(BaseImage<?> imageComponent) {
+        if (this.image != null) {
+            this.removeChild(this.image);
+        }
+        this.image = imageComponent;
+        if (this.image != null) {
+            this.addChild(this.image);
+        }
         updateLayout();
         return this;
     }
 
     public ImageButton setLabel(Text text) {
+        if (this.label == null) {
+            return setLabelComponent(TextComponent.of(text));
+        } else {
+            this.label.setText(text);
+            invalidateLayout();
+        }
+        return this;
+    }
+
+    public ImageButton setLabelComponent(TextComponent labelComponent) {
         if (this.label != null) this.removeChild(this.label);
-        this.label = TextComponent.of(text);
-        this.addChild(this.label);
+        this.label = labelComponent;
+        if (this.label != null) this.addChild(this.label);
         updateLayout();
         return this;
     }
@@ -108,5 +138,30 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         this.image.setHeight(Constraints.pixels(height));
         invalidateLayout();
         return this;
+    }
+
+    public ImageButton setPadding(float padding) {
+        this.padding = padding;
+        invalidateLayout();
+        return this;
+    }
+
+    public ImageButton setGap(float gap) {
+        this.gap = gap;
+        updateLayout();
+        invalidateLayout();
+        return this;
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Long> ANIMATION_DURATION = new StyleProperty<>("animation.duration", Long.class);
+        public static final StyleProperty<Color> COLOR_NORMAL = new StyleProperty<>("color.normal", Color.class);
+        public static final StyleProperty<Color> COLOR_HOVERED = new StyleProperty<>("color.hovered", Color.class);
+        public static final StyleProperty<Color> COLOR_FOCUSED = new StyleProperty<>("color.focused", Color.class);
+        public static final StyleProperty<Float> PADDING = new StyleProperty<>("padding", Float.class);
+        public static final StyleProperty<Float> GAP = new StyleProperty<>("gap", Float.class);
+
+        private StyleProps() {
+        }
     }
 }

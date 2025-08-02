@@ -6,26 +6,31 @@ import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 
 import java.awt.*;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
 public class ComponentStyle implements Cloneable {
-    private Map<ComponentState, ComponentRenderer> renderers = new EnumMap<>(ComponentState.class);
+    private final List<StyleState> statePriority = new ArrayList<>(Arrays.asList(StyleState.FOCUSED, StyleState.HOVERED, StyleState.NORMAL));
+    private Map<StyleState, ComponentRenderer> renderers = new HashMap<>();
     @Nullable
     private ComponentRenderer baseRenderer;
 
     @Nullable
     public ComponentRenderer getRenderer(Component<?> component) {
-        if (component.isFocused() && renderers.containsKey(ComponentState.FOCUSED)) {
-            return renderers.get(ComponentState.FOCUSED);
+        Set<StyleState> activeStates = component.getActiveStyleStates();
+        for (StyleState state : statePriority) {
+            if (activeStates.contains(state) && renderers.containsKey(state)) {
+                return renderers.get(state);
+            }
         }
-        if (component.isHovered() && renderers.containsKey(ComponentState.HOVERED)) {
-            return renderers.get(ComponentState.HOVERED);
-        }
-        if (renderers.containsKey(ComponentState.NORMAL)) {
-            return renderers.get(ComponentState.NORMAL);
-        }
+
         return baseRenderer;
+    }
+
+    public ComponentStyle setStatePriority(StyleState... states) {
+        this.statePriority.clear();
+        Collections.addAll(this.statePriority, states);
+        return this;
     }
 
     @Nullable
@@ -38,7 +43,7 @@ public class ComponentStyle implements Cloneable {
         return this;
     }
 
-    public ComponentStyle setRenderer(ComponentState state, @Nullable ComponentRenderer renderer) {
+    public ComponentStyle setRenderer(StyleState state, @Nullable ComponentRenderer renderer) {
         if (renderer == null) {
             renderers.remove(state);
         } else {
@@ -51,7 +56,7 @@ public class ComponentStyle implements Cloneable {
         return setBaseRenderer(new SolidColorRenderer(color));
     }
 
-    public ComponentStyle setColor(ComponentState state, Color color) {
+    public ComponentStyle setColor(StyleState state, Color color) {
         return setRenderer(state, new SolidColorRenderer(color));
     }
 
@@ -59,7 +64,9 @@ public class ComponentStyle implements Cloneable {
     public ComponentStyle clone() {
         try {
             ComponentStyle clone = (ComponentStyle) super.clone();
-            clone.renderers = new EnumMap<>(this.renderers);
+            clone.renderers = new HashMap<>(this.renderers);
+            clone.statePriority.clear();
+            clone.statePriority.addAll(this.statePriority);
             return clone;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("ComponentStyle is Cloneable but clone() failed", e);

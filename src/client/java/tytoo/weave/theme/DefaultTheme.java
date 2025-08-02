@@ -2,6 +2,7 @@ package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
 import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.Button.StyleProps;
 import tytoo.weave.component.components.interactive.ImageButton;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
@@ -32,30 +33,34 @@ public class DefaultTheme implements Theme {
 
         // Button
         Color buttonNormalColor = new Color(80, 80, 80);
-        stylesheet.setProperty(Button.class, "color.normal", buttonNormalColor);
-        stylesheet.setProperty(Button.class, "color.hovered", new Color(100, 100, 100));
-        stylesheet.setProperty(Button.class, "color.focused", new Color(120, 120, 120));
-        stylesheet.setProperty(Button.class, "animation.duration", 150L);
-        stylesheet.setStyleFor(Button.class, new ComponentStyle().setColor(buttonNormalColor));
+        stylesheet.set(Button.class, StyleProps.COLOR_NORMAL, buttonNormalColor);
+        stylesheet.set(Button.class, StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
+        stylesheet.set(Button.class, StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
+        stylesheet.set(Button.class, StyleProps.ANIMATION_DURATION, 150L);
+        stylesheet.setStyleFor(Button.class, new ComponentStyle()
+                .setColor(buttonNormalColor)
+        );
 
-        // ImageButton
         Color imageButtonNormalColor = new Color(100, 100, 100, 180);
-        stylesheet.setProperty(ImageButton.class, "color.normal", imageButtonNormalColor);
-        stylesheet.setProperty(ImageButton.class, "color.hovered", new Color(120, 120, 120, 180));
-        stylesheet.setProperty(ImageButton.class, "color.focused", new Color(140, 140, 140, 180));
-        stylesheet.setProperty(ImageButton.class, "animation.duration", 150L);
-        stylesheet.setStyleFor(ImageButton.class, new ComponentStyle().setColor(imageButtonNormalColor));
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_NORMAL, imageButtonNormalColor);
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.ANIMATION_DURATION, 150L);
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.PADDING, 5f);
+        stylesheet.set(ImageButton.class, ImageButton.StyleProps.GAP, 4f);
+        stylesheet.setStyleFor(ImageButton.class, new ComponentStyle()
+                .setColor(imageButtonNormalColor)
+        );
 
-        // TextField properties
         stylesheet.setStyleFor(TextField.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
-        stylesheet.setProperty(TextField.class, "selectionColor", new Color(50, 100, 200, 128));
-        stylesheet.setProperty(TextField.class, "borderColor.valid", new Color(0, 180, 0));
-        stylesheet.setProperty(TextField.class, "borderColor.invalid", new Color(180, 0, 0));
-        stylesheet.setProperty(TextField.class, "borderColor.focused", new Color(160, 160, 160));
-        stylesheet.setProperty(TextField.class, "borderColor.unfocused", new Color(80, 80, 80));
-        stylesheet.setProperty(TextField.class, "placeholderColor", new Color(150, 150, 150));
-        stylesheet.setProperty(TextField.class, "cursorColor", Color.LIGHT_GRAY);
-        stylesheet.setProperty(TextField.class, "cursor.blink-interval", 500L);
+        stylesheet.set(TextField.class, TextField.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+        stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
+        stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
+        stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+        stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+        stylesheet.set(TextField.class, TextField.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
+        stylesheet.set(TextField.class, TextField.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+        stylesheet.set(TextField.class, TextField.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
     }
 
     @Override

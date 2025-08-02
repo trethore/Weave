@@ -7,41 +7,50 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 
 public class ScrollPanel extends BasePanel<ScrollPanel> {
-    private final Panel contentPanel;
+    private final BasePanel<?> contentPanel;
     private final State<Float> scrollY = new State<>(0f);
     private float scrollSpeed = 10f;
     private float gap = 2f;
 
     public ScrollPanel() {
+        this(createDefaultContentPanel());
+        this.contentPanel.setHeight(Constraints.sumOfChildrenHeight(0, this.gap));
+        this.contentPanel.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, this.gap));
+    }
+
+    public ScrollPanel(BasePanel<?> contentPanel) {
         this.setWidth(Constraints.relative(1.0f));
         this.setHeight(Constraints.relative(1.0f));
 
         this.addEffect(Effects.scissor());
 
-        this.contentPanel = Panel.create()
+        this.contentPanel = contentPanel;
+        this.contentPanel
                 .setX(Constraints.pixels(0))
-                .setWidth(Constraints.relative(1.0f))
-                .setHeight(Constraints.sumOfChildrenHeight(0, this.gap))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, this.gap));
+                .setWidth(Constraints.relative(1.0f));
         super.addChild(this.contentPanel);
 
         this.contentPanel.setY((c, parentHeight, componentHeight) -> this.scrollY.get());
         this.scrollY.addListener((v) -> this.contentPanel.invalidateLayout());
 
         this.onMouseScroll(event -> {
-            float contentHeight = this.contentPanel.getRawHeight();
+            float contentHeight = this.contentPanel.getFinalHeight();
             float viewHeight = this.getInnerHeight();
 
             if (contentHeight <= viewHeight) return;
 
             float newScroll = scrollY.get() + (float) (event.getScrollY() * this.scrollSpeed);
-            float maxScroll = -(contentHeight - viewHeight);
+            float maxScroll = Math.min(0, -(contentHeight - viewHeight));
 
             scrollY.set(Math.max(maxScroll, Math.min(0, newScroll)));
         });
     }
 
-    public Panel getContentPanel() {
+    private static Panel createDefaultContentPanel() {
+        return Panel.create();
+    }
+
+    public BasePanel<?> getContentPanel() {
         return contentPanel;
     }
 
@@ -63,8 +72,10 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     public ScrollPanel setGap(float gap) {
         this.gap = gap;
-        this.contentPanel.setHeight(Constraints.sumOfChildrenHeight(0, this.gap));
-        this.contentPanel.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, this.gap));
+        if (this.contentPanel.getLayout() instanceof LinearLayout) {
+            this.contentPanel.setHeight(Constraints.sumOfChildrenHeight(0, this.gap));
+            this.contentPanel.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, this.gap));
+        }
         return this;
     }
 
@@ -77,8 +88,7 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
     public Component<?> hitTest(float x, float y) {
         if (this.isPointInside(x, y)) {
             Component<?> hit = super.hitTest(x, y);
-
-            if (hit == contentPanel) {
+            if (hit == this.contentPanel) {
                 return this;
             }
             return hit;

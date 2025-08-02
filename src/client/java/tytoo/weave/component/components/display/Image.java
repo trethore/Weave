@@ -24,15 +24,16 @@ public class Image extends BasePanel<Image> {
     private TextComponent labelPart;
     private float gap = 2;
 
-    protected Image(Identifier imageId) {
+    public Image(BaseImage<?> imagePart) {
         this.setLayout(LinearLayout.of(Orientation.VERTICAL, Alignment.CENTER, CrossAxisAlignment.STRETCH, gap));
         this.setHeight(Constraints.childBased());
-        this.imagePart = BaseImage.of(imageId).setLayoutData(LinearLayout.Data.grow(1));
-        this.addChild(imagePart);
+        this.imagePart = imagePart;
+        this.imagePart.setLayoutData(LinearLayout.Data.grow(1));
+        this.addChild(this.imagePart);
     }
 
     public static Image from(Identifier imageId) {
-        return new Image(imageId);
+        return new Image(BaseImage.of(imageId));
     }
 
     public static Image from(File file) {
@@ -69,6 +70,11 @@ public class Image extends BasePanel<Image> {
         if (labelIndex != -1) {
             this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
         }
+    }
+
+    @Nullable
+    public BaseImage<?> getImagePart() {
+        return this.imagePart;
     }
 
     public Image setLabel(String text, Styling style) {

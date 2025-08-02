@@ -1,5 +1,6 @@
 package tytoo.weave.animation;
 
+import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
@@ -28,66 +29,59 @@ public class AnimationBuilder<C extends Component<C>> {
         return this;
     }
 
-    private <T> void startAnimation(State<T> state, T toValue, PropertyInterpolator<T> interpolator, Consumer<T> onUpdate, String propertyKey) {
+    public <T> AnimationBuilder<C> animateProperty(State<T> state, T toValue, PropertyInterpolator<T> interpolator, @Nullable Consumer<T> onUpdate, String propertyKey) {
         if (onUpdate != null) {
             state.addListener(onUpdate);
         }
         Animation<T> animation = new Animation<>(state, toValue, duration, easing, interpolator, null);
         Animator.getInstance().add(new AnimationKey(component, propertyKey), animation);
+        return this;
     }
 
     public AnimationBuilder<C> width(float to) {
         State<Float> widthState = component.getAnimatedState("width", component.getWidth());
         component.setWidth((c, p) -> widthState.get());
-        startAnimation(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "width");
-        return this;
+        return animateProperty(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "width");
     }
 
     public AnimationBuilder<C> height(float to) {
         State<Float> heightState = component.getAnimatedState("height", component.getHeight());
         component.setHeight((c, p) -> heightState.get());
-        startAnimation(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "height");
-        return this;
+        return animateProperty(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "height");
     }
 
     public AnimationBuilder<C> x(float to) {
         State<Float> xState = component.getAnimatedState("x", component.getRawLeft());
         component.setX((c, pW, cW) -> xState.get());
-        startAnimation(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "x");
-        return this;
+        return animateProperty(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "x");
     }
 
     public AnimationBuilder<C> y(float to) {
         State<Float> yState = component.getAnimatedState("y", component.getRawTop());
         component.setY((c, pH, cH) -> yState.get());
-        startAnimation(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "y");
-        return this;
+        return animateProperty(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "y");
     }
 
     public AnimationBuilder<C> opacity(float to) {
-        startAnimation(component.getOpacityState(), to, Interpolators.FLOAT, null, "opacity");
-        return this;
+        return animateProperty(component.getOpacityState(), to, Interpolators.FLOAT, null, "opacity");
     }
 
     public AnimationBuilder<C> rotation(float to) {
-        startAnimation(component.getRotationState(), to, Interpolators.FLOAT, null, "rotation");
-        return this;
+        return animateProperty(component.getRotationState(), to, Interpolators.FLOAT, null, "rotation");
     }
 
     public AnimationBuilder<C> scale(float to) {
-        startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
-        startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
+        animateProperty(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
+        animateProperty(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
         return this;
     }
 
     public AnimationBuilder<C> scaleX(float to) {
-        startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
-        return this;
+        return animateProperty(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
     }
 
     public AnimationBuilder<C> scaleY(float to) {
-        startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
-        return this;
+        return animateProperty(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
     }
 
     public AnimationBuilder<C> color(Color to) {
@@ -96,16 +90,18 @@ public class AnimationBuilder<C extends Component<C>> {
 
         if (base instanceof ColorableRenderer colorable) {
             State<Color> colorState = component.getAnimatedState("color", colorable.getColor());
-            startAnimation(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
-            return this;
+            return animateProperty(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
         }
 
-        Color startColor = (base instanceof tytoo.weave.style.renderer.SolidColorRenderer scr) ? scr.getColor() : new Color(0, 0, 0, 0);
-        tytoo.weave.style.renderer.SolidColorRenderer animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
-        State<Color> colorState = component.getAnimatedState("color", startColor);
+        if (base == null) {
+            Color startColor = new Color(0, 0, 0, 0);
+            tytoo.weave.style.renderer.SolidColorRenderer animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
+            State<Color> colorState = component.getAnimatedState("color", startColor);
 
-        style.setBaseRenderer(animatedRenderer);
-        startAnimation(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
+            style.setBaseRenderer(animatedRenderer);
+            return animateProperty(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
+        }
+
         return this;
     }
 

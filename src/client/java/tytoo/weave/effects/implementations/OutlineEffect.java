@@ -8,9 +8,9 @@ import tytoo.weave.utils.render.Render2DUtils;
 import java.awt.*;
 
 public class OutlineEffect implements Effect {
-    private final Color color;
     private final float width;
     private final boolean inside;
+    private Color color;
 
     public OutlineEffect(Color color, float width, boolean inside) {
         this.color = color;
@@ -20,6 +20,14 @@ public class OutlineEffect implements Effect {
 
     public OutlineEffect(Color color, float width) {
         this(color, width, true);
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 
     @Override

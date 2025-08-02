@@ -79,6 +79,8 @@ public class TestGui extends WeaveScreen {
                             } else {
                                 imageDisplay.setImage(id).setColor(Color.WHITE);
                             }
+                            imageDisplay.setOpacity(1.0f);
+                            imageDisplay.setScale(1.0f);
                         }, McUtils.getMc().orElseThrow());
 
                     } catch (MalformedURLException | URISyntaxException e) {

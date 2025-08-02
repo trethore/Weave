@@ -31,6 +31,7 @@ public final class Render2DUtils {
             BufferRenderer.drawWithGlobalProgram(builtBuffer);
         }
         RenderSystem.disableBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     public static void enableScissor(DrawContext context, int x, int y, int width, int height) {

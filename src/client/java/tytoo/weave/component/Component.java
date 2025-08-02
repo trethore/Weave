@@ -9,6 +9,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import tytoo.weave.WeaveClient;
 import tytoo.weave.animation.AnimationBuilder;
+import tytoo.weave.animation.Animator;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -25,6 +26,7 @@ import tytoo.weave.layout.Layout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.EdgeInsets;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
@@ -39,6 +41,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected final State<Float> scaleX = new State<>(1.0f);
     protected final State<Float> scaleY = new State<>(1.0f);
     protected final State<Float> opacity = new State<>(1.0f);
+    private final Set<StyleState> activeStyleStates = new HashSet<>();
     protected Component<?> parent;
     protected List<Component<?>> children = new ArrayList<>();
     protected Constraints constraints = new Constraints(this);
@@ -68,6 +71,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
         this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
     }
+
 
     public <V> T setProperty(String key, V value) {
         if (this.finalProperties != null && this.finalProperties.contains(key)) {
@@ -408,6 +412,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public @Nullable Layout getLayout() {
+        return this.layout;
+    }
+
     public T setLayout(@Nullable Layout layout) {
         this.layout = layout;
         invalidateLayout();
@@ -578,6 +586,24 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 }).orElse(false);
     }
 
+    public Set<StyleState> getActiveStyleStates() {
+        return activeStyleStates;
+    }
+
+    public T addStyleState(StyleState state) {
+        if (activeStyleStates.add(state)) {
+            invalidateLayout();
+        }
+        return self();
+    }
+
+    public T removeStyleState(StyleState state) {
+        if (activeStyleStates.remove(state)) {
+            invalidateLayout();
+        }
+        return self();
+    }
+
     private Matrix4f getInverseTransformationMatrix() {
         Matrix4f matrix = new Matrix4f();
         float pivotX = getLeft() + getWidth() / 2;
@@ -685,7 +711,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public AnimationBuilder<T> animate() {
-        return new AnimationBuilder<>(self());
+        return Animator.getBuilderFor(self());
     }
 
     public Constraints getConstraints() {
