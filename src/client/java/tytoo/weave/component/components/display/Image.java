@@ -3,6 +3,7 @@ package tytoo.weave.component.components.display;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
+import tytoo.weave.WeaveClient;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -33,6 +34,7 @@ public class Image extends BasePanel<Image> {
     public static Image from(Identifier imageId) {
         return new Image(imageId);
     }
+
     public static Image from(File file) {
         return ImageManager.getIdentifierForFile(file)
                 .map(Image::from)
@@ -40,14 +42,14 @@ public class Image extends BasePanel<Image> {
     }
 
     public static Image from(URL url) {
-        Image image = Image.from(ImageManager.getPlaceholder()).setColor(new Color(128, 0, 128)); // Start with a placeholder
+        Image image = Image.from(ImageManager.getPlaceholder()).setColor(Color.WHITE);
         ImageManager.getIdentifierForUrl(url).whenCompleteAsync((id, throwable) -> {
             if (throwable != null) {
-                System.err.println("Weave: Failed to load image from URL " + url + ". Cause: " + throwable);
-                image.setColor(new Color(200, 0, 0));
+                WeaveClient.LOGGER.error("Failed to load image from URL {}.", url, throwable);
+                image.setImage(ImageManager.getPlaceholder()).setColor(Color.WHITE);
             } else {
                 image.setImage(id).setColor(Color.WHITE);
-                System.out.println("Weave: Loaded image from URL " + url + " with ID " + id);
+                WeaveClient.LOGGER.info("Loaded image from URL {} with ID {}", url, id);
             }
         }, McUtils.getMc().orElseThrow());
         return image;

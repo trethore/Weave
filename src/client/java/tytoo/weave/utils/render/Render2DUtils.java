@@ -21,7 +21,6 @@ public final class Render2DUtils {
 
     private static BufferBuilder setupRender(ShaderProgramKey shaderProgramKey, VertexFormat.DrawMode drawMode, VertexFormat vertexFormat) {
         RenderSystem.enableBlend();
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.setShader(shaderProgramKey);
         return Tessellator.getInstance().begin(drawMode, vertexFormat);
     }

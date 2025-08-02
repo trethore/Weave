@@ -1,23 +1,27 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
+import tytoo.weave.WeaveClient;
+import tytoo.weave.animation.Easing;
 import tytoo.weave.component.components.display.Image;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.TextField;
-import tytoo.weave.component.components.layout.*;
+import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.Styling;
+import tytoo.weave.utils.ImageManager;
+import tytoo.weave.utils.McUtils;
 
-import java.net.URI;
+import java.awt.*;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-
-
 
 public class TestGui extends WeaveScreen {
 
@@ -26,85 +30,64 @@ public class TestGui extends WeaveScreen {
     public TestGui() {
         super(Text.literal("Test GUI"));
 
-        window.setWidth(Constraints.pixels(350));
-        window.setHeight(Constraints.childBased());
-        window.setLayout(LinearLayout.of(
-                LinearLayout.Orientation.VERTICAL,
-                LinearLayout.Alignment.START,
-                10
-        ));
+        window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5));
+        window.setPadding(10);
 
-        Panel titlePanel = createTitlePanel();
-
-        Panel contentPanel = createContentPanel();
-
-        window.addChildren(titlePanel, contentPanel);
-    }
-
-    private Panel createTitlePanel() {
         Panel titlePanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
-                .setHeight(Constraints.pixels(50))
-                .setPadding(10);
-
-        ColorWave rainbowWave = new ColorWave(ColorWave.createRainbow(7), 2.0f);
-        TextComponent titleText = TextComponent.of("Weave UI Test")
-                .setX(Constraints.center())
-                .setY(Constraints.center())
-                .setScale(1.5f)
-                .setStyle(Styling.create().colorWave(rainbowWave));
-
-
-        titlePanel.addChild(titleText);
-        return titlePanel;
-    }
-
-    private Panel createContentPanel() {
-        Panel contentPanel = Panel.create()
-                .setWidth(Constraints.relative(1f))
                 .setHeight(Constraints.childBased(10))
-                .setLayout(LinearLayout.of(
-                        LinearLayout.Orientation.VERTICAL,
-                        LinearLayout.Alignment.CENTER,
-                        LinearLayout.CrossAxisAlignment.CENTER,
-                        10
-                ));
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER));
 
-        Panel inputPanel = Panel.create()
-                .setWidth(Constraints.relative(1f, -20))
-                .setHeight(Constraints.childBased())
-                .setLayout(LinearLayout.of(
-                        LinearLayout.Orientation.HORIZONTAL,
-                        LinearLayout.Alignment.CENTER,
-                        5
-                ));
+        TextComponent titleText = TextComponent.of("Weave Test UI")
+                .setStyle(Styling.create()
+                        .color(Color.BLACK)
+                        .shadow(true)
+                        .colorWave(new ColorWave(ColorWave.createRainbow(36), 2f)))
+                .setScale(1.5f);
+
+        titlePanel.addChildren(titleText);
+
+        Panel contentPanel = Panel.create()
+                .setWidth(Constraints.relative(1.0f))
+                .setPadding(10)
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, 5))
+                .setLayoutData(LinearLayout.Data.grow(1));
+
+        Image imageDisplay = Image.from(ImageManager.getPlaceholder())
+                .setWidth(Constraints.pixels(128))
+                .setHeight(Constraints.pixels(128));
 
         TextField urlInput = TextField.create()
-                .setLayoutData(LinearLayout.Data.grow(1))
-                .setPlaceholder("Enter Image URL...")
-                .bindText(textFieldState);
+                .bindText(textFieldState)
+                .setWidth(Constraints.relative(1.0f));
 
-        Panel imageHolderPanel = Panel.create()
-                .setWidth(Constraints.pixels(200))
-                .setHeight(Constraints.pixels(200));
-
-
-        Button loadImageButton = Button.of("Load Image")
+        Button loadButton = Button.of("Load Image")
+                .setWidth(Constraints.relative(1.0f))
                 .onClick(button -> {
                     try {
-                        URL imageUrl = URI.create(textFieldState.get()).toURL();
+                        URL url = new URI(textFieldState.get()).toURL();
+                        imageDisplay.setImage(ImageManager.getPlaceholder()).setColor(Color.WHITE);
 
-                        imageHolderPanel.removeAllChildren();
-                        Image newImage = Image.from(imageUrl).setWidth(Constraints.relative(1f)).setHeight(Constraints.relative(1f));
-                        imageHolderPanel.addChild(newImage);
-                    } catch (MalformedURLException | IllegalArgumentException e) {
-                        imageHolderPanel.removeAllChildren();
-                        System.err.println("Invalid URL: " + textFieldState.get());
+                        imageDisplay.animate()
+                                .duration(500L).easing(Easing.EASE_OUT_SINE).scale(1.5f).opacity(1f)
+                                .then(() -> imageDisplay.animate().duration(1000L).easing(Easing.EASE_IN_SINE).scale(0.5f).opacity(0.2f));
+
+                        ImageManager.forceFetchIdentifierForUrl(url).whenCompleteAsync((id, throwable) -> {
+                            if (throwable != null) {
+                                WeaveClient.LOGGER.error("Failed to load image from URL {}.", url, throwable);
+                                imageDisplay.setImage(ImageManager.getPlaceholder()).setColor(Color.WHITE);
+                            } else {
+                                imageDisplay.setImage(id).setColor(Color.WHITE);
+                            }
+                        }, McUtils.getMc().orElseThrow());
+
+                    } catch (MalformedURLException | URISyntaxException e) {
+                        WeaveClient.LOGGER.warn("Invalid URL: {}", textFieldState.get(), e);
+                        imageDisplay.setImage(ImageManager.getPlaceholder()).setColor(Color.WHITE);
                     }
                 });
 
-        inputPanel.addChildren(urlInput, loadImageButton);
-        contentPanel.addChildren(inputPanel, imageHolderPanel);
-        return contentPanel;
+        contentPanel.addChildren(imageDisplay, urlInput, loadButton);
+        window.addChildren(titlePanel, contentPanel);
     }
 }

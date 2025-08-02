@@ -1,14 +1,13 @@
 package tytoo.weave.component;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.slf4j.Logger;
+import tytoo.weave.WeaveClient;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
@@ -36,7 +35,6 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
-    private static final Logger LOGGER = LogUtils.getLogger();
     protected final State<Float> rotation = new State<>(0.0f);
     protected final State<Float> scaleX = new State<>(1.0f);
     protected final State<Float> scaleY = new State<>(1.0f);
@@ -73,7 +71,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public <V> T setProperty(String key, V value) {
         if (this.finalProperties != null && this.finalProperties.contains(key)) {
-            LOGGER.warn("Attempted to modify final property '{}' on component {}. Operation ignored.", key, this.getClass().getSimpleName());
+            WeaveClient.LOGGER.warn("Attempted to modify final property '{}' on component {}. Operation ignored.", key, this.getClass().getSimpleName());
             return self();
         }
         if (this.customProperties == null) {
@@ -677,6 +675,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
             return clone;
         } catch (CloneNotSupportedException e) {
+            WeaveClient.LOGGER.error("Component is Cloneable but clone() failed for {}", this.getClass().getName(), e);
             throw new AssertionError("Component is Cloneable but clone() failed", e);
         }
     }

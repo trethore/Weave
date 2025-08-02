@@ -1,5 +1,6 @@
 package tytoo.weave.layout;
 
+import tytoo.weave.WeaveClient;
 import tytoo.weave.component.Component;
 
 import java.awt.*;
@@ -15,6 +16,7 @@ public class GridLayout implements Layout {
 
     private GridLayout(int columns, float horizontalGap, float verticalGap) {
         if (columns <= 0) {
+            WeaveClient.LOGGER.error("GridLayout column count must be positive, but was {}.", columns);
             throw new IllegalArgumentException("Number of columns must be positive.");
         }
         this.columns = columns;

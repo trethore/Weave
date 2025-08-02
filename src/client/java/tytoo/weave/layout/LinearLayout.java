@@ -1,5 +1,6 @@
 package tytoo.weave.layout;
 
+import tytoo.weave.WeaveClient;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
@@ -243,6 +244,7 @@ public class LinearLayout implements Layout {
     public record Data(float grow) {
         public Data {
             if (grow < 0) {
+                WeaveClient.LOGGER.error("LinearLayout grow factor cannot be negative, but was {}.", grow);
                 throw new IllegalArgumentException("Grow factor cannot be negative.");
             }
         }

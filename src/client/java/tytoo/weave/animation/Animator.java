@@ -1,5 +1,7 @@
 package tytoo.weave.animation;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,6 +27,8 @@ public class Animator {
     public void update() {
         if (animations.isEmpty()) return;
 
+        List<Animation<?>> finishedAnimations = null;
+
         var iterator = animations.entrySet().iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
@@ -32,6 +36,18 @@ public class Animator {
             animation.update();
             if (animation.isFinished()) {
                 iterator.remove();
+                if (animation.getOnFinish() != null) {
+                    if (finishedAnimations == null) {
+                        finishedAnimations = new ArrayList<>();
+                    }
+                    finishedAnimations.add(animation);
+                }
+            }
+        }
+
+        if (finishedAnimations != null) {
+            for (Animation<?> animation : finishedAnimations) {
+                animation.getOnFinish().accept(animation);
             }
         }
     }

@@ -19,7 +19,9 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
 
     public T onClick(Consumer<T> action) {
         if (action != null) {
-            this.onMouseClick(e -> { if (e.getButton() == 0) action.accept(self()); });
+            this.onMouseClick(e -> {
+                if (e.getButton() == 0) action.accept(self());
+            });
         }
         return self();
     }

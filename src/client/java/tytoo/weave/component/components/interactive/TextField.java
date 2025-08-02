@@ -28,12 +28,12 @@ import java.util.regex.Pattern;
 public class TextField extends InteractiveComponent<TextField> {
     private final List<Consumer<String>> textChangeListeners = new ArrayList<>();
     private final State<ValidationState> validationState = new State<>(ValidationState.NEUTRAL);
+    private final long cursorBlinkInterval;
     private String text = "";
     private int cursorPos = 0;
     private int selectionAnchor = 0;
     private int firstCharacterIndex = 0;
     private long lastActionTime = 0;
-    private final long cursorBlinkInterval;
     private int maxLength = -1;
     @Nullable
     private Predicate<String> charFilter = null;
@@ -64,20 +64,23 @@ public class TextField extends InteractiveComponent<TextField> {
         this.cursorBlinkInterval = ThemeManager.getStylesheet().getProperty(this.getClass(), "cursor.blink-interval", 500L);
     }
 
+    public static TextField create() {
+        return new TextField();
+    }
+
     @Override
     protected void updateVisualState() {
         Color outlineColor = switch (validationState.get()) {
-            case VALID -> ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.valid", new Color(0, 180, 0));
-            case INVALID -> ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.invalid", new Color(180, 0, 0));
+            case VALID ->
+                    ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.valid", new Color(0, 180, 0));
+            case INVALID ->
+                    ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.invalid", new Color(180, 0, 0));
             default -> isFocused()
                     ? ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.focused", new Color(160, 160, 160))
                     : ThemeManager.getStylesheet().getProperty(this.getClass(), "borderColor.unfocused", new Color(80, 80, 80));
         };
         this.setProperty("outline.color", outlineColor);
         if (isFocused()) this.lastActionTime = System.currentTimeMillis();
-    }
-    public static TextField create() {
-        return new TextField();
     }
 
     public TextField setMaxLength(int maxLength) {

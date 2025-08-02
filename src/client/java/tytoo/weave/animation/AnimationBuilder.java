@@ -2,6 +2,7 @@ package tytoo.weave.animation;
 
 import tytoo.weave.component.Component;
 import tytoo.weave.state.State;
+import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.renderer.ColorableRenderer;
 
 import java.awt.*;
@@ -12,7 +13,6 @@ public class AnimationBuilder<C extends Component<C>> {
     private final C component;
     private long duration = 250;
     private Easing.EasingFunction easing = Easing.EASE_OUT_SINE;
-    private Consumer<Animation<?>> onFinish;
 
     public AnimationBuilder(C component) {
         this.component = component;
@@ -28,85 +28,95 @@ public class AnimationBuilder<C extends Component<C>> {
         return this;
     }
 
-    public AnimationBuilder<C> onFinish(Consumer<Animation<?>> onFinish) {
-        this.onFinish = onFinish;
-        return this;
-    }
-
-    @SuppressWarnings("unchecked")
     private <T> void startAnimation(State<T> state, T toValue, PropertyInterpolator<T> interpolator, Consumer<T> onUpdate, String propertyKey) {
         if (onUpdate != null) {
             state.addListener(onUpdate);
         }
-        Consumer<Animation<T>> finalOnFinish = onFinish != null ? (Consumer<Animation<T>>) (Consumer<?>) onFinish : null;
-        Animation<T> animation = new Animation<>(state, toValue, duration, easing, interpolator, finalOnFinish);
+        Animation<T> animation = new Animation<>(state, toValue, duration, easing, interpolator, null);
         Animator.getInstance().add(new AnimationKey(component, propertyKey), animation);
     }
 
-    public void width(float to) {
+    public AnimationBuilder<C> width(float to) {
         State<Float> widthState = component.getAnimatedState("width", component.getWidth());
         component.setWidth((c, p) -> widthState.get());
         startAnimation(widthState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "width");
+        return this;
     }
 
-    public void height(float to) {
+    public AnimationBuilder<C> height(float to) {
         State<Float> heightState = component.getAnimatedState("height", component.getHeight());
         component.setHeight((c, p) -> heightState.get());
         startAnimation(heightState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "height");
+        return this;
     }
 
-    public void x(float to) {
+    public AnimationBuilder<C> x(float to) {
         State<Float> xState = component.getAnimatedState("x", component.getRawLeft());
         component.setX((c, pW, cW) -> xState.get());
         startAnimation(xState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "x");
+        return this;
     }
 
-    public void y(float to) {
+    public AnimationBuilder<C> y(float to) {
         State<Float> yState = component.getAnimatedState("y", component.getRawTop());
         component.setY((c, pH, cH) -> yState.get());
         startAnimation(yState, to, Interpolators.FLOAT, v -> component.invalidateLayout(), "y");
+        return this;
     }
 
-    public void opacity(float to) {
+    public AnimationBuilder<C> opacity(float to) {
         startAnimation(component.getOpacityState(), to, Interpolators.FLOAT, null, "opacity");
+        return this;
     }
 
-    public void rotation(float to) {
+    public AnimationBuilder<C> rotation(float to) {
         startAnimation(component.getRotationState(), to, Interpolators.FLOAT, null, "rotation");
+        return this;
     }
 
-    public void scale(float to) {
-        Animator.getInstance().stop(new AnimationKey(component, "scaleX"));
-        Animator.getInstance().stop(new AnimationKey(component, "scaleY"));
+    public AnimationBuilder<C> scale(float to) {
         startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
         startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
+        return this;
     }
 
-    public void scaleX(float to) {
+    public AnimationBuilder<C> scaleX(float to) {
         startAnimation(component.getScaleXState(), to, Interpolators.FLOAT, null, "scaleX");
+        return this;
     }
 
-    public void scaleY(float to) {
+    public AnimationBuilder<C> scaleY(float to) {
         startAnimation(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
+        return this;
     }
 
-    public void color(Color to) {
-        var base = component.getStyle().getBaseRenderer();
+    public AnimationBuilder<C> color(Color to) {
+        ComponentStyle style = component.getStyle();
+        var base = style.getBaseRenderer();
 
         if (base instanceof ColorableRenderer colorable) {
             State<Color> colorState = component.getAnimatedState("color", colorable.getColor());
             startAnimation(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
-            return;
+            return this;
         }
 
         Color startColor = (base instanceof tytoo.weave.style.renderer.SolidColorRenderer scr) ? scr.getColor() : new Color(0, 0, 0, 0);
-        var animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
+        tytoo.weave.style.renderer.SolidColorRenderer animatedRenderer = new tytoo.weave.style.renderer.SolidColorRenderer(startColor);
         State<Color> colorState = component.getAnimatedState("color", startColor);
 
-        component.getStyle().setBaseRenderer(animatedRenderer);
+        style.setBaseRenderer(animatedRenderer);
         startAnimation(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
+        return this;
     }
 
-    private record AnimationKey(Component<?> component, String property) {
+    public void then(Runnable onFinish) {
+        if (onFinish == null) return;
+        State<Byte> dummyState = new State<>((byte) 0);
+        Consumer<Animation<Byte>> onFinishConsumer = animation -> onFinish.run();
+        Animation<Byte> timer = new Animation<>(dummyState, (byte) 1, duration, Easing.LINEAR, (start, end, progress) -> start, onFinishConsumer);
+        Animator.getInstance().add(new AnimationKey(component, "then_timer_" + System.nanoTime()), timer);
+    }
+
+    public record AnimationKey(Component<?> component, String property) {
     }
 }

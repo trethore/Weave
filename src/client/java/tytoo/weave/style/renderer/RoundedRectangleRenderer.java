@@ -7,8 +7,8 @@ import tytoo.weave.utils.render.Render2DUtils;
 import java.awt.*;
 
 public class RoundedRectangleRenderer implements ColorableRenderer {
-    private Color color;
     private final float radius;
+    private Color color;
 
     public RoundedRectangleRenderer(Color color, float radius) {
         this.color = color;

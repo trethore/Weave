@@ -1,5 +1,6 @@
 package tytoo.weave;
 
+import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -7,8 +8,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
 
 public class WeaveClient implements ClientModInitializer {
+    public static final Logger LOGGER = LogUtils.getLogger();
     public static String MOD_ID = "weave-ui";
     private static KeyBinding openTestGuiKeybind;
 
@@ -22,7 +25,7 @@ public class WeaveClient implements ClientModInitializer {
                 if (client.currentScreen == null) client.setScreen(new tytoo.weave.screen.screens.TestGui());
             }
         });
-        System.out.println("WeaveClient initialized!");
+        LOGGER.info("Weave initialized!");
     }
 
     private void test() {

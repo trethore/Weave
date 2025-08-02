@@ -41,10 +41,12 @@ public class Animation<T> {
 
         if (progress >= 1.0f) {
             finished = true;
-            if (onFinish != null) {
-                onFinish.accept(this);
-            }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    Consumer<Animation<?>> getOnFinish() {
+        return (Consumer<Animation<?>>) (Consumer<?>) onFinish;
     }
 
     public void finish() {

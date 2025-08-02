@@ -1,11 +1,10 @@
 package tytoo.weave.utils;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
+import tytoo.weave.WeaveClient;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,29 +14,39 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @SuppressWarnings("unused")
 public class ImageManager {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final MinecraftClient client = MinecraftClient.getInstance();
-    private static final Map<File, Identifier> fileCache = new HashMap<>();
-    private static final Map<URI, CompletableFuture<Identifier>> urlCache = new HashMap<>();
+    private static final ConcurrentHashMap<File, Identifier> fileCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<URI, Identifier> urlToIdentifier = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<URI, CompletableFuture<Identifier>> urlOperations = new ConcurrentHashMap<>();
     private static final ExecutorService VIRTUAL_THREAD_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
     private static Identifier PLACEHOLDER_ID;
 
     public static Identifier getPlaceholder() {
         if (PLACEHOLDER_ID == null) {
-            NativeImage image = new NativeImage(NativeImage.Format.RGBA, 1, 1, false);
-            image.setColorArgb(0, 0, 0xFFFFFFFF);
+            int imageSize = 16;
+            NativeImage image = new NativeImage(NativeImage.Format.RGBA, imageSize, imageSize, false);
+            int magenta = 0xFFFF00FF;
+            int black = 0xFF000000;
+
+            for (int y = 0; y < imageSize; y++) {
+                for (int x = 0; x < imageSize; x++) {
+                    boolean isMagenta = ((x / 8) + (y / 8)) % 2 == 0;
+                    image.setColorArgb(x, y, isMagenta ? magenta : black);
+                }
+            }
+
             NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
-            PLACEHOLDER_ID = Identifier.of("weave", "placeholder_image");
+            texture.setFilter(false, false);
+            PLACEHOLDER_ID = Identifier.of(WeaveClient.MOD_ID, "missing.png");
             client.getTextureManager().registerTexture(PLACEHOLDER_ID, texture);
         }
         return PLACEHOLDER_ID;
@@ -55,27 +64,38 @@ public class ImageManager {
             NativeImage nativeImage = loadImage(inputStream);
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
 
-            Identifier id = Identifier.of("weave", "dynamic/" + UUID.randomUUID());
+            Identifier id = Identifier.of(WeaveClient.MOD_ID, "dynamic/" + UUID.randomUUID());
             client.getTextureManager().registerTexture(id, texture);
             fileCache.put(file, id);
             return Optional.of(id);
         } catch (Exception e) {
-            LOGGER.error("Failed to load image from file: {}", file.getAbsolutePath(), e);
+            WeaveClient.LOGGER.error("Failed to load image from file: {}", file.getAbsolutePath(), e);
             return Optional.empty();
         }
     }
 
     public static CompletableFuture<Identifier> getIdentifierForUrl(URL url) {
+        return getOrFetch(url, false);
+    }
+
+    public static CompletableFuture<Identifier> forceFetchIdentifierForUrl(URL url) {
+        return getOrFetch(url, true);
+    }
+
+    private static CompletableFuture<Identifier> getOrFetch(URL url, boolean force) {
         URI uri;
         try {
             uri = url.toURI();
         } catch (URISyntaxException e) {
-            LOGGER.error("Invalid URL syntax: {}", url, e);
+            WeaveClient.LOGGER.error("Invalid URL syntax: {}", url, e);
             return CompletableFuture.failedFuture(e);
         }
 
-        if (urlCache.containsKey(uri)) {
-            return urlCache.get(uri);
+        if (!force) {
+            CompletableFuture<Identifier> existingFuture = urlOperations.get(uri);
+            if (existingFuture != null) {
+                return existingFuture;
+            }
         }
 
         CompletableFuture<Identifier> future = CompletableFuture.supplyAsync(() -> {
@@ -89,13 +109,13 @@ public class ImageManager {
                 throw new UncheckedIOException("Failed to download or read image from URL: " + url, e);
             }
         }, VIRTUAL_THREAD_EXECUTOR).thenApplyAsync(nativeImage -> {
+            Identifier id = urlToIdentifier.computeIfAbsent(uri, u -> Identifier.of(WeaveClient.MOD_ID, "url/" + UUID.randomUUID()));
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
-            Identifier id = Identifier.of("weave", "dynamic/" + UUID.randomUUID());
             client.getTextureManager().registerTexture(id, texture);
             return id;
         }, client);
 
-        urlCache.put(uri, future);
+        urlOperations.put(uri, future);
         return future;
     }
 
@@ -107,7 +127,7 @@ public class ImageManager {
         try {
             return NativeImage.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
-            LOGGER.debug("Could not read image as PNG, falling back to ImageIO. Reason: {}", e.getMessage());
+            WeaveClient.LOGGER.debug("Could not read image as PNG, falling back to ImageIO. Reason: {}", e.getMessage());
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
             if (bufferedImage == null) {
                 throw new IOException("Failed to read image using ImageIO. Unsupported format?");

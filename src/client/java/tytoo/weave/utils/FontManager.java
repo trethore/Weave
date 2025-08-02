@@ -1,6 +1,5 @@
 package tytoo.weave.utils;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.*;
 import net.minecraft.util.Identifier;
@@ -9,7 +8,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.freetype.FT_Face;
 import org.lwjgl.util.freetype.FreeType;
-import org.slf4j.Logger;
+import tytoo.weave.WeaveClient;
 
 import java.io.File;
 import java.io.InputStream;
@@ -20,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public final class FontManager {
-    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<String, TextRenderer> FONT_CACHE = new ConcurrentHashMap<>();
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
@@ -38,7 +36,7 @@ public final class FontManager {
                 byte[] bytes = inputStream.readAllBytes();
                 return loadFromBytes(bytes, size, oversample, fontId, cacheKey);
             } catch (Exception e) {
-                LOGGER.error("Failed to load font from identifier: {}", fontId, e);
+                WeaveClient.LOGGER.error("Failed to load font from identifier: {}", fontId, e);
                 return Optional.empty();
             }
         });
@@ -46,7 +44,7 @@ public final class FontManager {
 
     public static Optional<TextRenderer> loadFromFile(File fontFile, float size, float oversample) {
         if (!fontFile.exists() || !fontFile.canRead()) {
-            LOGGER.error("Font file does not exist or cannot be read: {}", fontFile.getAbsolutePath());
+            WeaveClient.LOGGER.error("Font file does not exist or cannot be read: {}", fontFile.getAbsolutePath());
             return Optional.empty();
         }
 
@@ -60,7 +58,7 @@ public final class FontManager {
             Identifier dynamicId = Identifier.of("weave", "dynamic/font/" + fontFile.getName().toLowerCase().replaceAll("[^a-z0-9.\\-_]", "_"));
             return loadFromBytes(bytes, size, oversample, dynamicId, cacheKey);
         } catch (Exception e) {
-            LOGGER.error("Failed to load font from file: {}", fontFile.getAbsolutePath(), e);
+            WeaveClient.LOGGER.error("Failed to load font from file: {}", fontFile.getAbsolutePath(), e);
             return Optional.empty();
         }
     }
@@ -85,7 +83,7 @@ public final class FontManager {
             FONT_CACHE.put(cacheKey, renderer);
             return Optional.of(renderer);
         } catch (Exception e) {
-            LOGGER.error("Failed to load font from bytes for: {}", fontIdForStorage, e);
+            WeaveClient.LOGGER.error("Failed to load font from bytes for: {}", fontIdForStorage, e);
             if (face != null) try {
                 FreeType.FT_Done_Face(face);
             } catch (Exception ignored) {
