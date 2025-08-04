@@ -11,10 +11,10 @@ import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class ImageButton extends InteractiveComponent<ImageButton> {
-    protected float padding;
-    protected float gap;
-    protected BaseImage<?> image;
-    protected TextComponent<?> label;
+    private float padding;
+    private float gap;
+    private BaseImage<?> image;
+    private TextComponent<?> label;
 
     protected ImageButton() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
@@ -22,23 +22,23 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         this.gap = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_GAP, 4f);
 
         this.setWidth((c, p) -> {
-            float contentWidth = 0;
-            if (image != null) contentWidth += image.getMeasuredWidth();
-            if (label != null) {
-                if (image != null) contentWidth += gap;
-                contentWidth += label.getMeasuredWidth();
+            float contentWidth = 0f;
+            if (this.image != null) contentWidth += this.image.getMeasuredWidth();
+            if (this.label != null) {
+                if (this.image != null) contentWidth += this.gap;
+                contentWidth += this.label.getMeasuredWidth();
             }
-            return contentWidth + padding * 2;
+            return contentWidth + this.padding * 2;
         });
         this.setHeight((c, p) -> {
-            float contentHeight = 0;
-            if (image != null) {
-                contentHeight = image.getMeasuredHeight();
+            float contentHeight = 0f;
+            if (this.image != null) {
+                contentHeight = this.image.getMeasuredHeight();
             }
-            if (label != null) {
-                contentHeight = Math.max(contentHeight, label.getMeasuredHeight());
+            if (this.label != null) {
+                contentHeight = Math.max(contentHeight, this.label.getMeasuredHeight());
             }
-            return contentHeight + padding * 2;
+            return contentHeight + this.padding * 2;
         });
     }
 
@@ -55,37 +55,25 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     }
 
     private void updateLayout() {
-        if (this.image != null) {
-            this.image.setY(Constraints.center());
-            this.image.setX((c, pW, cW) -> {
-                float contentWidth = image.getMeasuredWidth();
-                if (label != null) {
-                    contentWidth += gap + label.getMeasuredWidth();
+        if (this.getImage() != null) {
+            this.getImage().setY(Constraints.center());
+            this.getImage().setX((c, pW, cW) -> {
+                float contentWidth = this.getImage().getMeasuredWidth();
+                if (this.getLabel() != null) {
+                    contentWidth += this.getGap() + this.getLabel().getMeasuredWidth();
                 }
-                return (pW - contentWidth) / 2;
+                return (pW - contentWidth) / 2f;
             });
         }
-        if (this.label != null) {
-            this.label.setY(Constraints.center());
-            this.label.setX((c, pW, cW) -> {
-                float imageWidth = image != null ? image.getMeasuredWidth() + gap : 0;
-                float totalContentWidth = imageWidth + label.getMeasuredWidth();
-                float startOffset = (pW - totalContentWidth) / 2;
+        if (this.getLabel() != null) {
+            this.getLabel().setY(Constraints.center());
+            this.getLabel().setX((c, pW, cW) -> {
+                float imageWidth = this.getImage() != null ? this.getImage().getMeasuredWidth() + this.getGap() : 0;
+                float totalContentWidth = imageWidth + this.getLabel().getMeasuredWidth();
+                float startOffset = (pW - totalContentWidth) / 2f;
                 return startOffset + imageWidth;
             });
         }
-    }
-
-    public ImageButton setImage(Identifier imageId) {
-        if (this.image == null) {
-            return setImageComponent(BaseImage.of(imageId)
-                    .setWidth(Constraints.pixels(16))
-                    .setHeight(Constraints.pixels(16)));
-        } else {
-            this.image.setImage(imageId);
-            invalidateLayout();
-        }
-        return this;
     }
 
     public ImageButton setImageComponent(BaseImage<?> imageComponent) {
@@ -97,16 +85,6 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
             this.addChild(this.image);
         }
         updateLayout();
-        return this;
-    }
-
-    public ImageButton setLabel(Text text) {
-        if (this.label == null) {
-            return setLabelComponent(SimpleTextComponent.of(text));
-        } else {
-            this.label.setText(text);
-            invalidateLayout();
-        }
         return this;
     }
 
@@ -125,10 +103,48 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         return this;
     }
 
+    public BaseImage<?> getImage() {
+        return image;
+    }
+
+    public ImageButton setImage(Identifier imageId) {
+        if (this.image == null) {
+            return setImageComponent(BaseImage.of(imageId)
+                    .setWidth(Constraints.pixels(16))
+                    .setHeight(Constraints.pixels(16)));
+        } else {
+            this.image.setImage(imageId);
+            invalidateLayout();
+        }
+        return this;
+    }
+
+    public TextComponent<?> getLabel() {
+        return label;
+    }
+
+    public ImageButton setLabel(Text text) {
+        if (this.label == null) {
+            return setLabelComponent(SimpleTextComponent.of(text));
+        } else {
+            this.label.setText(text);
+            invalidateLayout();
+        }
+        return this;
+    }
+
+    public float getPadding() {
+        return padding;
+    }
+
     public ImageButton setPadding(float padding) {
         this.padding = padding;
         invalidateLayout();
         return this;
+    }
+
+    public float getGap() {
+        return gap;
     }
 
     public ImageButton setGap(float gap) {

@@ -2,9 +2,9 @@ package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.TextArea;
+import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
-import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
@@ -21,31 +21,36 @@ public class TestGui extends WeaveScreen {
         window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5));
         window.setPadding(10);
 
+
         Panel titlePanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
-                .setHeight(Constraints.childBased(10));
+                .setHeight(Constraints.pixels(30));
 
         SimpleTextComponent titleText = SimpleTextComponent.of("Weave Test UI")
                 .setStyle(Styling.create()
-                        .color(Color.BLACK)
+                        .color(Color.WHITE)
                         .shadow(true)
                         .colorWave(new ColorWave(ColorWave.createRainbow(36), 2f)))
                 .setScale(1.5f);
-        titleText.setX(Constraints.center());
+        titleText.setX(Constraints.center()).setY(Constraints.center());
 
         titlePanel.addChildren(titleText);
 
-        ScrollPanel scrollPanel = new ScrollPanel();
-        scrollPanel.getContentPanel().setPadding(5);
+        Panel testPanel = Panel.create()
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5))
+                .setLayoutData(LinearLayout.Data.grow(1))
+                .setWidth(Constraints.relative(1.0f));
 
-        for (int i = 1; i <= 10; i++) {
-            Button button = Button.of("Button " + i)
-                    .setWidth(Constraints.relative(1.0f));
-            scrollPanel.getContentPanel().addChild(button);
-        }
+        TextField textField = TextField.create()
+                .setPlaceholder("This is a TextField...")
+                .setWidth(Constraints.relative(1.0f));
 
+        TextArea textArea = TextArea.create()
+                .setText("This is a TextArea.\nYou can write multiple lines here.")
+                .setWidth(Constraints.relative(1.0f))
+                .setLayoutData(LinearLayout.Data.grow(1));
 
-        scrollPanel.setLayoutData(LinearLayout.Data.grow(1));
-        window.addChildren(titlePanel, scrollPanel);
+        testPanel.addChildren(textField, textArea);
+        window.addChildren(titlePanel, testPanel);
     }
 }

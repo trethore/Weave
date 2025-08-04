@@ -14,11 +14,27 @@ public class RenderState {
     public final State<Float> scaleY = new State<>(1.0f);
     public final State<Float> opacity = new State<>(1.0f);
     private final Component<?> owner;
-    public boolean visible = true;
-    public List<Effect> effects = new ArrayList<>();
+    private boolean visible = true;
+    private List<Effect> effects = new ArrayList<>();
 
     public RenderState(Component<?> owner) {
         this.owner = owner;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
+
+    public List<Effect> getEffects() {
+        return effects;
+    }
+
+    public void setEffects(List<Effect> effects) {
+        this.effects = effects;
     }
 
     public void applyTransformations(DrawContext context) {

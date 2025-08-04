@@ -3,8 +3,6 @@ package tytoo.weave.component.components.interactive;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
@@ -51,17 +49,17 @@ public class TextArea extends BaseTextInput<TextArea> {
         int fontHeight = textRenderer.fontHeight;
         float lineHeight = fontHeight + 1;
 
-        if (text.isEmpty() && !isFocused()) {
-            if (this.placeholder != null) {
+        if (getText().isEmpty() && !isFocused()) {
+            if (getPlaceholder() != null) {
                 Color placeholderColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
-                context.drawText(textRenderer, this.placeholder, (int) getInnerLeft(), (int) (getInnerTop() + 3), placeholderColor.getRGB(), true);
+                context.drawText(textRenderer, getPlaceholder(), (int) getInnerLeft(), (int) (getInnerTop() + 3), placeholderColor.getRGB(), true);
             }
         } else {
             List<String> lines = getLines();
             float yOffset = getInnerTop() + scrollY + 1;
 
-            int selectionStart = Math.min(cursorPos, selectionAnchor);
-            int selectionEnd = Math.max(cursorPos, selectionAnchor);
+            int selectionStart = Math.min(getCursorPos(), getSelectionAnchor());
+            int selectionEnd = Math.max(getCursorPos(), getSelectionAnchor());
 
             Color selectionColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
 
@@ -113,10 +111,10 @@ public class TextArea extends BaseTextInput<TextArea> {
             }
 
             long cursorBlinkInterval = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.CURSOR_BLINK_INTERVAL, 500L);
-            boolean shouldDrawCursor = (System.currentTimeMillis() - this.lastActionTime) < cursorBlinkInterval || (System.currentTimeMillis() / cursorBlinkInterval) % 2 == 0;
+            boolean shouldDrawCursor = (System.currentTimeMillis() - getLastActionTime()) < cursorBlinkInterval || (System.currentTimeMillis() / cursorBlinkInterval) % 2 == 0;
 
             if (isFocused() && shouldDrawCursor && selectionStart == selectionEnd) {
-                Point pos2d = getCursorPos2D(cursorPos);
+                Point pos2d = getCursorPos2D(getCursorPos());
                 float lineY = yOffset + pos2d.y * lineHeight;
 
                 if (lineY + lineHeight >= getInnerTop() && lineY <= getInnerTop() + getInnerHeight()) {
@@ -143,13 +141,13 @@ public class TextArea extends BaseTextInput<TextArea> {
         boolean shift = Screen.hasShiftDown();
         switch (event.getKeyCode()) {
             case GLFW.GLFW_KEY_UP: {
-                Point pos2d = getCursorPos2D(this.cursorPos);
+                Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y - 1, this.lastDesiredCol), shift);
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN: {
-                Point pos2d = getCursorPos2D(this.cursorPos);
+                Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y + 1, this.lastDesiredCol), shift);
                 return true;
@@ -158,7 +156,7 @@ public class TextArea extends BaseTextInput<TextArea> {
                 if (Screen.hasControlDown()) {
                     setCursorPos(getWordSkipPosition(-1), shift);
                 } else {
-                    setCursorPos(this.cursorPos - 1, shift);
+                    setCursorPos(getCursorPos() - 1, shift);
                 }
                 this.lastDesiredCol = -1;
                 return true;
@@ -166,18 +164,18 @@ public class TextArea extends BaseTextInput<TextArea> {
                 if (Screen.hasControlDown()) {
                     setCursorPos(getWordSkipPosition(1), shift);
                 } else {
-                    setCursorPos(this.cursorPos + 1, shift);
+                    setCursorPos(getCursorPos() + 1, shift);
                 }
                 this.lastDesiredCol = -1;
                 return true;
             case GLFW.GLFW_KEY_HOME: {
-                Point pos2d = getCursorPos2D(this.cursorPos);
+                Point pos2d = getCursorPos2D(getCursorPos());
                 setCursorPos(getPosFrom2D(pos2d.y, 0), shift);
                 this.lastDesiredCol = -1;
                 return true;
             }
             case GLFW.GLFW_KEY_END: {
-                Point pos2d = getCursorPos2D(this.cursorPos);
+                Point pos2d = getCursorPos2D(getCursorPos());
                 String line = getLines().get(pos2d.y);
                 setCursorPos(getPosFrom2D(pos2d.y, line.length()), shift);
                 this.lastDesiredCol = -1;
@@ -220,8 +218,8 @@ public class TextArea extends BaseTextInput<TextArea> {
         int colIndex = textRenderer.trimToWidth(line, (int) (event.getX() - getInnerLeft())).length();
 
         int newPos = getPosFrom2D(lineIndex, colIndex);
-        this.cursorPos = Math.max(0, Math.min(this.text.length(), newPos));
-        this.lastActionTime = System.currentTimeMillis();
+        setCursorPos(Math.max(0, Math.min(this.getText().length(), newPos)));
+        setLastActionTime(System.currentTimeMillis());
         ensureCursorVisible();
     }
 
@@ -247,7 +245,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     private int getPosFrom2D(int line, int col) {
         List<String> lines = getLines();
         if (line >= lines.size()) {
-            return this.text.length();
+            return this.getText().length();
         }
         line = Math.max(0, Math.min(lines.size() - 1, line));
         String targetLine = lines.get(line);
@@ -278,7 +276,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     protected void ensureCursorVisible() {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
-        Point pos2d = getCursorPos2D(this.cursorPos);
+        Point pos2d = getCursorPos2D(getCursorPos());
         float cursorY = pos2d.y * lineHeight;
         if (cursorY + scrollY < 0) {
             scrollY = -cursorY;
@@ -290,31 +288,14 @@ public class TextArea extends BaseTextInput<TextArea> {
         clampScroll();
     }
 
-    public String getText() {
-        return this.text;
-    }
-
     @Override
     public TextArea setText(String text) {
         if (text == null) text = "";
-        if (this.text.equals(text)) return self();
+        if (this.getText().equals(text)) return self();
         internalSetText(text);
-        this.cursorPos = Math.min(this.cursorPos, text.length());
-        this.selectionAnchor = this.cursorPos;
+        setCursorPos(Math.min(getCursorPos(), text.length()));
+        setSelectionAnchor(getCursorPos());
         clampScroll();
-        return this;
-    }
-
-    public TextArea setMaxLength(int maxLength) {
-        this.maxLength = maxLength;
-        if (this.maxLength > 0 && this.text.length() > this.maxLength) {
-            setText(this.text.substring(0, this.maxLength));
-        }
-        return this;
-    }
-
-    public TextArea setPlaceholder(@Nullable Text placeholder) {
-        this.placeholder = placeholder;
         return this;
     }
 }

@@ -24,7 +24,7 @@ public class Canvas extends Component<Canvas> {
     public void draw(DrawContext context) {
         if (!this.isVisible()) return;
 
-        for (var effect : getRenderState().effects) {
+        for (var effect : getRenderState().getEffects()) {
             effect.beforeDraw(context, this);
         }
 
@@ -37,8 +37,8 @@ public class Canvas extends Component<Canvas> {
 
         drawChildren(context);
 
-        for (int i = getRenderState().effects.size() - 1; i >= 0; i--) {
-            getRenderState().effects.get(i).afterDraw(context, this);
+        for (int i = getRenderState().getEffects().size() - 1; i >= 0; i--) {
+            getRenderState().getEffects().get(i).afterDraw(context, this);
         }
     }
 }

@@ -10,8 +10,20 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class EventState {
-    public final Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
-    public boolean focusable = false;
+    private final Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
+    private boolean focusable = false;
+
+    public Map<EventType<?>, List<Consumer<?>>> getEventListeners() {
+        return eventListeners;
+    }
+
+    public boolean isFocusable() {
+        return focusable;
+    }
+
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
 
     @SuppressWarnings("unchecked")
     public <E extends Event> void fireEvent(E event) {

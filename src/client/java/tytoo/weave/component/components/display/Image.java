@@ -131,8 +131,8 @@ public class Image extends BasePanel<Image> {
         return this;
     }
 
-    public Image setRotation(int rotation) {
-        this.imagePart.setRotation(rotation);
+    public Image setImageRotation(int rotation) {
+        this.imagePart.setImageRotation(rotation);
         return this;
     }
 

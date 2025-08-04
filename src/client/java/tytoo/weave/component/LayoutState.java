@@ -7,15 +7,15 @@ import tytoo.weave.style.EdgeInsets;
 
 public class LayoutState {
     private final Component<?> owner;
-    public Constraints constraints;
-    public EdgeInsets margin = EdgeInsets.zero();
-    public EdgeInsets padding = EdgeInsets.zero();
+    private final Constraints constraints;
+    private EdgeInsets margin = EdgeInsets.zero();
+    private EdgeInsets padding = EdgeInsets.zero();
     @Nullable
-    public Layout layout;
-    public Object layoutData;
-    public float measuredWidth, measuredHeight;
-    public float finalX, finalY, finalWidth, finalHeight;
-    public boolean layoutDirty = true;
+    private Layout layout;
+    private Object layoutData;
+    private float measuredWidth, measuredHeight;
+    private float finalX, finalY, finalWidth, finalHeight;
+    private boolean layoutDirty = true;
 
     public LayoutState(Component<?> owner) {
         this.owner = owner;
@@ -29,10 +29,6 @@ public class LayoutState {
                 owner.getParent().getLayoutState().invalidateLayout();
             }
         }
-    }
-
-    public void setLayoutData(Object layoutData) {
-        this.layoutData = layoutData;
     }
 
     public float getLeft() {
@@ -69,5 +65,98 @@ public class LayoutState {
 
     public float getInnerHeight() {
         return getHeight() - padding.top() - padding.bottom();
+    }
+
+    public Constraints getConstraints() {
+        return constraints;
+    }
+
+    public EdgeInsets getMargin() {
+        return margin;
+    }
+
+    public void setMargin(EdgeInsets margin) {
+        this.margin = margin;
+    }
+
+    public EdgeInsets getPadding() {
+        return padding;
+    }
+
+    public void setPadding(EdgeInsets padding) {
+        this.padding = padding;
+    }
+
+    @Nullable
+    public Layout getLayout() {
+        return layout;
+    }
+
+    public void setLayout(@Nullable Layout layout) {
+        this.layout = layout;
+    }
+
+    public Object getLayoutData() {
+        return layoutData;
+    }
+
+    public void setLayoutData(Object layoutData) {
+        this.layoutData = layoutData;
+    }
+
+    public float getMeasuredWidth() {
+        return measuredWidth;
+    }
+
+    public void setMeasuredWidth(float measuredWidth) {
+        this.measuredWidth = measuredWidth;
+    }
+
+    public float getMeasuredHeight() {
+        return measuredHeight;
+    }
+
+    public void setMeasuredHeight(float measuredHeight) {
+        this.measuredHeight = measuredHeight;
+    }
+
+    public float getFinalX() {
+        return finalX;
+    }
+
+    public void setFinalX(float finalX) {
+        this.finalX = finalX;
+    }
+
+    public float getFinalY() {
+        return finalY;
+    }
+
+    public void setFinalY(float finalY) {
+        this.finalY = finalY;
+    }
+
+    public float getFinalWidth() {
+        return finalWidth;
+    }
+
+    public void setFinalWidth(float finalWidth) {
+        this.finalWidth = finalWidth;
+    }
+
+    public float getFinalHeight() {
+        return finalHeight;
+    }
+
+    public void setFinalHeight(float finalHeight) {
+        this.finalHeight = finalHeight;
+    }
+
+    public boolean isLayoutDirty() {
+        return layoutDirty;
+    }
+
+    public void setLayoutDirty(boolean layoutDirty) {
+        this.layoutDirty = layoutDirty;
     }
 }

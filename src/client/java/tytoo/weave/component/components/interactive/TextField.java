@@ -4,7 +4,6 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
@@ -34,21 +33,13 @@ public class TextField extends BaseTextInput<TextField> {
         return new TextField();
     }
 
-    public String getText() {
-        return this.text;
-    }
-
     @Override
     public TextField setText(String text) {
         if (text == null) text = "";
-        if (this.text.equals(text)) return self();
+        if (this.getText().equals(text)) return self();
         internalSetText(text);
-        setCursorPos(Math.min(this.cursorPos, text.length()), false);
+        setCursorPos(Math.min(getCursorPos(), text.length()), false);
         return self();
-    }
-
-    public int getCursorPos() {
-        return cursorPos;
     }
 
     public int getFirstCharacterIndex() {
@@ -56,7 +47,7 @@ public class TextField extends BaseTextInput<TextField> {
     }
 
     public boolean hasSelection() {
-        return this.cursorPos != selectionAnchor;
+        return getCursorPos() != getSelectionAnchor();
     }
 
     public CursorRenderer getCursorRenderer() {
@@ -68,14 +59,6 @@ public class TextField extends BaseTextInput<TextField> {
         return this;
     }
 
-    public TextField setMaxLength(int maxLength) {
-        this.maxLength = maxLength;
-        if (this.maxLength > 0 && this.text.length() > this.maxLength) {
-            setText(this.text.substring(0, this.maxLength));
-        }
-        return this;
-    }
-
     @Override
     public void draw(DrawContext context) {
         super.draw(context);
@@ -84,12 +67,12 @@ public class TextField extends BaseTextInput<TextField> {
         int fontHeight = textRenderer.fontHeight;
         float textY = this.getInnerTop() + (this.getInnerHeight() - (fontHeight - 1)) / 2.0f + 1f;
 
-        boolean hasText = !text.isEmpty();
+        boolean hasText = !getText().isEmpty();
         if (hasText || isFocused()) {
-            String visibleText = textRenderer.trimToWidth(this.text.substring(this.firstCharacterIndex), (int) this.getInnerWidth());
+            String visibleText = textRenderer.trimToWidth(getText().substring(this.firstCharacterIndex), (int) this.getInnerWidth());
 
-            int selectionStart = Math.min(this.cursorPos, this.selectionAnchor);
-            int selectionEnd = Math.max(this.cursorPos, this.selectionAnchor);
+            int selectionStart = Math.min(getCursorPos(), getSelectionAnchor());
+            int selectionEnd = Math.max(getCursorPos(), getSelectionAnchor());
             if (selectionStart != selectionEnd) {
                 int visibleSelectionStart = Math.max(0, selectionStart - this.firstCharacterIndex);
                 int visibleSelectionEnd = Math.min(visibleText.length(), selectionEnd - this.firstCharacterIndex);
@@ -119,10 +102,10 @@ public class TextField extends BaseTextInput<TextField> {
             }
 
         } else {
-            if (this.placeholder != null) {
+            if (getPlaceholder() != null) {
                 Color placeholderColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
                 if (placeholderColor != null) {
-                    context.drawText(textRenderer, this.placeholder, (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
+                    context.drawText(textRenderer, getPlaceholder(), (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
                 }
             }
         }
@@ -134,27 +117,22 @@ public class TextField extends BaseTextInput<TextField> {
     }
 
     public TextField setPlaceholder(String placeholder) {
-        return setPlaceholder(Text.of(placeholder));
-    }
-
-    public TextField setPlaceholder(@Nullable Text placeholder) {
-        this.placeholder = placeholder;
-        return this;
+        return setPlaceholder(placeholder == null ? null : Text.of(placeholder));
     }
 
     protected void onMouseClick(MouseClickEvent event) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        String visibleText = this.text.substring(this.firstCharacterIndex);
+        String visibleText = getText().substring(this.firstCharacterIndex);
         int i = (int) (event.getX() - this.getInnerLeft());
         setCursorPos(this.firstCharacterIndex + textRenderer.trimToWidth(visibleText, i).length(), Screen.hasShiftDown());
     }
 
     private void onMouseDragged(MouseDragEvent event) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        String visibleText = this.text.substring(this.firstCharacterIndex);
+        String visibleText = getText().substring(this.firstCharacterIndex);
         int i = (int) (event.getX() - this.getInnerLeft());
-        this.cursorPos = this.firstCharacterIndex + textRenderer.trimToWidth(visibleText, i).length();
-        this.lastActionTime = System.currentTimeMillis();
+        setCursorPos(this.firstCharacterIndex + textRenderer.trimToWidth(visibleText, i).length());
+        setLastActionTime(System.currentTimeMillis());
         ensureCursorVisible();
     }
 
@@ -163,13 +141,13 @@ public class TextField extends BaseTextInput<TextField> {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         int innerWidth = (int) getInnerWidth();
 
-        if (this.cursorPos < this.firstCharacterIndex) {
-            this.firstCharacterIndex = this.cursorPos;
+        if (getCursorPos() < this.firstCharacterIndex) {
+            this.firstCharacterIndex = getCursorPos();
         }
 
-        String visibleText = textRenderer.trimToWidth(this.text.substring(this.firstCharacterIndex), innerWidth);
-        if (this.cursorPos > this.firstCharacterIndex + visibleText.length()) {
-            this.firstCharacterIndex = this.cursorPos - visibleText.length();
+        String visibleText = textRenderer.trimToWidth(getText().substring(this.firstCharacterIndex), innerWidth);
+        if (getCursorPos() > this.firstCharacterIndex + visibleText.length()) {
+            this.firstCharacterIndex = getCursorPos() - visibleText.length();
         }
     }
 
@@ -181,7 +159,7 @@ public class TextField extends BaseTextInput<TextField> {
                 if (Screen.hasControlDown()) {
                     setCursorPos(super.getWordSkipPosition(-1), shift);
                 } else {
-                    setCursorPos(cursorPos - 1, shift);
+                    setCursorPos(getCursorPos() - 1, shift);
                 }
                 return true;
             }
@@ -189,7 +167,7 @@ public class TextField extends BaseTextInput<TextField> {
                 if (Screen.hasControlDown()) {
                     setCursorPos(super.getWordSkipPosition(1), shift);
                 } else {
-                    setCursorPos(cursorPos + 1, shift);
+                    setCursorPos(getCursorPos() + 1, shift);
                 }
                 return true;
             }
@@ -198,7 +176,7 @@ public class TextField extends BaseTextInput<TextField> {
                 return true;
             }
             case GLFW.GLFW_KEY_END -> {
-                setCursorPos(text.length(), shift);
+                setCursorPos(getText().length(), shift);
                 return true;
             }
         }

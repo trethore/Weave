@@ -19,17 +19,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public final class FontManager {
-    private static final Map<String, TextRenderer> FONT_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, CachedFont> FONT_CACHE = new ConcurrentHashMap<>();
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     private FontManager() {
     }
 
+    public static void closeAll() {
+        FONT_CACHE.values().forEach(CachedFont::close);
+        FONT_CACHE.clear();
+    }
+
     public static Optional<TextRenderer> loadFromIdentifier(Identifier fontId, float size, float oversample) {
         String cacheKey = "id:" + fontId + ":" + size + ":" + oversample;
-        if (FONT_CACHE.containsKey(cacheKey)) {
-            return Optional.of(FONT_CACHE.get(cacheKey));
-        }
+        if (FONT_CACHE.containsKey(cacheKey)) return Optional.of(FONT_CACHE.get(cacheKey).renderer);
 
         return client.getResourceManager().getResource(fontId).flatMap(resource -> {
             try (InputStream inputStream = resource.getInputStream()) {
@@ -49,9 +52,7 @@ public final class FontManager {
         }
 
         String cacheKey = "file:" + fontFile.getAbsolutePath() + ":" + size + ":" + oversample;
-        if (FONT_CACHE.containsKey(cacheKey)) {
-            return Optional.of(FONT_CACHE.get(cacheKey));
-        }
+        if (FONT_CACHE.containsKey(cacheKey)) return Optional.of(FONT_CACHE.get(cacheKey).renderer);
 
         try {
             byte[] bytes = Files.readAllBytes(fontFile.toPath());
@@ -64,11 +65,9 @@ public final class FontManager {
     }
 
     private static Optional<TextRenderer> loadFromBytes(byte[] fontBytes, float size, float oversample, Identifier fontIdForStorage, String cacheKey) {
-        ByteBuffer byteBuffer = null;
+        ByteBuffer byteBuffer = MemoryUtil.memAlloc(fontBytes.length).put(fontBytes).flip();
         FT_Face face = null;
         try {
-            byteBuffer = MemoryUtil.memAlloc(fontBytes.length).put(fontBytes).flip();
-
             try (MemoryStack memoryStack = MemoryStack.stackPush()) {
                 PointerBuffer pointerBuffer = memoryStack.mallocPointer(1);
                 synchronized (FreeTypeUtil.LOCK) {
@@ -79,27 +78,39 @@ public final class FontManager {
             }
 
             Font font = new TrueTypeFont(byteBuffer, face, size, oversample, 0.0f, 0.0f, "");
-            TextRenderer renderer = createTextRenderer(fontIdForStorage, font);
-            FONT_CACHE.put(cacheKey, renderer);
-            return Optional.of(renderer);
+            RendererAndStorage ras = createRendererAndStorage(fontIdForStorage, font);
+
+            FONT_CACHE.put(cacheKey, new CachedFont(ras.renderer(), ras.storage(), byteBuffer));
+            face = null;
+            return Optional.of(ras.renderer());
         } catch (Exception e) {
             WeaveClient.LOGGER.error("Failed to load font from bytes for: {}", fontIdForStorage, e);
-            if (face != null) try {
+            if (face != null) {
                 FreeType.FT_Done_Face(face);
-            } catch (Exception ignored) {
             }
-            if (byteBuffer != null) try {
-                MemoryUtil.memFree(byteBuffer);
-            } catch (Exception ignored) {
-            }
+            MemoryUtil.memFree(byteBuffer);
             return Optional.empty();
         }
     }
 
-    private static TextRenderer createTextRenderer(Identifier fontId, Font font) {
+    private static RendererAndStorage createRendererAndStorage(Identifier fontId, Font font) {
         FontStorage storage = new FontStorage(client.getTextureManager(), fontId);
         Font.FontFilterPair pair = new Font.FontFilterPair(font, new FontFilterType.FilterMap(Collections.emptyMap()));
         storage.setFonts(List.of(pair), Set.of());
-        return new TextRenderer(id -> storage, true);
+        TextRenderer renderer = new TextRenderer(id -> storage, true);
+        return new RendererAndStorage(renderer, storage);
+    }
+
+    private record RendererAndStorage(TextRenderer renderer, FontStorage storage) {
+    }
+
+    private record CachedFont(TextRenderer renderer, FontStorage storage,
+                              ByteBuffer fontBuffer) implements AutoCloseable {
+
+        @Override
+        public void close() {
+            this.storage.close();
+            MemoryUtil.memFree(this.fontBuffer);
+        }
     }
 }

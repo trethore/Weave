@@ -51,7 +51,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.onCharTyped(this::onCharTyped);
         this.onKeyPress(this::onKeyPressed);
 
-        this.onFocusGained(e -> this.lastActionTime = System.currentTimeMillis());
+        this.onFocusGained(e -> this.setLastActionTime(System.currentTimeMillis()));
 
         updateVisualState();
     }
@@ -98,9 +98,9 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         }
 
         if (InputHelper.isSelectAll()) {
-            this.selectionAnchor = 0;
-            this.cursorPos = this.text.length();
-            this.lastActionTime = System.currentTimeMillis();
+            setSelectionAnchor(0);
+            setCursorPos(this.getText().length());
+            setLastActionTime(System.currentTimeMillis());
             ensureCursorVisible();
             return true;
         }
@@ -122,13 +122,13 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         }
 
         if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE || event.getKeyCode() == GLFW.GLFW_KEY_DELETE) {
-            if (cursorPos != selectionAnchor) {
+            if (getCursorPos() != getSelectionAnchor()) {
                 write("");
-            } else if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE && cursorPos > 0) {
-                this.selectionAnchor = cursorPos - 1;
+            } else if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE && getCursorPos() > 0) {
+                setSelectionAnchor(getCursorPos() - 1);
                 write("");
-            } else if (event.getKeyCode() == GLFW.GLFW_KEY_DELETE && cursorPos < text.length()) {
-                this.selectionAnchor = cursorPos + 1;
+            } else if (event.getKeyCode() == GLFW.GLFW_KEY_DELETE && getCursorPos() < getText().length()) {
+                setSelectionAnchor(getCursorPos() + 1);
                 write("");
             }
             return true;
@@ -143,7 +143,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     private void saveStateToHistory() {
         redoStack.clear();
-        HistoryState currentState = new HistoryState(this.text, this.cursorPos, this.selectionAnchor);
+        HistoryState currentState = new HistoryState(this.getText(), this.getCursorPos(), this.getSelectionAnchor());
         if (!undoStack.isEmpty() && undoStack.getLast().equals(currentState)) {
             return;
         }
@@ -155,22 +155,22 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     private void applyHistoryState(HistoryState state) {
         internalSetText(state.text());
-        this.cursorPos = Math.min(state.cursorPos(), this.text.length());
-        this.selectionAnchor = Math.min(state.selectionAnchor(), this.text.length());
+        setCursorPos(Math.min(state.cursorPos(), this.getText().length()));
+        setSelectionAnchor(Math.min(state.selectionAnchor(), this.getText().length()));
         ensureCursorVisible();
-        this.lastActionTime = System.currentTimeMillis();
+        setLastActionTime(System.currentTimeMillis());
     }
 
     private void undo() {
         if (undoStack.isEmpty()) return;
-        redoStack.add(new HistoryState(this.text, this.cursorPos, this.selectionAnchor));
+        redoStack.add(new HistoryState(this.getText(), this.getCursorPos(), this.getSelectionAnchor()));
         HistoryState stateToApply = undoStack.removeLast();
         applyHistoryState(stateToApply);
     }
 
     private void redo() {
         if (redoStack.isEmpty()) return;
-        undoStack.add(new HistoryState(this.text, this.cursorPos, this.selectionAnchor));
+        undoStack.add(new HistoryState(this.getText(), this.getCursorPos(), this.getSelectionAnchor()));
         HistoryState stateToApply = redoStack.removeLast();
         applyHistoryState(stateToApply);
     }
@@ -178,23 +178,24 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     public void write(String newText) {
         beforeWriteAction();
 
-        if (this.charFilter != null) {
+        Predicate<String> currentFilter = this.getCharFilter();
+        if (currentFilter != null) {
             StringBuilder filteredText = new StringBuilder();
             for (char c : newText.toCharArray()) {
-                if (this.charFilter.test(String.valueOf(c))) {
+                if (currentFilter.test(String.valueOf(c))) {
                     filteredText.append(c);
                 }
             }
             newText = filteredText.toString();
         }
 
-        int start = Math.min(this.cursorPos, this.selectionAnchor);
-        int end = Math.max(this.cursorPos, this.selectionAnchor);
+        int start = Math.min(this.getCursorPos(), this.getSelectionAnchor());
+        int end = Math.max(this.getCursorPos(), this.getSelectionAnchor());
         int selectionLength = end - start;
-        int lengthWithoutSelection = this.text.length() - selectionLength;
+        int lengthWithoutSelection = this.getText().length() - selectionLength;
 
-        if (this.maxLength > 0 && lengthWithoutSelection + newText.length() > this.maxLength) {
-            int capacity = this.maxLength - lengthWithoutSelection;
+        if (getMaxLength() > 0 && lengthWithoutSelection + newText.length() > getMaxLength()) {
+            int capacity = getMaxLength() - lengthWithoutSelection;
             newText = capacity <= 0 ? "" : newText.substring(0, capacity);
         }
 
@@ -203,23 +204,23 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     protected int getWordSkipPosition(int direction) {
-        if (direction == 0) return this.cursorPos;
+        if (direction == 0) return this.getCursorPos();
 
-        int pos = this.cursorPos;
-        int len = this.text.length();
+        int pos = this.getCursorPos();
+        int len = this.getText().length();
 
         if (direction > 0) {
-            while (pos < len && !Character.isWhitespace(this.text.charAt(pos))) {
+            while (pos < len && !Character.isWhitespace(this.getText().charAt(pos))) {
                 pos++;
             }
-            while (pos < len && Character.isWhitespace(this.text.charAt(pos))) {
+            while (pos < len && Character.isWhitespace(this.getText().charAt(pos))) {
                 pos++;
             }
         } else {
-            while (pos > 0 && Character.isWhitespace(this.text.charAt(pos - 1))) {
+            while (pos > 0 && Character.isWhitespace(this.getText().charAt(pos - 1))) {
                 pos--;
             }
-            while (pos > 0 && !Character.isWhitespace(this.text.charAt(pos - 1))) {
+            while (pos > 0 && !Character.isWhitespace(this.getText().charAt(pos - 1))) {
                 pos--;
             }
         }
@@ -227,17 +228,17 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     protected void setCursorPos(int pos, boolean shiftPressed) {
-        this.cursorPos = Math.max(0, Math.min(this.text.length(), pos));
+        this.cursorPos = Math.max(0, Math.min(this.getText().length(), pos));
         if (!shiftPressed) {
-            this.selectionAnchor = this.cursorPos;
+            setSelectionAnchor(getCursorPos());
         }
-        this.lastActionTime = System.currentTimeMillis();
+        setLastActionTime(System.currentTimeMillis());
         ensureCursorVisible();
     }
 
     public String getSelectedText() {
-        int start = Math.min(this.cursorPos, this.selectionAnchor);
-        int end = Math.max(this.cursorPos, this.selectionAnchor);
+        int start = Math.min(getCursorPos(), getSelectionAnchor());
+        int end = Math.max(getCursorPos(), getSelectionAnchor());
         return this.text.substring(start, end);
     }
 
@@ -246,51 +247,22 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.text = newText;
         validate();
         for (Consumer<String> listener : textChangeListeners) {
-            listener.accept(this.text);
+            listener.accept(this.getText());
         }
     }
 
     private void validate() {
-        if (this.validator == null) {
+        Predicate<String> currentValidator = this.getValidator();
+        if (currentValidator == null) {
             this.validationState.set(ValidationState.NEUTRAL);
             return;
         }
-        this.validationState.set(this.validator.test(this.text) ? ValidationState.VALID : ValidationState.INVALID);
+        this.validationState.set(currentValidator.test(this.text) ? ValidationState.VALID : ValidationState.INVALID);
     }
 
     public T onTextChanged(Consumer<String> listener) {
         this.textChangeListeners.add(listener);
         return self();
-    }
-
-    public T setCharFilter(@Nullable Predicate<String> charFilter) {
-        this.charFilter = charFilter;
-        return self();
-    }
-
-    public T setCharFilter(String regex) {
-        if (regex == null) {
-            this.charFilter = null;
-            return self();
-        }
-        Pattern pattern = Pattern.compile(regex);
-        return setCharFilter(s -> pattern.matcher(s).matches());
-    }
-
-    public T setValidator(@Nullable Predicate<String> validator) {
-        this.validator = validator;
-        validate();
-        return self();
-    }
-
-    public T setValidator(@Nullable String regex) {
-        if (regex == null) {
-            this.validator = null;
-            this.validationState.set(ValidationState.NEUTRAL);
-            return self();
-        }
-        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
-        return setValidator(s -> pattern.matcher(s).matches());
     }
 
     public T bindText(State<String> state) {
@@ -312,10 +284,105 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         return self();
     }
 
-    public abstract T setText(String text);
-
     public long getLastActionTime() {
         return this.lastActionTime;
+    }
+
+    protected void setLastActionTime(long lastActionTime) {
+        this.lastActionTime = lastActionTime;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public abstract T setText(String text);
+
+    public int getCursorPos() {
+        return cursorPos;
+    }
+
+    protected void setCursorPos(int cursorPos) {
+        this.cursorPos = cursorPos;
+    }
+
+    public int getSelectionAnchor() {
+        return selectionAnchor;
+    }
+
+    protected void setSelectionAnchor(int selectionAnchor) {
+        this.selectionAnchor = selectionAnchor;
+    }
+
+    public int getMaxLength() {
+        return maxLength;
+    }
+
+    public T setMaxLength(int maxLength) {
+        this.maxLength = maxLength;
+        if (this.maxLength > 0 && this.getText().length() > this.maxLength) {
+            this.setText(this.getText().substring(0, this.maxLength));
+        }
+        return self();
+    }
+
+    @Nullable
+    protected Predicate<String> getCharFilter() {
+        return charFilter;
+    }
+
+    public T setCharFilter(@Nullable Predicate<String> charFilter) {
+        this.charFilter = charFilter;
+        return self();
+    }
+
+    public T setCharFilter(String regex) {
+        if (regex == null) {
+            this.charFilter = null;
+            return self();
+        }
+        Pattern pattern = Pattern.compile(regex);
+        return setCharFilter(s -> pattern.matcher(s).matches());
+    }
+
+    @Nullable
+    protected Predicate<String> getValidator() {
+        return validator;
+    }
+
+    public T setValidator(@Nullable Predicate<String> validator) {
+        this.validator = validator;
+        validate();
+        return self();
+    }
+
+    public T setValidator(@Nullable String regex) {
+        if (regex == null) {
+            this.validator = null;
+            this.validationState.set(ValidationState.NEUTRAL);
+            return self();
+        }
+        Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+        return setValidator(s -> pattern.matcher(s).matches());
+    }
+
+    @Nullable
+    public Text getPlaceholder() {
+        return placeholder;
+    }
+
+    public T setPlaceholder(@Nullable Text placeholder) {
+        this.placeholder = placeholder;
+        return self();
+    }
+
+    @Override
+    public T clone() {
+        T clone = super.clone();
+        if (this.validator != null) {
+            ((BaseTextInput<?>) clone).setValidator(this.validator);
+        }
+        return clone;
     }
 
     public enum ValidationState {

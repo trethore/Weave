@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class TextComponent<T extends TextComponent<T>> extends Component<T> {
-    protected List<TextSegment> segments = new ArrayList<>();
-    protected Styling baseStyle;
-    protected Styling hoverStyle;
+    private List<TextSegment> segments = new ArrayList<>();
+    private Styling baseStyle;
+    private Styling hoverStyle;
 
     private transient Text cachedText = null;
     private transient int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
@@ -28,10 +28,10 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     protected TextComponent(Text text) {
         parseText(text);
 
-        this.getLayoutState().constraints.setWidth((component, parentWidth) ->
+        this.getConstraints().setWidth((component, parentWidth) ->
                 (float) getEffectiveTextRenderer().getWidth(getDrawableText())
         );
-        this.getLayoutState().constraints.setHeight((component, parentHeight) ->
+        this.getConstraints().setHeight((component, parentHeight) ->
                 (float) getEffectiveTextRenderer().fontHeight
         );
     }
@@ -145,7 +145,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     public T clone() {
         T clone = super.clone();
 
-        clone.segments = new ArrayList<>(this.segments);
+        ((TextComponent<?>) clone).segments = new ArrayList<>(this.segments);
         ((TextComponent<?>) clone).invalidateCache();
         return clone;
     }
@@ -186,13 +186,21 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         return self();
     }
 
+    public Styling getBaseStyle() {
+        return this.baseStyle;
+    }
+
+    public List<TextSegment> getSegments() {
+        return segments;
+    }
+
+    public Styling getHoverStyle() {
+        return hoverStyle;
+    }
+
     public T setHoverStyle(Styling style) {
         this.hoverStyle = style;
         invalidateCache();
         return self();
-    }
-
-    public Styling getBaseStyle() {
-        return this.baseStyle;
     }
 }

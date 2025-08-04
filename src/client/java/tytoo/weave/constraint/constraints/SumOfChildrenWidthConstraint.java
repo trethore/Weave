@@ -31,7 +31,7 @@ public class SumOfChildrenWidthConstraint implements WidthConstraint {
         }
 
         totalWidth += Math.max(0, visibleCount - 1) * gap;
-        totalWidth += padding * 2 + component.getLayoutState().padding.left() + component.getLayoutState().padding.right();
+        totalWidth += padding * 2 + component.getLayoutState().getPadding().left() + component.getLayoutState().getPadding().right();
 
         return totalWidth;
     }

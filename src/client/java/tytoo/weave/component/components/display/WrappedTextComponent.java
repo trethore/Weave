@@ -12,7 +12,7 @@ public class WrappedTextComponent extends TextComponent<WrappedTextComponent> {
     protected WrappedTextComponent(Text text) {
         super(text);
 
-        this.getLayoutState().constraints.setHeight((c, parentHeight) -> {
+        this.getConstraints().setHeight((c, parentHeight) -> {
             TextRenderer textRenderer = getEffectiveTextRenderer();
 
             if (c.getMeasuredWidth() <= 0) {

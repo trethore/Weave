@@ -7,18 +7,18 @@ import tytoo.weave.utils.render.Render2DUtils;
 import java.awt.*;
 
 public class BaseImage<T extends BaseImage<T>> extends Component<T> {
-    protected Identifier imageId;
-    protected Color color = Color.WHITE;
-    protected int rotation = 0;
-    protected boolean parity = false;
+    private Identifier imageId;
+    private Color color = Color.WHITE;
+    private int imageRotation = 0;
+    private boolean parity = false;
 
     protected BaseImage(Identifier imageId) {
         this.imageId = imageId;
         this.style.setBaseRenderer((context, component) -> Render2DUtils.drawImage(
-                context, this.imageId,
+                context, this.getImageId(),
                 component.getLeft(), component.getTop(),
                 component.getLeft() + component.getWidth(), component.getTop() + component.getHeight(),
-                this.rotation, this.parity, this.color
+                this.getImageRotation(), this.isParity(), this.getColor()
         ));
     }
 
@@ -26,29 +26,41 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
         return new BaseImage<>(imageId);
     }
 
-    @SuppressWarnings("unchecked")
+    public Identifier getImageId() {
+        return imageId;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
     public T setColor(Color color) {
         this.color = color;
         invalidateLayout();
-        return (T) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
-    public T setRotation(int rotation) {
-        this.rotation = rotation;
-        return (T) this;
+    public int getImageRotation() {
+        return imageRotation;
     }
 
-    @SuppressWarnings("unchecked")
+    public T setImageRotation(int rotation) {
+        this.imageRotation = rotation;
+        return self();
+    }
+
+    public boolean isParity() {
+        return parity;
+    }
+
     public T setParity(boolean parity) {
         this.parity = parity;
-        return (T) this;
+        return self();
     }
 
-    @SuppressWarnings("unchecked")
     public T setImage(Identifier imageId) {
         this.imageId = imageId;
         invalidateLayout();
-        return (T) this;
+        return self();
     }
 }

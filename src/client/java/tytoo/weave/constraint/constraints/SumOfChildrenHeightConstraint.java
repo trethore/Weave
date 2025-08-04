@@ -31,7 +31,7 @@ public class SumOfChildrenHeightConstraint implements HeightConstraint {
         }
 
         totalHeight += Math.max(0, visibleCount - 1) * gap;
-        totalHeight += padding * 2 + component.getLayoutState().padding.top() + component.getLayoutState().padding.bottom();
+        totalHeight += padding * 2 + component.getLayoutState().getPadding().top() + component.getLayoutState().getPadding().bottom();
 
         return totalHeight;
     }
