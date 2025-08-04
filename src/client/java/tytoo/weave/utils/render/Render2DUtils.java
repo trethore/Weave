@@ -106,6 +106,48 @@ public final class Render2DUtils {
         endRender(bufferbuilder);
     }
 
+    public static void drawLine(DrawContext context, Vector2f p1, Vector2f p2, float thickness, Color color) {
+        Vector2f dir = new Vector2f(p2).sub(p1);
+        if (dir.lengthSquared() == 0) return;
+        dir.normalize();
+        Vector2f perp = new Vector2f(-dir.y, dir.x).mul(thickness / 2f);
+
+        Vector2f v1 = new Vector2f(p1).add(perp);
+        Vector2f v2 = new Vector2f(p2).add(perp);
+        Vector2f v3 = new Vector2f(p2).sub(perp);
+        Vector2f v4 = new Vector2f(p1).sub(perp);
+
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+
+        int colorRgb = color.getRGB();
+        buffer.vertex(matrix, v1.x, v1.y, 0).color(colorRgb);
+        buffer.vertex(matrix, v2.x, v2.y, 0).color(colorRgb);
+        buffer.vertex(matrix, v3.x, v3.y, 0).color(colorRgb);
+        buffer.vertex(matrix, v4.x, v4.y, 0).color(colorRgb);
+
+        endRender(buffer);
+    }
+
+    public static void drawLine(DrawContext context, Vector2f start, float angleDegrees, float length, float thickness, Color color) {
+        float angleRad = (float) Math.toRadians(angleDegrees);
+        float dx = (float) Math.cos(angleRad) * length;
+        float dy = (float) Math.sin(angleRad) * length;
+        Vector2f end = new Vector2f(start.x + dx, start.y + dy);
+        drawLine(context, start, end, thickness, color);
+    }
+
+    public static void drawTriangle(DrawContext context, Vector2f p1, Vector2f p2, Vector2f p3, Color color) {
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+
+        int colorRgb = color.getRGB();
+        buffer.vertex(matrix, p1.x, p1.y, 0).color(colorRgb);
+        buffer.vertex(matrix, p2.x, p2.y, 0).color(colorRgb);
+        buffer.vertex(matrix, p3.x, p3.y, 0).color(colorRgb);
+
+        endRender(buffer);
+    }
 
     public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, Color color) {
         drawCircle(context, centerX, centerY, radius, 0, 360, color);

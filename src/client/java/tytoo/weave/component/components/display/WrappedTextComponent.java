@@ -2,12 +2,12 @@ package tytoo.weave.component.components.display;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
-
-import java.util.List;
+import tytoo.weave.utils.render.RenderTextUtils;
 
 public class WrappedTextComponent extends TextComponent<WrappedTextComponent> {
+
+    private Alignment textAlignment = Alignment.LEFT;
 
     protected WrappedTextComponent(Text text) {
         super(text);
@@ -40,28 +40,27 @@ public class WrappedTextComponent extends TextComponent<WrappedTextComponent> {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         Text drawableText = getDrawableText();
         int wrapWidth = (int) (getMeasuredWidth() / getScaleX());
-
-        if (wrapWidth <= 0) {
-            return;
-        }
-
-        float drawX = getLeft();
-        float drawY = getTop();
-
-        List<OrderedText> lines = textRenderer.wrapLines(drawableText, wrapWidth);
-
-        float yOffset = drawY;
-        for (OrderedText line : lines) {
-            context.drawText(
-                    textRenderer,
-                    line,
-                    (int) drawX,
-                    (int) yOffset,
-                    -1,
-                    shadow
-            );
-            yOffset += textRenderer.fontHeight;
-        }
+        RenderTextUtils.drawWrappedText(context, textRenderer, drawableText, getLeft(), getTop(), wrapWidth, shadow, textAlignment);
     }
 
-}
+    public Alignment getAlignment() {
+        return this.textAlignment;
+    }
+
+    public WrappedTextComponent setAlignment(Alignment alignment) {
+        this.textAlignment = alignment;
+        return this;
+    }
+
+    @Override
+    public WrappedTextComponent clone() {
+        WrappedTextComponent clone = super.clone();
+        clone.textAlignment = this.textAlignment;
+        return clone;
+    }
+
+    public enum Alignment {
+        LEFT, CENTER, RIGHT
+    }
+
+}

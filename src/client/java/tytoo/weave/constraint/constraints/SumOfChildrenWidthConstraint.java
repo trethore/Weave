@@ -1,38 +1,38 @@
 package tytoo.weave.constraint.constraints;
 
 import tytoo.weave.component.Component;
-import tytoo.weave.constraint.HeightConstraint;
+import tytoo.weave.constraint.WidthConstraint;
 
 import java.util.List;
 
-public class SumOfChildrenHeightConstraint implements HeightConstraint {
+public class SumOfChildrenWidthConstraint implements WidthConstraint {
     private final float padding;
     private final float gap;
 
-    public SumOfChildrenHeightConstraint(float padding, float gap) {
+    public SumOfChildrenWidthConstraint(float padding, float gap) {
         this.padding = padding;
         this.gap = gap;
     }
 
     @Override
-    public float calculateHeight(Component<?> component, float parentHeight) {
+    public float calculateWidth(Component<?> component, float parentWidth) {
         List<Component<?>> children = component.getChildren();
         if (children.isEmpty()) {
             return padding * 2;
         }
 
-        float totalHeight = 0;
+        float totalWidth = 0;
         long visibleCount = 0;
         for (Component<?> child : children) {
             if (child.isVisible()) {
-                totalHeight += child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom();
+                totalWidth += child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right();
                 visibleCount++;
             }
         }
 
-        totalHeight += Math.max(0, visibleCount - 1) * gap;
-        totalHeight += padding * 2;
+        totalWidth += Math.max(0, visibleCount - 1) * gap;
+        totalWidth += padding * 2;
 
-        return totalHeight;
+        return totalWidth;
     }
 }

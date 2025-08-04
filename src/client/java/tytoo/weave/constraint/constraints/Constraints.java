@@ -56,6 +56,10 @@ public class Constraints {
         return new SumOfChildrenHeightConstraint(padding, gap);
     }
 
+    public static SumOfChildrenWidthConstraint sumOfChildrenWidth(float padding, float gap) {
+        return new SumOfChildrenWidthConstraint(padding, gap);
+    }
+
     public XConstraint getXConstraint() {
         return x;
     }

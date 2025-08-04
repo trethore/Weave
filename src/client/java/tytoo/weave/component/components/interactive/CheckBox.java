@@ -1,12 +1,8 @@
 package tytoo.weave.component.components.interactive;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.*;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.SimpleTextComponent;
@@ -15,8 +11,10 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
+import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -29,7 +27,9 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     private final List<Consumer<Boolean>> checkChangedListeners = new ArrayList<>();
     private final Panel box;
     @Nullable
-    private TextComponent<?> label;
+    private TextComponent<?> prefixLabel;
+    @Nullable
+    private TextComponent<?> suffixLabel;
     private boolean isUpdatingFromState = false;
 
     protected CheckBox() {
@@ -39,7 +39,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, gap));
         this.setHeight(Constraints.childBased());
-        this.setWidth(Constraints.childBased());
+        this.setWidth(Constraints.sumOfChildrenWidth(0, gap));
 
         this.box = Panel.create()
                 .setWidth(Constraints.pixels(boxSize))
@@ -52,7 +52,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         checkMark.setHeight(Constraints.relative(1.0f));
         this.box.addChild(checkMark);
 
-        this.addChild(this.box);
+        updateChildren();
 
         this.getStyle().setBaseRenderer(null);
 
@@ -66,11 +66,11 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     }
 
     public static CheckBox of(String label) {
-        return create().setLabel(Text.of(label));
+        return create().setSuffixLabel(Text.of(label));
     }
 
     public static CheckBox of(Text label) {
-        return create().setLabel(label);
+        return create().setSuffixLabel(label);
     }
 
     @Override
@@ -87,18 +87,50 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         this.box.animate().duration(duration).color(targetColor);
     }
 
-    @Nullable
-    public TextComponent<?> getLabel() {
-        return this.label;
+    private void updateChildren() {
+        this.removeAllChildren();
+        if (this.prefixLabel != null) {
+            prefixLabel.setMargin(1, Auto.AUTO);
+            this.addChild(this.prefixLabel);
+        }
+        this.addChild(this.box);
+        if (this.suffixLabel != null) {
+            suffixLabel.setMargin(1, Auto.AUTO);
+            this.addChild(this.suffixLabel);
+        }
     }
 
-    public CheckBox setLabel(Text text) {
-        if (this.label != null) {
-            this.removeChild(this.label);
-        }
-        this.label = SimpleTextComponent.of(text).setY(Constraints.center());
-        this.addChild(this.label);
-        invalidateLayout();
+    @Nullable
+    public TextComponent<?> getPrefixLabel() {
+        return this.prefixLabel;
+    }
+
+    public CheckBox setPrefixLabel(Text text) {
+        this.prefixLabel = SimpleTextComponent.of(text);
+        updateChildren();
+        return this;
+    }
+
+    public CheckBox clearPrefixLabel() {
+        this.prefixLabel = null;
+        updateChildren();
+        return this;
+    }
+
+    @Nullable
+    public TextComponent<?> getSuffixLabel() {
+        return this.suffixLabel;
+    }
+
+    public CheckBox setSuffixLabel(Text text) {
+        this.suffixLabel = SimpleTextComponent.of(text);
+        updateChildren();
+        return this;
+    }
+
+    public CheckBox clearSuffixLabel() {
+        this.suffixLabel = null;
+        updateChildren();
         return this;
     }
 
@@ -174,43 +206,14 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
             Color checkColor = stylesheet.get(CheckBox.class, StyleProps.CHECK_COLOR, Color.WHITE);
             float thickness = stylesheet.get(CheckBox.class, StyleProps.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
 
-            Vector2f p1 = new Vector2f(x + w * 0.2f, y + h * 0.5f);
-            Vector2f p2 = new Vector2f(x + w * 0.45f, y + h * 0.75f);
-            Vector2f p3 = new Vector2f(x + w * 0.8f, y + h * 0.25f);
+            float padding = w * 0.25f;
+            Vector2f p1 = new Vector2f(x + padding, y + padding);
+            Vector2f p2 = new Vector2f(x + w - padding, y + h - padding);
+            Vector2f p3 = new Vector2f(x + w - padding, y + padding);
+            Vector2f p4 = new Vector2f(x + padding, y + h - padding);
 
-            drawLine(context, p1, p2, thickness, checkColor);
-            drawLine(context, p2, p3, thickness, checkColor);
-        }
-
-        private void drawLine(DrawContext context, Vector2f p1, Vector2f p2, float thickness, Color color) {
-            Vector2f dir = new Vector2f(p2).sub(p1);
-            if (dir.lengthSquared() == 0) return;
-            dir.normalize();
-            Vector2f perp = new Vector2f(-dir.y, dir.x).mul(thickness / 2f);
-
-            Vector2f v1 = new Vector2f(p1).add(perp);
-            Vector2f v2 = new Vector2f(p2).add(perp);
-            Vector2f v3 = new Vector2f(p2).sub(perp);
-            Vector2f v4 = new Vector2f(p1).sub(perp);
-
-            RenderSystem.enableBlend();
-            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
-
-            Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
-            BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-
-            buffer.vertex(matrix, v1.x, v1.y, 0).color(color.getRGB());
-            buffer.vertex(matrix, v2.x, v2.y, 0).color(color.getRGB());
-            buffer.vertex(matrix, v3.x, v3.y, 0).color(color.getRGB());
-            buffer.vertex(matrix, v4.x, v4.y, 0).color(color.getRGB());
-
-            BuiltBuffer builtBuffer = buffer.end();
-            if (builtBuffer != null) {
-                BufferRenderer.drawWithGlobalProgram(builtBuffer);
-            }
-
-            RenderSystem.disableBlend();
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            Render2DUtils.drawLine(context, p1, p2, thickness, checkColor);
+            Render2DUtils.drawLine(context, p3, p4, thickness, checkColor);
         }
     }
 }

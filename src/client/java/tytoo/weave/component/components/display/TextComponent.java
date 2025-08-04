@@ -11,8 +11,8 @@ import tytoo.weave.style.Styling;
 import tytoo.weave.style.TextSegment;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.render.RenderTextUtils;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -126,32 +126,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-
-        double timeCycle = ((System.currentTimeMillis() / 1000.0) * wave.speed()) % 1.0;
-
-        if (getWidth() <= 0) {
-            if (!text.isEmpty()) {
-                Color color = wave.getColorAt((float) timeCycle);
-                context.drawText(textRenderer, text, (int) getLeft(), (int) getTop(), color.getRGB(), shadow);
-            }
-            return;
-        }
-
-        float x = getLeft();
-        for (int i = 0; i < text.length(); ++i) {
-            String character = String.valueOf(text.charAt(i));
-            float charWidth = textRenderer.getWidth(character);
-
-            float charCenterPos = (x - getLeft()) + charWidth / 2f;
-            float posCycle = charCenterPos / Math.max(1f, getWidth());
-
-            double totalCycle = timeCycle + posCycle;
-            float cyclicProgress = (float) (totalCycle % 1.0);
-
-            Color color = wave.getColorAt(cyclicProgress);
-            context.drawText(textRenderer, character, (int) x, (int) getTop(), color.getRGB(), shadow);
-            x += charWidth;
-        }
+        RenderTextUtils.drawWaveText(context, textRenderer, text, getLeft(), getTop(), getWidth(), shadow, wave);
     }
 
     private Styling getActiveStyling() {
@@ -163,14 +138,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        context.drawText(
-                textRenderer,
-                text,
-                (int) getLeft(),
-                (int) getTop(),
-                -1,
-                shadow
-        );
+        RenderTextUtils.drawText(context, textRenderer, text, getLeft(), getTop(), shadow);
     }
 
     @Override
@@ -227,4 +195,4 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     public Styling getBaseStyle() {
         return this.baseStyle;
     }
-}
+}

@@ -14,6 +14,7 @@ import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effect;
+import tytoo.weave.event.Event;
 import tytoo.weave.event.EventType;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;
@@ -397,7 +398,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
-    public <E extends tytoo.weave.event.Event> void fireEvent(E event) {
+    public <E extends Event> void fireEvent(E event) {
         this.eventState.fireEvent(event);
     }
 

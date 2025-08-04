@@ -76,7 +76,7 @@ public class UIManager {
         Component<?> target = root.hitTest((float) mouseX, (float) mouseY);
         if (target != null) {
             state.setClickedComponent(target);
-            bubbleEvent(target, new MouseClickEvent((float) mouseX, (float) mouseY, button), Component::fireEvent);
+            bubbleEvent(target, new MouseClickEvent(target, (float) mouseX, (float) mouseY, button), Component::fireEvent);
 
             Component<?> componentToFocus = target;
             while (componentToFocus != null && !componentToFocus.isFocusable()) {
@@ -101,14 +101,18 @@ public class UIManager {
     public static boolean onMouseDragged(Screen screen, double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Optional<UIState> stateOpt = getState(screen);
         if (stateOpt.isEmpty() || stateOpt.get().getClickedComponent() == null) return false;
-        bubbleEvent(stateOpt.get().getClickedComponent(), new MouseDragEvent((float) mouseX, (float) mouseY, deltaX, deltaY, button), Component::fireEvent);
+        Component<?> target = stateOpt.get().getClickedComponent();
+        bubbleEvent(target, new MouseDragEvent(target, (float) mouseX, (float) mouseY, deltaX, deltaY, button), Component::fireEvent);
         return true;
     }
 
     public static boolean onMouseScrolled(Screen screen, double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
         Optional<UIState> stateOpt = getState(screen);
-        if (stateOpt.isEmpty() || stateOpt.get().getHoveredComponent() == null) return false;
-        bubbleEvent(stateOpt.get().getHoveredComponent(), new MouseScrollEvent((float) mouseX, (float) mouseY, horizontalAmount, verticalAmount), Component::fireEvent);
+        if (stateOpt.isEmpty() || stateOpt.get().getRoot() == null) return false;
+
+        Component<?> target = stateOpt.get().getRoot().hitTest((float) mouseX, (float) mouseY);
+        if (target == null) return false;
+        bubbleEvent(target, new MouseScrollEvent(target, (float) mouseX, (float) mouseY, horizontalAmount, verticalAmount), Component::fireEvent);
         updateHoveredComponent(screen, mouseX, mouseY);
         return true;
     }
@@ -139,10 +143,10 @@ public class UIManager {
                 state.setHoveredComponent(newHovered);
 
                 if (oldHovered != null) {
-                    bubbleEvent(oldHovered, new MouseLeaveEvent((float) mouseX, (float) mouseY), Component::fireEvent);
+                    bubbleEvent(oldHovered, new MouseLeaveEvent(oldHovered, (float) mouseX, (float) mouseY), Component::fireEvent);
                 }
                 if (newHovered != null) {
-                    bubbleEvent(newHovered, new MouseEnterEvent((float) mouseX, (float) mouseY), Component::fireEvent);
+                    bubbleEvent(newHovered, new MouseEnterEvent(newHovered, (float) mouseX, (float) mouseY), Component::fireEvent);
                 }
             }
         });

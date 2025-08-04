@@ -1,5 +1,6 @@
 package tytoo.weave.event.mouse;
 
+import tytoo.weave.component.Component;
 import tytoo.weave.event.EventType;
 
 public class MouseDragEvent extends MouseEvent {
@@ -8,8 +9,8 @@ public class MouseDragEvent extends MouseEvent {
     private final double deltaY;
     private final int button;
 
-    public MouseDragEvent(float x, float y, double deltaX, double deltaY, int button) {
-        super(x, y);
+    public MouseDragEvent(Component<?> target, float x, float y, double deltaX, double deltaY, int button) {
+        super(target, x, y);
         this.deltaX = deltaX;
         this.deltaY = deltaY;
         this.button = button;

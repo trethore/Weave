@@ -1,13 +1,14 @@
 package tytoo.weave.event.mouse;
 
+import tytoo.weave.component.Component;
 import tytoo.weave.event.EventType;
 
 public class MouseClickEvent extends MouseEvent {
     public static final EventType<MouseClickEvent> TYPE = new EventType<>();
     private final int button;
 
-    public MouseClickEvent(float x, float y, int button) {
-        super(x, y);
+    public MouseClickEvent(Component<?> target, float x, float y, int button) {
+        super(target, x, y);
         this.button = button;
     }
 

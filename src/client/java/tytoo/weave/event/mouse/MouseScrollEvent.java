@@ -1,5 +1,6 @@
 package tytoo.weave.event.mouse;
 
+import tytoo.weave.component.Component;
 import tytoo.weave.event.EventType;
 
 public class MouseScrollEvent extends MouseEvent {
@@ -7,8 +8,8 @@ public class MouseScrollEvent extends MouseEvent {
     private final double scrollX;
     private final double scrollY;
 
-    public MouseScrollEvent(float x, float y, double scrollX, double scrollY) {
-        super(x, y);
+    public MouseScrollEvent(Component<?> target, float x, float y, double scrollX, double scrollY) {
+        super(target, x, y);
         this.scrollX = scrollX;
         this.scrollY = scrollY;
     }
