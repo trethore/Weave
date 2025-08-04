@@ -3,7 +3,6 @@ package tytoo.weave.screen.screens;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.interactive.Button;
-import tytoo.weave.component.components.interactive.CheckBox;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -45,11 +44,8 @@ public class TestGui extends WeaveScreen {
             scrollPanel.getContentPanel().addChild(button);
         }
 
-        CheckBox scrollbarToggle = CheckBox.of("Show Scrollbar");
-        scrollbarToggle.setChecked(true);
-        scrollbarToggle.setX(Constraints.center());
 
         scrollPanel.setLayoutData(LinearLayout.Data.grow(1));
-        window.addChildren(titlePanel, scrollbarToggle, scrollPanel);
+        window.addChildren(titlePanel, scrollPanel);
     }
 }

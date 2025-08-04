@@ -404,11 +404,12 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public Component<?> hitTest(float x, float y) {
         if (!isPointInside(x, y)) return null;
-
         for (Component<?> child : children.reversed()) {
             if (child.isVisible()) {
                 Component<?> hit = child.hitTest(x, y);
-                if (hit != null) return hit;
+                if (hit != null) {
+                    return hit;
+                }
             }
         }
         return this;
@@ -500,16 +501,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public boolean isHovered() {
         return McUtils.getMc().map(mc -> mc.currentScreen)
                 .flatMap(UIManager::getState)
-                .map(state -> {
-                    Component<?> hovered = state.getHoveredComponent();
-                    if (hovered == null) {
-                        return false;
-                    }
-                    for (Component<?> c = hovered; c != null; c = c.getParent()) {
-                        if (c == this) return true;
-                    }
-                    return false;
-                }).orElse(false);
+                .map(state -> state.getHoveredComponent() == this)
+                .orElse(false);
     }
 
     public Set<StyleState> getActiveStyleStates() {

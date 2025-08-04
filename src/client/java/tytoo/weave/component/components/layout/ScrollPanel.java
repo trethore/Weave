@@ -86,13 +86,9 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     @Override
     public Component<?> hitTest(float x, float y) {
-        if (this.isPointInside(x, y)) {
-            Component<?> hit = super.hitTest(x, y);
-            if (hit == this.contentPanel) {
-                return this;
-            }
-            return hit;
+        if (!isPointInside(x, y)) {
+            return null;
         }
-        return null;
+        return super.hitTest(x, y);
     }
 }
