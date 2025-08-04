@@ -78,11 +78,16 @@ public class UIManager {
             state.setClickedComponent(target);
             bubbleEvent(target, new MouseClickEvent(target, (float) mouseX, (float) mouseY, button), Component::fireEvent);
 
-            Component<?> componentToFocus = target;
-            while (componentToFocus != null && !componentToFocus.isFocusable()) {
-                componentToFocus = componentToFocus.getParent();
+            Component<?> interactiveComponent = target;
+            while (interactiveComponent != null && !interactiveComponent.isFocusable()) {
+                interactiveComponent = interactiveComponent.getParent();
             }
-            setFocusedComponent(state, componentToFocus);
+
+            if (interactiveComponent != null && !interactiveComponent.getActiveStyleStates().contains(tytoo.weave.style.StyleState.DISABLED)) {
+                interactiveComponent.setStyleState(tytoo.weave.style.StyleState.ACTIVE, true);
+                state.setActiveComponent(interactiveComponent);
+            }
+            setFocusedComponent(state, interactiveComponent);
             return true;
         } else {
             setFocusedComponent(state, null);
@@ -90,12 +95,23 @@ public class UIManager {
         }
     }
 
-    public static boolean onMouseReleased(Screen screen) {
+    public static boolean onMouseReleased(Screen screen, double mouseX, double mouseY, int button) {
         Optional<UIState> stateOpt = getState(screen);
         if (stateOpt.isEmpty()) return false;
-        boolean hadClicked = stateOpt.get().getClickedComponent() != null;
-        stateOpt.get().setClickedComponent(null);
-        return hadClicked;
+        UIState state = stateOpt.get();
+
+        Component<?> clickedComponent = state.getClickedComponent();
+        if (clickedComponent != null) {
+            bubbleEvent(clickedComponent, new MouseReleaseEvent(clickedComponent, (float) mouseX, (float) mouseY, button), Component::fireEvent);
+            state.setClickedComponent(null);
+        }
+
+        Component<?> activeComponent = state.getActiveComponent();
+        if (activeComponent != null) {
+            activeComponent.setStyleState(tytoo.weave.style.StyleState.ACTIVE, false);
+            state.setActiveComponent(null);
+        }
+        return clickedComponent != null;
     }
 
     public static boolean onMouseDragged(Screen screen, double mouseX, double mouseY, int button, double deltaX, double deltaY) {

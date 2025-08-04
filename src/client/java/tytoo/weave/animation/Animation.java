@@ -33,6 +33,12 @@ public class Animation<T> {
     void update() {
         if (finished || startTime == -1) return;
 
+        if (duration <= 0) {
+            target.set(endValue);
+            finished = true;
+            return;
+        }
+
         long elapsed = System.currentTimeMillis() - startTime;
         float progress = Math.min(1.0f, (float) elapsed / duration);
         float easedProgress = easing.ease(progress);

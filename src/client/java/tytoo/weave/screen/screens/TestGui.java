@@ -1,10 +1,11 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
+import tytoo.weave.WeaveClient;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.TextArea;
-import tytoo.weave.component.components.interactive.TextField;
+import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
@@ -36,21 +37,19 @@ public class TestGui extends WeaveScreen {
 
         titlePanel.addChildren(titleText);
 
-        Panel testPanel = Panel.create()
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5))
+        ScrollPanel scrollPanel = new ScrollPanel()
                 .setLayoutData(LinearLayout.Data.grow(1))
-                .setWidth(Constraints.relative(1.0f));
-
-        TextField textField = TextField.create()
-                .setPlaceholder("This is a TextField...")
-                .setWidth(Constraints.relative(1.0f));
-
-        TextArea textArea = TextArea.create()
-                .setText("This is a TextArea.\nYou can write multiple lines here.")
                 .setWidth(Constraints.relative(1.0f))
-                .setLayoutData(LinearLayout.Data.grow(1));
+                .setGap(4);
 
-        testPanel.addChildren(textField, textArea);
-        window.addChildren(titlePanel, testPanel);
+        for (int i = 1; i <= 15; i++) {
+            final int buttonNum = i;
+            Button button = Button.of("Button " + buttonNum)
+                    .setWidth(Constraints.relative(1.0f))
+                    .onClick(b -> WeaveClient.LOGGER.info("Clicked button {}!", buttonNum));
+            scrollPanel.addChild(button);
+        }
+
+        window.addChildren(titlePanel, scrollPanel);
     }
 }

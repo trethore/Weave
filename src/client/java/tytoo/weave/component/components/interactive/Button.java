@@ -16,10 +16,10 @@ public class Button extends InteractiveComponent<Button> {
     }
 
     public static Button of(String text) {
-        return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()));
+        return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()).setHittable(false));
     }
 
     public static Button of(Text text) {
-        return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()));
+        return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()).setHittable(false));
     }
 }

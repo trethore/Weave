@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 public class EventState {
     private final Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     private boolean focusable = false;
+    private boolean hittable = true;
 
     public Map<EventType<?>, List<Consumer<?>>> getEventListeners() {
         return eventListeners;
@@ -23,6 +24,14 @@ public class EventState {
 
     public void setFocusable(boolean focusable) {
         this.focusable = focusable;
+    }
+
+    public boolean isHittable() {
+        return hittable;
+    }
+
+    public void setHittable(boolean hittable) {
+        this.hittable = hittable;
     }
 
     @SuppressWarnings("unchecked")

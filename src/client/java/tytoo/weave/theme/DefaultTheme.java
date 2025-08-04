@@ -38,6 +38,8 @@ public class DefaultTheme implements Theme {
         stylesheet.set(Button.class, StyleProps.COLOR_NORMAL, buttonNormalColor);
         stylesheet.set(Button.class, StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
         stylesheet.set(Button.class, StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
+        stylesheet.set(Button.class, StyleProps.COLOR_ACTIVE, new Color(60, 60, 60));
+        stylesheet.set(Button.class, StyleProps.COLOR_DISABLED, new Color(50, 50, 50, 150));
         stylesheet.set(Button.class, StyleProps.ANIMATION_DURATION, 150L);
         stylesheet.setStyleFor(Button.class, new ComponentStyle()
                 .setColor(stylesheet.get(Button.class, StyleProps.COLOR_NORMAL, buttonNormalColor))
@@ -47,6 +49,8 @@ public class DefaultTheme implements Theme {
         stylesheet.set(ImageButton.class, StyleProps.COLOR_NORMAL, imageButtonNormalColor);
         stylesheet.set(ImageButton.class, StyleProps.COLOR_HOVERED, new Color(120, 120, 120, 180));
         stylesheet.set(ImageButton.class, StyleProps.COLOR_FOCUSED, new Color(140, 140, 140, 180));
+        stylesheet.set(ImageButton.class, StyleProps.COLOR_ACTIVE, new Color(80, 80, 80, 180));
+        stylesheet.set(ImageButton.class, StyleProps.COLOR_DISABLED, new Color(50, 50, 50, 120));
         stylesheet.set(ImageButton.class, StyleProps.ANIMATION_DURATION, 150L);
         stylesheet.set(ImageButton.class, ImageButton.StyleProps.IMAGE_BUTTON_PADDING, 5f);
         stylesheet.set(ImageButton.class, ImageButton.StyleProps.IMAGE_BUTTON_GAP, 4f);
@@ -55,6 +59,11 @@ public class DefaultTheme implements Theme {
         );
 
         stylesheet.setStyleFor(TextField.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
+        stylesheet.set(TextField.class, StyleProps.COLOR_NORMAL, new Color(20, 20, 20));
+        stylesheet.set(TextField.class, StyleProps.COLOR_HOVERED, new Color(20, 20, 20));
+        stylesheet.set(TextField.class, StyleProps.COLOR_FOCUSED, new Color(20, 20, 20));
+        stylesheet.set(TextField.class, StyleProps.COLOR_ACTIVE, new Color(20, 20, 20));
+        stylesheet.set(TextField.class, StyleProps.COLOR_DISABLED, new Color(15, 15, 15, 150));
         stylesheet.set(TextField.class, TextField.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
         stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
         stylesheet.set(TextField.class, TextField.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
@@ -66,6 +75,11 @@ public class DefaultTheme implements Theme {
 
         // TextArea
         stylesheet.setStyleFor(TextArea.class, new ComponentStyle().setColor(new Color(20, 20, 20)));
+        stylesheet.set(TextArea.class, StyleProps.COLOR_NORMAL, new Color(20, 20, 20));
+        stylesheet.set(TextArea.class, StyleProps.COLOR_HOVERED, new Color(20, 20, 20));
+        stylesheet.set(TextArea.class, StyleProps.COLOR_FOCUSED, new Color(20, 20, 20));
+        stylesheet.set(TextArea.class, StyleProps.COLOR_ACTIVE, new Color(20, 20, 20));
+        stylesheet.set(TextArea.class, StyleProps.COLOR_DISABLED, new Color(15, 15, 15, 150));
         stylesheet.set(TextArea.class, TextArea.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
         stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
         stylesheet.set(TextArea.class, TextArea.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));

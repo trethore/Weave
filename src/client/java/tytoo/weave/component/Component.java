@@ -34,13 +34,14 @@ import tytoo.weave.utils.McUtils;
 import java.util.*;
 import java.util.function.Consumer;
 
+
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
     protected final LayoutState layoutState;
     protected final RenderState renderState;
     protected final EventState eventState;
 
-    private final Set<StyleState> activeStyleStates = new HashSet<>();
+    private final Set<StyleState> activeStyleStates = EnumSet.noneOf(StyleState.class);
     protected Component<?> parent;
     protected List<Component<?>> children = new LinkedList<>();
     protected ComponentStyle style;
@@ -318,6 +319,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return onEvent(MouseClickEvent.TYPE, listener);
     }
 
+    public T onMouseRelease(Consumer<MouseReleaseEvent> listener) {
+        return onEvent(MouseReleaseEvent.TYPE, listener);
+    }
+
     public T onMouseEnter(Consumer<MouseEnterEvent> listener) {
         return onEvent(MouseEnterEvent.TYPE, listener);
     }
@@ -348,6 +353,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T onFocusLost(Consumer<FocusLostEvent> listener) {
         return onEvent(FocusLostEvent.TYPE, listener);
+    }
+
+    public T onEvent(Consumer<tytoo.weave.event.Event> listener) {
+        return onEvent(tytoo.weave.event.Event.ANY, listener);
     }
 
     public <E extends tytoo.weave.event.Event> T onEvent(EventType<E> type, Consumer<E> listener) {
@@ -412,7 +421,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 }
             }
         }
-        return this;
+        return this.isHittable() ? this : null;
     }
 
     public boolean isFocusable() {
@@ -421,6 +430,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T setFocusable(boolean focusable) {
         this.eventState.setFocusable(focusable);
+        return self();
+    }
+
+    public boolean isHittable() {
+        return this.eventState.isHittable();
+    }
+
+    public T setHittable(boolean hittable) {
+        this.eventState.setHittable(hittable);
         return self();
     }
 
@@ -511,6 +529,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T addStyleState(StyleState state) {
         if (activeStyleStates.add(state)) {
+            onStyleStateChanged();
             invalidateLayout();
         }
         return self();
@@ -518,9 +537,18 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T removeStyleState(StyleState state) {
         if (activeStyleStates.remove(state)) {
+            onStyleStateChanged();
             invalidateLayout();
         }
         return self();
+    }
+
+    public T setStyleState(StyleState state, boolean enable) {
+        return enable ? addStyleState(state) : removeStyleState(state);
+    }
+
+    protected void onStyleStateChanged() {
+        // Subclasses can override this to react to state changes.
     }
 
     private Matrix4f getInverseTransformationMatrix() {

@@ -6,40 +6,20 @@ import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleProperty;
-import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class ImageButton extends InteractiveComponent<ImageButton> {
-    private float padding;
-    private float gap;
     private BaseImage<?> image;
     private TextComponent<?> label;
 
     protected ImageButton() {
-        Stylesheet stylesheet = ThemeManager.getStylesheet();
-        this.padding = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_PADDING, 5f);
-        this.gap = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_GAP, 4f);
-
-        this.setWidth((c, p) -> {
-            float contentWidth = 0f;
-            if (this.image != null) contentWidth += this.image.getMeasuredWidth();
-            if (this.label != null) {
-                if (this.image != null) contentWidth += this.gap;
-                contentWidth += this.label.getMeasuredWidth();
-            }
-            return contentWidth + this.padding * 2;
-        });
-        this.setHeight((c, p) -> {
-            float contentHeight = 0f;
-            if (this.image != null) {
-                contentHeight = this.image.getMeasuredHeight();
-            }
-            if (this.label != null) {
-                contentHeight = Math.max(contentHeight, this.label.getMeasuredHeight());
-            }
-            return contentHeight + this.padding * 2;
-        });
+        var stylesheet = ThemeManager.getStylesheet();
+        float padding = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_PADDING, 5f);
+        float gap = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_GAP, 4f);
+        this.setPadding(padding);
+        this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, gap));
     }
 
     public static ImageButton of(Identifier imageId) {
@@ -54,37 +34,19 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         return new ImageButton().setImage(imageId).setLabel(text);
     }
 
-    private void updateLayout() {
-        if (this.getImage() != null) {
-            this.getImage().setY(Constraints.center());
-            this.getImage().setX((c, pW, cW) -> {
-                float contentWidth = this.getImage().getMeasuredWidth();
-                if (this.getLabel() != null) {
-                    contentWidth += this.getGap() + this.getLabel().getMeasuredWidth();
-                }
-                return (pW - contentWidth) / 2f;
-            });
-        }
-        if (this.getLabel() != null) {
-            this.getLabel().setY(Constraints.center());
-            this.getLabel().setX((c, pW, cW) -> {
-                float imageWidth = this.getImage() != null ? this.getImage().getMeasuredWidth() + this.getGap() : 0;
-                float totalContentWidth = imageWidth + this.getLabel().getMeasuredWidth();
-                float startOffset = (pW - totalContentWidth) / 2f;
-                return startOffset + imageWidth;
-            });
-        }
-    }
-
     public ImageButton setImageComponent(BaseImage<?> imageComponent) {
         if (this.image != null) {
             this.removeChild(this.image);
         }
         this.image = imageComponent;
         if (this.image != null) {
-            this.addChild(this.image);
+            int labelIndex = this.label != null ? this.getChildren().indexOf(this.label) : -1;
+            if (labelIndex != -1) {
+                this.children.add(labelIndex, this.image);
+            } else {
+                this.addChild(this.image);
+            }
         }
-        updateLayout();
         return this;
     }
 
@@ -92,7 +54,6 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         if (this.label != null) this.removeChild(this.label);
         this.label = labelComponent;
         if (this.label != null) this.addChild(this.label);
-        updateLayout();
         return this;
     }
 
@@ -134,23 +95,20 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     }
 
     public float getPadding() {
-        return padding;
+        return this.getMargin().top();
     }
 
     public ImageButton setPadding(float padding) {
-        this.padding = padding;
-        invalidateLayout();
+        super.setPadding(padding);
         return this;
     }
 
     public float getGap() {
-        return gap;
+        return this.getLayout() instanceof LinearLayout linearLayout ? linearLayout.getGap() : 0;
     }
 
     public ImageButton setGap(float gap) {
-        this.gap = gap;
-        updateLayout();
-        invalidateLayout();
+        this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, gap));
         return this;
     }
 

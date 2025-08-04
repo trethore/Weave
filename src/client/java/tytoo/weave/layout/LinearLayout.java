@@ -46,6 +46,10 @@ public class LinearLayout implements Layout {
         return new Data(0);
     }
 
+    public float getGap() {
+        return gap;
+    }
+
     @Override
     public void arrangeChildren(Component<?> parent) {
         List<Component<?>> visibleChildren = parent.getChildren().stream()

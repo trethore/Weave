@@ -13,6 +13,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -58,7 +59,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
         this.onClick(c -> this.setChecked(!this.isChecked()));
 
-        updateVisualState();
+        updateVisualState(0L);
     }
 
     public static CheckBox create() {
@@ -77,12 +78,30 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     protected void updateVisualState() {
         var stylesheet = ThemeManager.getStylesheet();
         long duration = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
+        updateVisualState(duration);
+    }
+
+    protected void updateVisualState(long duration) {
+        var stylesheet = ThemeManager.getStylesheet();
 
         Color normalColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_NORMAL, new Color(80, 80, 80));
         Color hoveredColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
         Color focusedColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
+        Color activeColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_ACTIVE, new Color(60, 60, 60));
+        Color disabledColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_DISABLED, new Color(50, 50, 50, 150));
 
-        Color targetColor = isFocused() ? focusedColor : (isHovered() ? hoveredColor : normalColor);
+        Color targetColor;
+        if (!isEnabled()) {
+            targetColor = disabledColor;
+        } else if (getActiveStyleStates().contains(StyleState.ACTIVE)) {
+            targetColor = activeColor;
+        } else if (isFocused()) {
+            targetColor = focusedColor;
+        } else if (isHovered()) {
+            targetColor = hoveredColor;
+        } else {
+            targetColor = normalColor;
+        }
 
         this.box.animate().duration(duration).color(targetColor);
     }

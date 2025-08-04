@@ -12,6 +12,8 @@ public class UIState {
     private Component<?> clickedComponent;
     @Nullable
     private Component<?> focusedComponent;
+    @Nullable
+    private Component<?> activeComponent;
 
     @Nullable
     public Component<?> getRoot() {
@@ -47,5 +49,14 @@ public class UIState {
 
     public void setFocusedComponent(@Nullable Component<?> focusedComponent) {
         this.focusedComponent = focusedComponent;
+    }
+
+    @Nullable
+    public Component<?> getActiveComponent() {
+        return activeComponent;
+    }
+
+    public void setActiveComponent(@Nullable Component<?> activeComponent) {
+        this.activeComponent = activeComponent;
     }
 }

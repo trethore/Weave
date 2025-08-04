@@ -5,6 +5,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.Styling;
@@ -28,12 +29,17 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     protected TextComponent(Text text) {
         parseText(text);
 
-        this.getConstraints().setWidth((component, parentWidth) ->
-                (float) getEffectiveTextRenderer().getWidth(getDrawableText())
-        );
-        this.getConstraints().setHeight((component, parentHeight) ->
-                (float) getEffectiveTextRenderer().fontHeight
-        );
+        this.getConstraints().setWidth((component, parentWidth) -> {
+            Styling styling = getActiveStyling();
+            Float letterSpacing = styling != null ? styling.getLetterSpacing() : null;
+            return RenderTextUtils.getStyledTextWidth(getEffectiveTextRenderer(), getDrawableText(), letterSpacing);
+        });
+        this.getConstraints().setHeight((component, parentHeight) -> {
+            TextRenderer textRenderer = getEffectiveTextRenderer();
+            Styling styling = getActiveStyling();
+            float lineHeightMultiplier = styling != null && styling.getLineHeightMultiplier() != null ? styling.getLineHeightMultiplier() : 1.0f;
+            return (float) textRenderer.fontHeight * lineHeightMultiplier;
+        });
     }
 
     private void parseText(Text text) {
@@ -112,7 +118,8 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 for (TextSegment segment : segments) {
                     sb.append(segment.getText());
                 }
-                drawWaveText(context, sb.toString(), hasShadow(), colorWave);
+                Float letterSpacing = activeStyling.getLetterSpacing();
+                drawWaveText(context, sb.toString(), hasShadow(), colorWave, letterSpacing);
             } else {
                 drawScaledContent(context, getDrawableText(), hasShadow());
             }
@@ -124,9 +131,18 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         }
     }
 
-    private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave) {
+    @Override
+    public TextRenderer getEffectiveTextRenderer() {
+        Styling activeStyling = getActiveStyling();
+        if (activeStyling != null && activeStyling.getFont() != null) {
+            return activeStyling.getFont();
+        }
+        return super.getEffectiveTextRenderer();
+    }
+
+    private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave, @Nullable Float letterSpacing) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        RenderTextUtils.drawWaveText(context, textRenderer, text, getLeft(), getTop(), getWidth(), shadow, wave);
+        RenderTextUtils.drawWaveText(context, textRenderer, text, getLeft(), getTop(), getWidth(), shadow, wave, letterSpacing);
     }
 
     private Styling getActiveStyling() {
@@ -138,7 +154,9 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        RenderTextUtils.drawText(context, textRenderer, text, getLeft(), getTop(), shadow);
+        Styling styling = getActiveStyling();
+        Float letterSpacing = styling != null ? styling.getLetterSpacing() : null;
+        RenderTextUtils.drawText(context, textRenderer, text, getLeft(), getTop(), shadow, letterSpacing);
     }
 
     @Override

@@ -4,6 +4,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.components.display.WrappedTextComponent;
 import tytoo.weave.style.ColorWave;
 
@@ -15,15 +16,49 @@ public final class RenderTextUtils {
     private RenderTextUtils() {
     }
 
-    public static void drawText(DrawContext context, TextRenderer textRenderer, Text text, float x, float y, boolean shadow) {
-        context.drawText(
-                textRenderer,
-                text,
-                (int) x,
-                (int) y,
-                -1,
-                shadow
-        );
+    public static float getStyledTextWidth(TextRenderer textRenderer, Text text, @Nullable Float letterSpacing) {
+        if (letterSpacing == null || letterSpacing == 0) {
+            return textRenderer.getWidth(text);
+        }
+        final float[] width = {0f};
+        text.asOrderedText().accept((index, style, codePoint) -> {
+            Text charText = Text.literal(new String(Character.toChars(codePoint))).setStyle(style);
+            width[0] += textRenderer.getWidth(charText);
+            return true;
+        });
+        if (!text.getString().isEmpty()) {
+            width[0] += letterSpacing * (text.getString().length() - 1);
+        }
+        return width[0];
+    }
+
+    public static void drawText(DrawContext context, TextRenderer textRenderer, Text text, float x, float y, boolean shadow, @Nullable Float letterSpacing) {
+        if (letterSpacing == null || letterSpacing == 0) {
+            context.drawText(
+                    textRenderer,
+                    text,
+                    (int) x,
+                    (int) y,
+                    -1,
+                    shadow
+            );
+            return;
+        }
+
+        final float[] currentX = {x};
+        text.asOrderedText().accept((index, style, codePoint) -> {
+            Text charText = Text.literal(new String(Character.toChars(codePoint))).setStyle(style);
+            context.drawText(
+                    textRenderer,
+                    charText,
+                    (int) currentX[0],
+                    (int) y,
+                    -1,
+                    shadow
+            );
+            currentX[0] += textRenderer.getWidth(charText) + letterSpacing;
+            return true;
+        });
     }
 
     public static void drawWrappedText(DrawContext context, TextRenderer textRenderer, Text text, float x, float y, float wrapWidth, boolean shadow, WrappedTextComponent.Alignment alignment) {
@@ -57,7 +92,7 @@ public final class RenderTextUtils {
         }
     }
 
-    public static void drawWaveText(DrawContext context, TextRenderer textRenderer, String text, float x, float y, float width, boolean shadow, ColorWave wave) {
+    public static void drawWaveText(DrawContext context, TextRenderer textRenderer, String text, float x, float y, float width, boolean shadow, ColorWave wave, @Nullable Float letterSpacing) {
         double timeCycle = ((System.currentTimeMillis() / 1000.0) * wave.speed()) % 1.0;
 
         if (width <= 0) {
@@ -81,7 +116,7 @@ public final class RenderTextUtils {
 
             Color color = wave.getColorAt(cyclicProgress);
             context.drawText(textRenderer, character, (int) currentX, (int) y, color.getRGB(), shadow);
-            currentX += charWidth;
+            currentX += charWidth + (letterSpacing != null ? letterSpacing : 0);
         }
     }
 }

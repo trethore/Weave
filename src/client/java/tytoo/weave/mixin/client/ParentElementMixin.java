@@ -22,7 +22,7 @@ public interface ParentElementMixin {
     @Inject(method = "mouseReleased", at = @At("HEAD"), cancellable = true)
     private void onMouseReleased(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (this instanceof Screen screen) {
-            if (UIManager.onMouseReleased(screen)) {
+            if (UIManager.onMouseReleased(screen, mouseX, mouseY, button)) {
                 cir.setReturnValue(true);
             }
         }

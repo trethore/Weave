@@ -35,7 +35,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     }
 
     private List<String> getLines() {
-        return Arrays.asList(this.text.split("\n", -1));
+        return Arrays.asList(getText().split("\n", -1));
     }
 
     @Override
@@ -218,7 +218,7 @@ public class TextArea extends BaseTextInput<TextArea> {
         int colIndex = textRenderer.trimToWidth(line, (int) (event.getX() - getInnerLeft())).length();
 
         int newPos = getPosFrom2D(lineIndex, colIndex);
-        setCursorPos(Math.max(0, Math.min(this.getText().length(), newPos)));
+        setCursorPos(Math.max(0, Math.min(getText().length(), newPos)), true);
         setLastActionTime(System.currentTimeMillis());
         ensureCursorVisible();
     }
@@ -245,7 +245,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     private int getPosFrom2D(int line, int col) {
         List<String> lines = getLines();
         if (line >= lines.size()) {
-            return this.getText().length();
+            return getText().length();
         }
         line = Math.max(0, Math.min(lines.size() - 1, line));
         String targetLine = lines.get(line);
@@ -291,11 +291,18 @@ public class TextArea extends BaseTextInput<TextArea> {
     @Override
     public TextArea setText(String text) {
         if (text == null) text = "";
-        if (this.getText().equals(text)) return self();
+        if (getText().equals(text)) return self();
         internalSetText(text);
-        setCursorPos(Math.min(getCursorPos(), text.length()));
-        setSelectionAnchor(getCursorPos());
+        setCursorPos(Math.min(getCursorPos(), text.length()), false);
+        setSelectionAnchor(this.getCursorPos());
         clampScroll();
-        return this;
+        return self();
+    }
+
+    @Override
+    public void arrange(float x, float y) {
+        super.arrange(x, y);
+        clampScroll();
+        ensureCursorVisible();
     }
 }
