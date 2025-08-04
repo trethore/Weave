@@ -7,19 +7,23 @@ import net.minecraft.text.Text;
 
 import java.util.List;
 
-public class WrappedTextComponent extends TextComponent {
+public class WrappedTextComponent extends TextComponent<WrappedTextComponent> {
+
     protected WrappedTextComponent(Text text) {
         super(text);
 
         this.getLayoutState().constraints.setHeight((c, parentHeight) -> {
             TextRenderer textRenderer = getEffectiveTextRenderer();
 
-            if (this.getWidth() <= 0 || this.scale <= 0) return 0f;
+            if (c.getMeasuredWidth() <= 0) {
+                return 0f;
+            }
 
             Text textToWrap = this.getDrawableText();
-            int wrapWidth = (int) (this.getWidth() / this.scale);
+
+            int wrapWidth = (int) (c.getMeasuredWidth() / c.getScaleX());
             int lines = textRenderer.wrapLines(textToWrap, wrapWidth).size();
-            return (float) lines * textRenderer.fontHeight * this.scale;
+            return (float) lines * textRenderer.fontHeight;
         });
     }
 
@@ -34,17 +38,30 @@ public class WrappedTextComponent extends TextComponent {
     @Override
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
+        Text drawableText = getDrawableText();
+        int wrapWidth = (int) (getMeasuredWidth() / getScaleX());
 
-        int wrapWidth = (int) (this.getWidth() / this.scale);
-        if (wrapWidth <= 0) return;
-        List<OrderedText> lines = textRenderer.wrapLines(text, wrapWidth);
+        if (wrapWidth <= 0) {
+            return;
+        }
 
-        int yOffset = 0;
+        float drawX = getLeft();
+        float drawY = getTop();
+
+        List<OrderedText> lines = textRenderer.wrapLines(drawableText, wrapWidth);
+
+        float yOffset = drawY;
         for (OrderedText line : lines) {
-            context.drawText(textRenderer,
+            context.drawText(
+                    textRenderer,
                     line,
-                    0, yOffset, -1, shadow);
+                    (int) drawX,
+                    (int) yOffset,
+                    -1,
+                    shadow
+            );
             yOffset += textRenderer.fontHeight;
         }
     }
-}
+
+}

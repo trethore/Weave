@@ -678,19 +678,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         if (wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
             h = hc.calculateHeight(this, availableHeight);
-            this.layoutState.measuredHeight = h;
+            this.layoutState.measuredHeight = this.layoutState.constraints.clampHeight(h);
             w = wc.calculateWidth(this, availableWidth);
-        } else if (hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
+            this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
+        } else { // This also handles (hc is aspect, wc is not) and (neither is aspect)
             w = wc.calculateWidth(this, availableWidth);
-            this.layoutState.measuredWidth = w;
+            this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
             h = hc.calculateHeight(this, availableHeight);
-        } else {
-            w = wc.calculateWidth(this, availableWidth);
-            h = hc.calculateHeight(this, availableHeight);
+            this.layoutState.measuredHeight = this.layoutState.constraints.clampHeight(h);
         }
-
-        this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
-        this.layoutState.measuredHeight = this.layoutState.constraints.clampHeight(h);
 
         if (!widthDependsOnChildren && !heightDependsOnChildren) {
             float horizontalPadding = this.layoutState.padding.left() + this.layoutState.padding.right();

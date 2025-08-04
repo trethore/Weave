@@ -2,6 +2,7 @@ package tytoo.weave.animation;
 
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.renderer.ColorableRenderer;
@@ -61,6 +62,24 @@ public class AnimationBuilder<C extends Component<C>> {
     }
 
     public AnimationBuilder<C> color(Color to) {
+        if (component instanceof TextComponent<?> textComponent) {
+            tytoo.weave.style.Styling currentStyling = textComponent.getBaseStyle();
+            Color startColor = Color.WHITE;
+            if (currentStyling != null && currentStyling.getColor() != null) {
+                startColor = currentStyling.getColor();
+            }
+
+            State<Color> colorState = new State<>(startColor);
+            Consumer<Color> onUpdate = newColor -> {
+                tytoo.weave.style.Styling style = textComponent.getBaseStyle();
+                if (style == null) {
+                    style = tytoo.weave.style.Styling.create();
+                }
+                textComponent.setStyle(style.color(newColor));
+            };
+            return animateProperty(colorState, to, Interpolators.COLOR, onUpdate, "color");
+        }
+
         ComponentStyle style = component.getStyle();
         var base = style.getBaseRenderer();
 

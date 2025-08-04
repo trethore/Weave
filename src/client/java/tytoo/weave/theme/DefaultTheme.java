@@ -1,8 +1,8 @@
 package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
+import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.interactive.Button;
-import tytoo.weave.component.components.interactive.ImageButton;
 import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
@@ -74,6 +74,16 @@ public class DefaultTheme implements Theme {
         stylesheet.set(TextArea.class, TextArea.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
         stylesheet.set(TextArea.class, TextArea.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
         stylesheet.set(TextArea.class, TextArea.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
+
+        // CheckBox
+        stylesheet.set(CheckBox.class, StyleProps.COLOR_NORMAL, new Color(80, 80, 80));
+        stylesheet.set(CheckBox.class, StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
+        stylesheet.set(CheckBox.class, StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
+        stylesheet.set(CheckBox.class, CheckBox.StyleProps.CHECK_COLOR, Color.WHITE);
+        stylesheet.set(CheckBox.class, CheckBox.StyleProps.BOX_SIZE, 12f);
+        stylesheet.set(CheckBox.class, CheckBox.StyleProps.GAP, 4f);
+        stylesheet.set(CheckBox.class, CheckBox.StyleProps.CHECK_THICKNESS, 2f);
+
     }
 
     @Override

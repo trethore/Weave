@@ -1,5 +1,6 @@
 package tytoo.weave.component.components.display;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
@@ -8,6 +9,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.Styling;
 import tytoo.weave.style.TextSegment;
+import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
@@ -15,32 +17,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class TextComponent extends Component<TextComponent> {
+public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     protected List<TextSegment> segments = new ArrayList<>();
     protected Styling baseStyle;
     protected Styling hoverStyle;
-    protected float scale = 1.0f;
 
-    private Text cachedText = null;
-    private int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
+    private transient Text cachedText = null;
+    private transient int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
 
     protected TextComponent(Text text) {
         parseText(text);
 
         this.getLayoutState().constraints.setWidth((component, parentWidth) ->
-                getEffectiveTextRenderer().getWidth(getDrawableText()) * scale
+                (float) getEffectiveTextRenderer().getWidth(getDrawableText())
         );
         this.getLayoutState().constraints.setHeight((component, parentHeight) ->
-                (float) getEffectiveTextRenderer().fontHeight * scale
+                (float) getEffectiveTextRenderer().fontHeight
         );
-    }
-
-    public static TextComponent of(String text) {
-        return new TextComponent(Text.of(text));
-    }
-
-    public static TextComponent of(Text text) {
-        return new TextComponent(text);
     }
 
     private void parseText(Text text) {
@@ -97,54 +90,66 @@ public class TextComponent extends Component<TextComponent> {
 
     @Override
     public void draw(DrawContext context) {
-        Styling activeStyling = getActiveStyling();
-        ColorWave colorWave = activeStyling != null ? activeStyling.getColorWave() : null;
-
-        context.getMatrices().push();
-        context.getMatrices().translate(getLeft(), getTop(), 0);
-        context.getMatrices().scale(this.scale, this.scale, 1.0f);
-
-        if (colorWave != null) {
-            StringBuilder sb = new StringBuilder();
-            for (TextSegment segment : segments) {
-                sb.append(segment.getText());
-            }
-            drawWaveText(context, sb.toString(), hasShadow(), colorWave);
-        } else {
-            drawScaledContent(context, getDrawableText(), hasShadow());
+        if (!isVisible() || getOpacity() <= 0.001f) {
+            return;
         }
 
-        context.getMatrices().pop();
-        drawChildren(context);
+        float[] lastColor = RenderSystem.getShaderColor().clone();
+        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * getOpacity());
+
+        context.getMatrices().push();
+        try {
+            applyTransformations(context);
+
+            ComponentRenderer renderer = style.getRenderer(this);
+            if (renderer != null) renderer.render(context, this);
+
+            Styling activeStyling = getActiveStyling();
+            ColorWave colorWave = activeStyling != null ? activeStyling.getColorWave() : null;
+
+            if (colorWave != null) {
+                StringBuilder sb = new StringBuilder();
+                for (TextSegment segment : segments) {
+                    sb.append(segment.getText());
+                }
+                drawWaveText(context, sb.toString(), hasShadow(), colorWave);
+            } else {
+                drawScaledContent(context, getDrawableText(), hasShadow());
+            }
+
+            drawChildren(context);
+        } finally {
+            context.getMatrices().pop();
+            RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
+        }
     }
 
     private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
 
         double timeCycle = ((System.currentTimeMillis() / 1000.0) * wave.speed()) % 1.0;
-        float textWidth = textRenderer.getWidth(text);
 
-        if (textWidth <= 0) {
+        if (getWidth() <= 0) {
             if (!text.isEmpty()) {
                 Color color = wave.getColorAt((float) timeCycle);
-                context.drawText(textRenderer, text, 0, 0, color.getRGB(), shadow);
+                context.drawText(textRenderer, text, (int) getLeft(), (int) getTop(), color.getRGB(), shadow);
             }
             return;
         }
 
-        float x = 0;
+        float x = getLeft();
         for (int i = 0; i < text.length(); ++i) {
             String character = String.valueOf(text.charAt(i));
             float charWidth = textRenderer.getWidth(character);
 
-            float charCenterPos = x + charWidth / 2f;
-            float posCycle = charCenterPos / textWidth;
+            float charCenterPos = (x - getLeft()) + charWidth / 2f;
+            float posCycle = charCenterPos / Math.max(1f, getWidth());
 
             double totalCycle = timeCycle + posCycle;
             float cyclicProgress = (float) (totalCycle % 1.0);
 
             Color color = wave.getColorAt(cyclicProgress);
-            context.drawText(textRenderer, character, (int) x, 0, color.getRGB(), shadow);
+            context.drawText(textRenderer, character, (int) x, (int) getTop(), color.getRGB(), shadow);
             x += charWidth;
         }
     }
@@ -157,32 +162,36 @@ public class TextComponent extends Component<TextComponent> {
     }
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
+        TextRenderer textRenderer = getEffectiveTextRenderer();
         context.drawText(
-                getEffectiveTextRenderer(),
+                textRenderer,
                 text,
-                0, 0, -1, shadow
+                (int) getLeft(),
+                (int) getTop(),
+                -1,
+                shadow
         );
     }
 
     @Override
-    public TextComponent clone() {
-        TextComponent clone = super.clone();
+    public T clone() {
+        T clone = super.clone();
 
         clone.segments = new ArrayList<>(this.segments);
-        clone.invalidateCache();
+        ((TextComponent<?>) clone).invalidateCache();
         return clone;
     }
 
-    public TextComponent setText(Text text) {
+    public T setText(Text text) {
         parseText(text);
-        return this;
+        return self();
     }
 
-    public TextComponent setText(String text) {
+    public T setText(String text) {
         this.segments.clear();
         this.segments.add(new TextSegment(text, Styling.create()));
         invalidateCache();
-        return this;
+        return self();
     }
 
     public TextSegment append(String text) {
@@ -203,21 +212,19 @@ public class TextComponent extends Component<TextComponent> {
         return segment;
     }
 
-    public TextComponent setStyle(Styling style) {
+    public T setStyle(Styling style) {
         this.baseStyle = style;
         invalidateCache();
-        return this;
+        return self();
     }
 
-    public TextComponent setHoverStyle(Styling style) {
+    public T setHoverStyle(Styling style) {
         this.hoverStyle = style;
         invalidateCache();
-        return this;
+        return self();
     }
 
-    public TextComponent setScale(float scale) {
-        this.scale = scale;
-        invalidateLayout();
-        return this;
+    public Styling getBaseStyle() {
+        return this.baseStyle;
     }
-}
+}

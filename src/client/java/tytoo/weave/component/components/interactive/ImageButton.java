@@ -3,6 +3,7 @@ package tytoo.weave.component.components.interactive;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import tytoo.weave.component.components.display.BaseImage;
+import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.style.StyleProperty;
@@ -13,7 +14,7 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     protected float padding;
     protected float gap;
     protected BaseImage<?> image;
-    protected TextComponent label;
+    protected TextComponent<?> label;
 
     protected ImageButton() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
@@ -101,7 +102,7 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     public ImageButton setLabel(Text text) {
         if (this.label == null) {
-            return setLabelComponent(TextComponent.of(text));
+            return setLabelComponent(SimpleTextComponent.of(text));
         } else {
             this.label.setText(text);
             invalidateLayout();
@@ -109,7 +110,7 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         return this;
     }
 
-    public ImageButton setLabelComponent(TextComponent labelComponent) {
+    public ImageButton setLabelComponent(TextComponent<?> labelComponent) {
         if (this.label != null) this.removeChild(this.label);
         this.label = labelComponent;
         if (this.label != null) this.addChild(this.label);

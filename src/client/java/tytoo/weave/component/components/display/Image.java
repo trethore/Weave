@@ -21,7 +21,7 @@ import java.net.URL;
 
 public class Image extends BasePanel<Image> {
     private BaseImage<?> imagePart;
-    private TextComponent labelPart;
+    private TextComponent<?> labelPart;
     private float gap = 2;
 
     public Image(BaseImage<?> imagePart) {
@@ -68,7 +68,7 @@ public class Image extends BasePanel<Image> {
 
         int labelIndex = original.getChildren().indexOf(originalImage.labelPart);
         if (labelIndex != -1) {
-            this.labelPart = (TextComponent) this.getChildren().get(labelIndex);
+            this.labelPart = (TextComponent<?>) this.getChildren().get(labelIndex);
         }
     }
 
@@ -78,15 +78,15 @@ public class Image extends BasePanel<Image> {
     }
 
     public Image setLabel(String text, Styling style) {
-        return setLabel(TextComponent.of(text).setStyle(style));
+        return setLabel(SimpleTextComponent.of(text).setStyle(style));
     }
 
     public Image setLabel(Text text, Styling style) {
-        return setLabel(TextComponent.of(text).setStyle(style));
+        return setLabel(SimpleTextComponent.of(text).setStyle(style));
     }
 
     public Image clearLabel() {
-        return setLabel((TextComponent) null);
+        return setLabel((TextComponent<?>) null);
     }
 
     public Image setLabelScale(float scale) {
@@ -97,11 +97,11 @@ public class Image extends BasePanel<Image> {
     }
 
     @Nullable
-    public TextComponent getLabel() {
+    public TextComponent<?> getLabel() {
         return this.labelPart;
     }
 
-    public Image setLabel(TextComponent label) {
+    public Image setLabel(TextComponent<?> label) {
         if (this.labelPart != null) {
             this.removeChild(this.labelPart);
         }
@@ -113,11 +113,11 @@ public class Image extends BasePanel<Image> {
     }
 
     public Image setLabel(String text) {
-        return setLabel(TextComponent.of(text));
+        return setLabel(SimpleTextComponent.of(text));
     }
 
     public Image setLabel(Text text) {
-        return setLabel(TextComponent.of(text));
+        return setLabel(SimpleTextComponent.of(text));
     }
 
     public Image setGap(float gap) {
