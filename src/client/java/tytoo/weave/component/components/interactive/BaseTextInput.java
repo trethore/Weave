@@ -208,14 +208,14 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         int pos = this.cursorPos;
         int len = this.text.length();
 
-        if (direction > 0) { // Forward
+        if (direction > 0) {
             while (pos < len && !Character.isWhitespace(this.text.charAt(pos))) {
                 pos++;
             }
             while (pos < len && Character.isWhitespace(this.text.charAt(pos))) {
                 pos++;
             }
-        } else { // Backward
+        } else {
             while (pos > 0 && Character.isWhitespace(this.text.charAt(pos - 1))) {
                 pos--;
             }

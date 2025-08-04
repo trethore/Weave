@@ -524,16 +524,16 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     private Matrix4f getInverseTransformationMatrix() {
-        Matrix4f matrix = new Matrix4f(); // Start with identity
-        float pivotX = getLeft() + getWidth() / 2; // Use public API for position
+        Matrix4f matrix = new Matrix4f();
+        float pivotX = getLeft() + getWidth() / 2;
         float pivotY = getTop() + getHeight() / 2;
 
-        matrix.translate(pivotX, pivotY, 0); // Translate to pivot
-        matrix.rotateZ((float) Math.toRadians(getRotation())); // Rotate
-        matrix.scale(getScaleX(), getScaleY(), 1.0f); // Scale
-        matrix.translate(-pivotX, -pivotY, 0); // Translate back
+        matrix.translate(pivotX, pivotY, 0);
+        matrix.rotateZ((float) Math.toRadians(getRotation()));
+        matrix.scale(getScaleX(), getScaleY(), 1.0f);
+        matrix.translate(-pivotX, -pivotY, 0);
 
-        return matrix.invert(); // Return the inverse
+        return matrix.invert();
     }
 
     public boolean isPointInside(float x, float y) {
@@ -675,7 +675,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             this.layoutState.measuredHeight = this.layoutState.constraints.clampHeight(h);
             w = wc.calculateWidth(this, availableWidth);
             this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
-        } else { // This also handles (hc is aspect, wc is not) and (neither is aspect)
+        } else {
             w = wc.calculateWidth(this, availableWidth);
             this.layoutState.measuredWidth = this.layoutState.constraints.clampWidth(w);
             h = hc.calculateHeight(this, availableHeight);

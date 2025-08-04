@@ -9,6 +9,7 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
+import tytoo.weave.screen.screens.TestGui;
 
 public class WeaveClient implements ClientModInitializer {
     public static final Logger LOGGER = LogUtils.getLogger();
@@ -22,7 +23,7 @@ public class WeaveClient implements ClientModInitializer {
         }
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (openTestGuiKeybind != null && openTestGuiKeybind.wasPressed()) {
-                if (client.currentScreen == null) client.setScreen(new tytoo.weave.screen.screens.TestGui());
+                if (client.currentScreen == null) client.setScreen(new TestGui());
             }
         });
         LOGGER.info("Weave initialized!");

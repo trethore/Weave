@@ -9,6 +9,7 @@ import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
+import tytoo.weave.animation.Interpolators;
 import tytoo.weave.style.ColorWave;
 
 import java.awt.*;
@@ -234,7 +235,7 @@ public final class Render2DUtils {
         int[] quadOrder = {3, 2, 1, 0};
         for (int index : quadOrder) {
             float progress = (projections[index] - min) / range;
-            Color interpolated = tytoo.weave.animation.Interpolators.COLOR.interpolate(color1, color2, progress);
+            Color interpolated = Interpolators.COLOR.interpolate(color1, color2, progress);
             buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(interpolated.getRGB());
         }
         endRender(buffer);
