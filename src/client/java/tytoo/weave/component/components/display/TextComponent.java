@@ -107,7 +107,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         try {
             applyTransformations(context);
 
-            ComponentRenderer renderer = style.getRenderer(this);
+            ComponentRenderer renderer = getStyle().getRenderer(this);
             if (renderer != null) renderer.render(context, this);
 
             Styling activeStyling = getActiveStyling();

@@ -1,53 +1,75 @@
 package tytoo.weave.theme;
 
-import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.StyleState;
+import tytoo.weave.style.renderer.ComponentRenderer;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class Stylesheet {
-    private final Map<Class<? extends Component<?>>, ComponentStyle> styles = new HashMap<>();
-    private final Map<Class<? extends Component<?>>, Map<StyleProperty<?>, Object>> properties = new HashMap<>();
+    private final List<StyleRule> rules = new ArrayList<>();
 
-    public <T extends Component<T>> void setStyleFor(Class<T> componentClass, ComponentStyle style) {
-        styles.put(componentClass, style);
+    private static StyleProperty<ComponentRenderer> getPropertyForState(StyleState state) {
+        return switch (state) {
+            case NORMAL -> ComponentStyle.StyleProps.NORMAL_RENDERER;
+            case HOVERED -> ComponentStyle.StyleProps.HOVERED_RENDERER;
+            case FOCUSED -> ComponentStyle.StyleProps.FOCUSED_RENDERER;
+            case ACTIVE -> ComponentStyle.StyleProps.ACTIVE_RENDERER;
+            case DISABLED -> ComponentStyle.StyleProps.DISABLED_RENDERER;
+            case VALID -> ComponentStyle.StyleProps.VALID_RENDERER;
+            case INVALID -> ComponentStyle.StyleProps.INVALID_RENDERER;
+        };
     }
 
-    @Nullable
-    public ComponentStyle getStyleFor(Class<?> componentClass) {
-        Class<?> currentClass = componentClass;
-        while (currentClass != null && Component.class.isAssignableFrom(currentClass)) {
-            ComponentStyle style = styles.get(currentClass);
-            if (style != null) {
-                return style;
-            }
-            currentClass = currentClass.getSuperclass();
+    public void addRule(StyleRule rule) {
+        this.rules.add(rule);
+    }
+
+    public void clearRules() {
+        this.rules.clear();
+    }
+
+    public ComponentStyle resolveStyleFor(Component<?> component) {
+        ComponentStyle style = new ComponentStyle();
+
+        ComponentRenderer baseRenderer = get(component, ComponentStyle.StyleProps.BASE_RENDERER, null);
+        if (baseRenderer != null) {
+            style.setBaseRenderer(baseRenderer);
         }
-        return null;
-    }
 
-    public <T> void set(Class<? extends Component<?>> componentClass, StyleProperty<T> property, T value) {
-        properties.computeIfAbsent(componentClass, k -> new HashMap<>()).put(property, value);
+        for (StyleState state : StyleState.values()) {
+            StyleProperty<ComponentRenderer> prop = getPropertyForState(state);
+            ComponentRenderer stateRenderer = get(component, prop, null);
+            style.setRenderer(state, stateRenderer);
+        }
+        return style;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(Class<?> componentClass, StyleProperty<T> property, T defaultValue) {
-        Class<?> currentClass = componentClass;
-        while (currentClass != null && Component.class.isAssignableFrom(currentClass)) {
-            Map<StyleProperty<?>, Object> classProperties = properties.get(currentClass);
-            if (classProperties != null && classProperties.containsKey(property)) {
-                Object value = classProperties.get(property);
-                try {
-                    return (T) value;
-                } catch (ClassCastException e) {
-                    return defaultValue;
-                }
+    public <T> T get(Component<?> component, StyleProperty<T> property, T defaultValue) {
+        List<StyleRule> matchingRules = new ArrayList<>();
+        for (StyleRule rule : this.rules) {
+            if (rule.getSelector().matches(component) && rule.getProperties().containsKey(property)) {
+                matchingRules.add(rule);
             }
-            currentClass = currentClass.getSuperclass();
         }
-        return defaultValue;
+
+        if (matchingRules.isEmpty()) {
+            return defaultValue;
+        }
+
+        matchingRules.sort(Comparator.comparingInt(StyleRule::getSpecificity).reversed());
+
+        try {
+            return (T) matchingRules.getFirst().getProperties().get(property);
+        } catch (ClassCastException e) {
+            // This indicates a developer error in the stylesheet definition.
+            return defaultValue;
+        }
     }
 }

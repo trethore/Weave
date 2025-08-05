@@ -11,6 +11,7 @@ import tytoo.weave.event.focus.FocusLostEvent;
 import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.utils.McUtils;
 
 import java.util.Optional;
@@ -83,8 +84,8 @@ public class UIManager {
                 interactiveComponent = interactiveComponent.getParent();
             }
 
-            if (interactiveComponent != null && !interactiveComponent.getActiveStyleStates().contains(tytoo.weave.style.StyleState.DISABLED)) {
-                interactiveComponent.setStyleState(tytoo.weave.style.StyleState.ACTIVE, true);
+            if (interactiveComponent != null && !interactiveComponent.getActiveStyleStates().contains(StyleState.DISABLED)) {
+                interactiveComponent.setStyleState(StyleState.ACTIVE, true);
                 state.setActiveComponent(interactiveComponent);
             }
             setFocusedComponent(state, interactiveComponent);
@@ -108,7 +109,7 @@ public class UIManager {
 
         Component<?> activeComponent = state.getActiveComponent();
         if (activeComponent != null) {
-            activeComponent.setStyleState(tytoo.weave.style.StyleState.ACTIVE, false);
+            activeComponent.setStyleState(StyleState.ACTIVE, false);
             state.setActiveComponent(null);
         }
         return clickedComponent != null;

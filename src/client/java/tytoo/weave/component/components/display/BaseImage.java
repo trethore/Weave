@@ -14,7 +14,7 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
 
     protected BaseImage(Identifier imageId) {
         this.imageId = imageId;
-        this.style.setBaseRenderer((context, component) -> Render2DUtils.drawImage(
+        getStyle().setBaseRenderer((context, component) -> Render2DUtils.drawImage(
                 context, this.getImageId(),
                 component.getLeft(), component.getTop(),
                 component.getLeft() + component.getWidth(), component.getTop() + component.getHeight(),

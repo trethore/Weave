@@ -52,32 +52,16 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
 
     protected void updateVisualState() {
         var stylesheet = ThemeManager.getStylesheet();
-        long duration = stylesheet.get(this.getClass(), StyleProps.ANIMATION_DURATION, 100L);
+        long duration = stylesheet.get(this, StyleProps.ANIMATION_DURATION, 100L);
         updateVisualState(duration);
     }
 
     protected void updateVisualState(long duration) {
-        var stylesheet = ThemeManager.getStylesheet();
-        Color normalColor = stylesheet.get(this.getClass(), StyleProps.COLOR_NORMAL, new Color(80, 80, 80));
-        Color hoveredColor = stylesheet.get(this.getClass(), StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
-        Color focusedColor = stylesheet.get(this.getClass(), StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
-        Color activeColor = stylesheet.get(this.getClass(), StyleProps.COLOR_ACTIVE, new Color(60, 60, 60));
-        Color disabledColor = stylesheet.get(this.getClass(), StyleProps.COLOR_DISABLED, new Color(50, 50, 50, 150));
-
-        Color targetColor;
-        if (!isEnabled()) {
-            targetColor = disabledColor;
-        } else if (this.getActiveStyleStates().contains(StyleState.ACTIVE)) {
-            targetColor = activeColor;
-        } else if (isFocused()) {
-            targetColor = focusedColor;
-        } else if (isHovered()) {
-            targetColor = hoveredColor;
-        } else {
-            targetColor = normalColor;
-        }
-
-        this.animate().duration(duration).color(targetColor);
+        // This method is now a hook for subclasses. The actual visual
+        // change is handled by the stylesheet resolving the correct
+        // renderer for the component's current state.
+        // We keep the call to ensure components depending on it still work,
+        // but the base implementation is now empty.
     }
 
     public T onClick(Consumer<T> action) {

@@ -13,7 +13,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
     public void render(DrawContext context, TextField textField) {
         if (!textField.isFocused()) return;
 
-        long cursorBlinkInterval = ThemeManager.getStylesheet().get(textField.getClass(), TextField.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
+        long cursorBlinkInterval = ThemeManager.getStylesheet().get(textField, TextField.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
         if (textField.hasSelection()) return;
 
         long timeSinceLastAction = System.currentTimeMillis() - textField.getLastActionTime();
@@ -36,7 +36,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
         float cursorX = textField.getInnerLeft() + textRenderer.getWidth(textBeforeCursor);
         float cursorY = textY - 2;
         float cursorHeight = textRenderer.fontHeight + 1;
-        Color cursorColor = ThemeManager.getStylesheet().get(textField.getClass(), TextField.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+        Color cursorColor = ThemeManager.getStylesheet().get(textField, TextField.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
 
         if (cursorColor != null) {
             Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, cursorColor);

@@ -66,13 +66,13 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         ValidationState vState = validationState.get();
 
         if (vState == ValidationState.VALID) {
-            outlineColor = stylesheet.get(this.getClass(), StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
         } else if (vState == ValidationState.INVALID) {
-            outlineColor = stylesheet.get(this.getClass(), StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
         } else if (isFocused()) {
-            outlineColor = stylesheet.get(this.getClass(), StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
         } else {
-            outlineColor = stylesheet.get(this.getClass(), StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
 
         this.outlineEffect.setColor(outlineColor);

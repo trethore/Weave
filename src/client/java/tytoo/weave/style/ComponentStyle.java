@@ -72,4 +72,18 @@ public class ComponentStyle implements Cloneable {
             throw new AssertionError("ComponentStyle is Cloneable but clone() failed", e);
         }
     }
+
+    public static final class StyleProps {
+        public static final StyleProperty<ComponentRenderer> BASE_RENDERER = new StyleProperty<>("renderer", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> NORMAL_RENDERER = new StyleProperty<>("renderer-normal", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> HOVERED_RENDERER = new StyleProperty<>("renderer-hovered", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> FOCUSED_RENDERER = new StyleProperty<>("renderer-focused", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> ACTIVE_RENDERER = new StyleProperty<>("renderer-active", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> DISABLED_RENDERER = new StyleProperty<>("renderer-disabled", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> VALID_RENDERER = new StyleProperty<>("renderer-valid", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> INVALID_RENDERER = new StyleProperty<>("renderer-invalid", ComponentRenderer.class);
+
+        private StyleProps() {
+        }
+    }
 }

@@ -12,7 +12,10 @@ import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
+import tytoo.weave.constraint.constraints.AspectRatioConstraint;
+import tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.EventType;
@@ -40,21 +43,22 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected final LayoutState layoutState;
     protected final RenderState renderState;
     protected final EventState eventState;
-
+    protected final Set<String> styleClasses = new HashSet<>();
     private final Set<StyleState> activeStyleStates = EnumSet.noneOf(StyleState.class);
     protected Component<?> parent;
     protected List<Component<?>> children = new LinkedList<>();
-    protected ComponentStyle style;
+    @Nullable
+    protected String id;
     @Nullable
     protected TextRenderer textRenderer;
+
+    @Nullable
+    private ComponentStyle style;
 
     public Component() {
         this.layoutState = new LayoutState(this);
         this.renderState = new RenderState(this);
         this.eventState = new EventState();
-
-        ComponentStyle sheetStyle = ThemeManager.getStylesheet().getStyleFor(this.getClass());
-        this.style = sheetStyle != null ? sheetStyle.clone() : new ComponentStyle();
     }
 
     public LayoutState getLayoutState() {
@@ -93,7 +97,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 effect.beforeDraw(context, this);
             }
 
-            ComponentRenderer renderer = style.getRenderer(this);
+            ComponentRenderer renderer = getStyle().getRenderer(this);
             if (renderer != null) renderer.render(context, this);
             drawChildren(context);
 
@@ -385,12 +389,17 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public ComponentStyle getStyle() {
+        if (this.style == null) {
+            this.style = tytoo.weave.theme.ThemeManager.getStylesheet().resolveStyleFor(this);
+        }
         return style;
     }
 
     public T setStyle(ComponentStyle style) {
         this.style = style;
-        invalidateLayout();
+        if (this.style != null) {
+            invalidateLayout();
+        }
         return self();
     }
 
@@ -529,14 +538,20 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public T addStyleState(StyleState state) {
         if (activeStyleStates.add(state)) {
+            invalidateStyleCache();
             onStyleStateChanged();
             invalidateLayout();
         }
         return self();
     }
 
+    private void invalidateStyleCache() {
+        this.style = null;
+    }
+
     public T removeStyleState(StyleState state) {
         if (activeStyleStates.remove(state)) {
+            invalidateStyleCache();
             onStyleStateChanged();
             invalidateLayout();
         }
@@ -623,7 +638,9 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clonedRenderState.setEffects(new ArrayList<>(this.renderState.getEffects()));
 
             // Copy other properties
-            clonedComponent.style = this.style.clone();
+            clonedComponent.setStyle(this.style != null ? this.style.clone() : null);
+            clonedComponent.id = this.id;
+            clonedComponent.styleClasses.addAll(this.styleClasses);
             clonedComponent.updateClonedChildReferences(this);
 
             return clonedComponent;
@@ -638,6 +655,41 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public AnimationBuilder<T> animate() {
         return Animator.getBuilderFor(self());
+    }
+
+    @Nullable
+    public String getId() {
+        return this.id;
+    }
+
+    public T setId(@Nullable String id) {
+        if (!Objects.equals(this.id, id)) {
+            this.id = id;
+            invalidateStyleCache();
+        }
+        return self();
+    }
+
+    public T addStyleClass(String styleClass) {
+        if (this.styleClasses.add(styleClass)) {
+            invalidateStyleCache();
+        }
+        return self();
+    }
+
+    public T removeStyleClass(String styleClass) {
+        if (this.styleClasses.remove(styleClass)) {
+            invalidateStyleCache();
+        }
+        return self();
+    }
+
+    public Set<String> getStyleClasses() {
+        return Collections.unmodifiableSet(this.styleClasses);
+    }
+
+    public boolean hasStyleClass(String styleClass) {
+        return this.styleClasses.contains(styleClass);
     }
 
     public Constraints getConstraints() {
@@ -685,8 +737,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         WidthConstraint wc = this.layoutState.getConstraints().getWidthConstraint();
         HeightConstraint hc = this.layoutState.getConstraints().getHeightConstraint();
 
-        boolean widthDependsOnChildren = wc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
-        boolean heightDependsOnChildren = hc instanceof tytoo.weave.constraint.constraints.ChildBasedSizeConstraint || hc instanceof tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
+        boolean widthDependsOnChildren = wc instanceof ChildBasedSizeConstraint;
+        boolean heightDependsOnChildren = hc instanceof ChildBasedSizeConstraint || hc instanceof SumOfChildrenHeightConstraint;
 
         if (widthDependsOnChildren || heightDependsOnChildren) {
             float horizontalPadding = this.layoutState.getPadding().left() + this.layoutState.getPadding().right();
@@ -698,7 +750,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         float w, h;
 
-        if (wc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint && !(hc instanceof tytoo.weave.constraint.constraints.AspectRatioConstraint)) {
+        if (wc instanceof AspectRatioConstraint && !(hc instanceof AspectRatioConstraint)) {
             h = hc.calculateHeight(this, availableHeight);
             this.layoutState.setMeasuredHeight(this.layoutState.getConstraints().clampHeight(h));
             w = wc.calculateWidth(this, availableWidth);

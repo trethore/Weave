@@ -51,7 +51,7 @@ public class TextArea extends BaseTextInput<TextArea> {
 
         if (getText().isEmpty() && !isFocused()) {
             if (getPlaceholder() != null) {
-                Color placeholderColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
+                Color placeholderColor = ThemeManager.getStylesheet().get(this, StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
                 context.drawText(textRenderer, getPlaceholder(), (int) getInnerLeft(), (int) (getInnerTop() + 3), placeholderColor.getRGB(), true);
             }
         } else {
@@ -61,7 +61,7 @@ public class TextArea extends BaseTextInput<TextArea> {
             int selectionStart = Math.min(getCursorPos(), getSelectionAnchor());
             int selectionEnd = Math.max(getCursorPos(), getSelectionAnchor());
 
-            Color selectionColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+            Color selectionColor = ThemeManager.getStylesheet().get(this, StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
 
             if (selectionStart != selectionEnd) {
                 int absPos = 0;
@@ -110,7 +110,7 @@ public class TextArea extends BaseTextInput<TextArea> {
                 context.drawText(textRenderer, lines.get(i), (int) getInnerLeft(), (int) textY, -1, true);
             }
 
-            long cursorBlinkInterval = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.CURSOR_BLINK_INTERVAL, 500L);
+            long cursorBlinkInterval = ThemeManager.getStylesheet().get(this, StyleProps.CURSOR_BLINK_INTERVAL, 500L);
             boolean shouldDrawCursor = (System.currentTimeMillis() - getLastActionTime()) < cursorBlinkInterval || (System.currentTimeMillis() / cursorBlinkInterval) % 2 == 0;
 
             if (isFocused() && shouldDrawCursor && selectionStart == selectionEnd) {
@@ -119,8 +119,8 @@ public class TextArea extends BaseTextInput<TextArea> {
 
                 if (lineY + lineHeight >= getInnerTop() && lineY <= getInnerTop() + getInnerHeight()) {
                     String lineToCursor = lines.get(pos2d.y).substring(0, pos2d.x);
-                    float cursorX = getInnerLeft() + textRenderer.getWidth(lineToCursor);
-                    Color cursorColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+                    float cursorX = getInnerLeft() + textRenderer.getWidth(lineToCursor); //
+                    Color cursorColor = ThemeManager.getStylesheet().get(this, StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
                     Render2DUtils.drawRect(context, cursorX, lineY, 1, lineHeight, cursorColor);
                 }
             }

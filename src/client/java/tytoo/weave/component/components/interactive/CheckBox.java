@@ -13,7 +13,6 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleProperty;
-import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -35,8 +34,8 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
     protected CheckBox() {
         var stylesheet = ThemeManager.getStylesheet();
-        float boxSize = stylesheet.get(getClass(), StyleProps.BOX_SIZE, 12f);
-        float gap = stylesheet.get(getClass(), StyleProps.GAP, 4f);
+        float boxSize = stylesheet.get(this, StyleProps.BOX_SIZE, 12f);
+        float gap = stylesheet.get(this, StyleProps.GAP, 4f);
 
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, gap));
         this.setHeight(Constraints.childBased());
@@ -45,8 +44,6 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         this.box = Panel.create()
                 .setWidth(Constraints.pixels(boxSize))
                 .setHeight(Constraints.pixels(boxSize));
-
-        this.box.getStyle().setColor(stylesheet.get(getClass(), InteractiveComponent.StyleProps.COLOR_NORMAL, new Color(40, 40, 40)));
 
         CheckMark checkMark = new CheckMark(this);
         checkMark.setWidth(Constraints.relative(1.0f));
@@ -77,33 +74,13 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     @Override
     protected void updateVisualState() {
         var stylesheet = ThemeManager.getStylesheet();
-        long duration = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
+        long duration = stylesheet.get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
         updateVisualState(duration);
     }
 
     protected void updateVisualState(long duration) {
-        var stylesheet = ThemeManager.getStylesheet();
-
-        Color normalColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_NORMAL, new Color(80, 80, 80));
-        Color hoveredColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_HOVERED, new Color(100, 100, 100));
-        Color focusedColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_FOCUSED, new Color(120, 120, 120));
-        Color activeColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_ACTIVE, new Color(60, 60, 60));
-        Color disabledColor = stylesheet.get(this.getClass(), InteractiveComponent.StyleProps.COLOR_DISABLED, new Color(50, 50, 50, 150));
-
-        Color targetColor;
-        if (!isEnabled()) {
-            targetColor = disabledColor;
-        } else if (getActiveStyleStates().contains(StyleState.ACTIVE)) {
-            targetColor = activeColor;
-        } else if (isFocused()) {
-            targetColor = focusedColor;
-        } else if (isHovered()) {
-            targetColor = hoveredColor;
-        } else {
-            targetColor = normalColor;
-        }
-
-        this.box.animate().duration(duration).color(targetColor);
+        // The visual state is now handled by the stylesheet resolving the renderer.
+        // This method can be kept for future subclass overrides.
     }
 
     private void updateChildren() {
@@ -222,8 +199,8 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
             float h = getHeight();
 
             var stylesheet = ThemeManager.getStylesheet();
-            Color checkColor = stylesheet.get(CheckBox.class, StyleProps.CHECK_COLOR, Color.WHITE);
-            float thickness = stylesheet.get(CheckBox.class, StyleProps.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
+            Color checkColor = stylesheet.get(this.checkBox, StyleProps.CHECK_COLOR, Color.WHITE);
+            float thickness = stylesheet.get(this.checkBox, StyleProps.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
 
             float padding = w * 0.25f;
             Vector2f p1 = new Vector2f(x + padding, y + padding);

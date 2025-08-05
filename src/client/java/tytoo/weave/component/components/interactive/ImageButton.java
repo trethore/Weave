@@ -16,8 +16,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     protected ImageButton() {
         var stylesheet = ThemeManager.getStylesheet();
-        float padding = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_PADDING, 5f);
-        float gap = stylesheet.get(this.getClass(), StyleProps.IMAGE_BUTTON_GAP, 4f);
+        float padding = stylesheet.get(this, StyleProps.IMAGE_BUTTON_PADDING, 5f);
+        float gap = stylesheet.get(this, StyleProps.IMAGE_BUTTON_GAP, 4f);
         this.setPadding(padding);
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, gap));
     }

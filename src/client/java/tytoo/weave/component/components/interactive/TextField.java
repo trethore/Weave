@@ -83,7 +83,7 @@ public class TextField extends BaseTextInput<TextField> {
 
                     String selected = visibleText.substring(visibleSelectionStart, visibleSelectionEnd);
                     float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
-                    Color selectionColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+                    Color selectionColor = ThemeManager.getStylesheet().get(this, StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
 
                     float highlightY = textY - 2;
                     float highlightHeight = fontHeight + 1;
@@ -103,7 +103,7 @@ public class TextField extends BaseTextInput<TextField> {
 
         } else {
             if (getPlaceholder() != null) {
-                Color placeholderColor = ThemeManager.getStylesheet().get(this.getClass(), StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
+                Color placeholderColor = ThemeManager.getStylesheet().get(this, StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
                 if (placeholderColor != null) {
                     context.drawText(textRenderer, getPlaceholder(), (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
                 }
