@@ -11,7 +11,6 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.layout.LinearLayout.Alignment;
 import tytoo.weave.layout.LinearLayout.CrossAxisAlignment;
 import tytoo.weave.layout.LinearLayout.Orientation;
-import tytoo.weave.style.Styling;
 import tytoo.weave.utils.ImageManager;
 import tytoo.weave.utils.McUtils;
 
@@ -61,14 +60,6 @@ public class Image extends BasePanel<Image> {
     @Nullable
     public BaseImage<?> getImagePart() {
         return this.imagePart;
-    }
-
-    public Image setLabel(String text, Styling style) {
-        return setLabel(SimpleTextComponent.of(text).setStyle(style));
-    }
-
-    public Image setLabel(Text text, Styling style) {
-        return setLabel(SimpleTextComponent.of(text).setStyle(style));
     }
 
     public Image clearLabel() {

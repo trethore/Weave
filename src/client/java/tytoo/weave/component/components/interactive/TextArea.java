@@ -9,6 +9,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseScrollEvent;
+import tytoo.weave.theme.ThemeManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,8 +20,12 @@ public class TextArea extends BaseTextInput<TextArea> {
 
     protected TextArea() {
         super();
-        this.setHeight(Constraints.pixels(100));
-        this.setWidth(Constraints.pixels(200));
+        var stylesheet = ThemeManager.getStylesheet();
+        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 200f);
+        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 100f);
+
+        this.setWidth(Constraints.pixels(defaultWidth));
+        this.setHeight(Constraints.pixels(defaultHeight));
 
         this.onMouseClick(this::onMouseClick);
         this.onMouseScroll(this::onMouseScroll);

@@ -3,13 +3,22 @@ package tytoo.weave.component.components.interactive;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.ThemeManager;
 
 public class Button extends InteractiveComponent<Button> {
 
     protected Button() {
-        this.setWidth(Constraints.childBased(10));
-        this.setHeight(Constraints.childBased(10));
+        var stylesheet = ThemeManager.getStylesheet();
+        float minWidth = stylesheet.get(this, StyleProps.MIN_WIDTH, 20f);
+        float minHeight = stylesheet.get(this, StyleProps.MIN_HEIGHT, 20f);
+        float padding = stylesheet.get(this, StyleProps.PADDING, 5f);
+
+        this.setMinWidth(minWidth);
+        this.setMinHeight(minHeight);
+        this.setPadding(padding);
+
         this.addStyleState(StyleState.NORMAL);
         this.addStyleClass("interactive-visual");
     }
@@ -24,5 +33,14 @@ public class Button extends InteractiveComponent<Button> {
 
     public static Button of(Text text) {
         return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()).setHittable(false));
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Float> MIN_WIDTH = new StyleProperty<>("button.min-width", Float.class);
+        public static final StyleProperty<Float> MIN_HEIGHT = new StyleProperty<>("button.min-height", Float.class);
+        public static final StyleProperty<Float> PADDING = new StyleProperty<>("button.padding", Float.class);
+
+        private StyleProps() {
+        }
     }
 }

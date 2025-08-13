@@ -2,24 +2,29 @@ package tytoo.weave.component.components.display;
 
 import net.minecraft.util.Identifier;
 import tytoo.weave.component.Component;
+import tytoo.weave.state.State;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
 public class BaseImage<T extends BaseImage<T>> extends Component<T> {
+    private final State<Color> colorState = new State<>(Color.WHITE);
     private Identifier imageId;
-    private Color color = Color.WHITE;
     private int imageRotation = 0;
     private boolean parity = false;
 
     protected BaseImage(Identifier imageId) {
         this.imageId = imageId;
-        getStyle().setBaseRenderer((context, component) -> Render2DUtils.drawImage(
-                context, this.getImageId(),
-                component.getLeft(), component.getTop(),
-                component.getLeft() + component.getWidth(), component.getTop() + component.getHeight(),
-                this.getImageRotation(), this.isParity(), this.getColor()
-        ));
+        getStyle().setBaseRenderer((context, component) -> {
+            if (component instanceof BaseImage<?> img) {
+                Render2DUtils.drawImage(
+                        context, img.getImageId(),
+                        img.getLeft(), img.getTop(),
+                        img.getLeft() + img.getWidth(), img.getTop() + img.getHeight(),
+                        img.getImageRotation(), img.isParity(), img.getColor()
+                );
+            }
+        });
     }
 
     public static BaseImage<?> of(Identifier imageId) {
@@ -31,12 +36,11 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
     }
 
     public Color getColor() {
-        return color;
+        return colorState.get();
     }
 
     public T setColor(Color color) {
-        this.color = color;
-        invalidateLayout();
+        this.colorState.set(color);
         return self();
     }
 
@@ -62,5 +66,9 @@ public class BaseImage<T extends BaseImage<T>> extends Component<T> {
         this.imageId = imageId;
         invalidateLayout();
         return self();
+    }
+
+    public State<Color> getColorState() {
+        return colorState;
     }
 }

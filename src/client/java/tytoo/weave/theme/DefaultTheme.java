@@ -1,14 +1,16 @@
 package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
+import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.*;
+import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
+import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleRule;
-import tytoo.weave.style.Styling;
 import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
@@ -19,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class DefaultTheme implements Theme {
-    private static final Styling DEFAULT_TEXT_STYLE = Styling.create().color(Color.WHITE).shadow(true);
     private final Stylesheet stylesheet;
 
     public DefaultTheme() {
@@ -35,10 +36,29 @@ public class DefaultTheme implements Theme {
 
         // General
         s = new StyleSelector(Window.class, null, null, null);
-        stylesheet.addRule(new StyleRule(s, Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(20, 20, 20, 220)))));
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(20, 20, 20, 220)),
+                Window.StyleProps.DEFAULT_WIDTH, 400f,
+                Window.StyleProps.DEFAULT_HEIGHT, 300f
+        )));
 
         s = new StyleSelector(Separator.class, null, null, null);
-        stylesheet.addRule(new StyleRule(s, Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(128, 128, 128)))));
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(128, 128, 128)),
+                Separator.StyleProps.THICKNESS, 1f
+        )));
+
+        // --- TextComponent ---
+        s = new StyleSelector(TextComponent.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                TextComponent.StyleProps.TEXT_COLOR, Color.WHITE,
+                TextComponent.StyleProps.SHADOW, true
+        )));
+
+        s = new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f)
+        )));
 
         // --- Interactive Components ---
         s = new StyleSelector(InteractiveComponent.class, null, Set.of("interactive-visual"), null);
@@ -50,6 +70,14 @@ public class DefaultTheme implements Theme {
                 ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(140, 140, 140)),
                 ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50, 150)),
                 StyleProps.ANIMATION_DURATION, 150L
+        )));
+
+        // --- Button ---
+        s = new StyleSelector(Button.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                Button.StyleProps.MIN_WIDTH, 20f,
+                Button.StyleProps.MIN_HEIGHT, 20f,
+                Button.StyleProps.PADDING, 5f
         )));
 
         // --- ImageButton ---
@@ -79,7 +107,9 @@ public class DefaultTheme implements Theme {
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80)),
                 Map.entry(BaseTextInput.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150)),
                 Map.entry(BaseTextInput.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY),
-                Map.entry(BaseTextInput.StyleProps.CURSOR_BLINK_INTERVAL, 500L)
+                Map.entry(BaseTextInput.StyleProps.CURSOR_BLINK_INTERVAL, 500L),
+                Map.entry(BaseTextInput.StyleProps.DEFAULT_WIDTH, 150f),
+                Map.entry(BaseTextInput.StyleProps.DEFAULT_HEIGHT, 20f)
         )));
 
         // --- CheckBox ---
@@ -104,6 +134,9 @@ public class DefaultTheme implements Theme {
         stylesheet.addRule(new StyleRule(s, Map.of(
                 Slider.StyleProps.THUMB_COLOR, new Color(160, 160, 160),
                 Slider.StyleProps.TRACK_PADDING, 2f,
+                Slider.StyleProps.DEFAULT_WIDTH, 150f,
+                Slider.StyleProps.DEFAULT_HEIGHT, 20f,
+                Slider.StyleProps.THUMB_SIZE, 8f,
                 ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(40, 40, 40)),
                 ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
                 ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
@@ -112,6 +145,12 @@ public class DefaultTheme implements Theme {
         )));
 
         // --- RadioButton ---
+        s = new StyleSelector(RadioButton.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                RadioButton.StyleProps.GAP, 5f,
+                RadioButton.StyleProps.OUTLINE_SIZE, 12f,
+                RadioButton.StyleProps.DOT_SIZE, 6f
+        )));
 
         s = new StyleSelector(Panel.class, null, Set.of("radio-button-outline"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
@@ -141,10 +180,5 @@ public class DefaultTheme implements Theme {
     @Override
     public TextRenderer getTextRenderer() {
         return McUtils.getMc().map(mc -> mc.textRenderer).orElse(null);
-    }
-
-    @Override
-    public Styling getDefaultTextStyle() {
-        return DEFAULT_TEXT_STYLE;
     }
 }

@@ -40,20 +40,23 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
 
         this.thumb = Panel.create();
         var stylesheet = ThemeManager.getStylesheet();
-        Color thumbColor = stylesheet.get(this, StyleProps.THUMB_COLOR, new Color(160, 160, 160));
+        Color thumbColor = stylesheet.get(this, StyleProps.THUMB_COLOR, new Color(160, 160, 160)); // This was already good
         this.trackPadding = stylesheet.get(this, StyleProps.TRACK_PADDING, 4f);
-        this.thumb.getStyle().setColor(thumbColor);
+
+        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
+        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
+        float thumbSize = stylesheet.get(this, StyleProps.THUMB_SIZE, 8f);
 
         if (orientation == Orientation.HORIZONTAL) {
-            this.setHeight(Constraints.pixels(20));
-            this.setWidth(Constraints.pixels(150));
-            thumb.setWidth(Constraints.pixels(8));
+            this.setHeight(Constraints.pixels(defaultHeight));
+            this.setWidth(Constraints.pixels(defaultWidth));
+            thumb.setWidth(Constraints.pixels(thumbSize));
             thumb.setHeight(Constraints.relative(0.8f));
             thumb.setY(Constraints.center());
         } else {
-            this.setWidth(Constraints.pixels(20));
-            this.setHeight(Constraints.pixels(150));
-            thumb.setHeight(Constraints.pixels(8));
+            this.setWidth(Constraints.pixels(defaultHeight)); // Swapped for vertical
+            this.setHeight(Constraints.pixels(defaultWidth));
+            thumb.setHeight(Constraints.pixels(thumbSize));
             thumb.setWidth(Constraints.relative(0.8f));
             thumb.setX(Constraints.center());
         }
@@ -289,6 +292,10 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
     public static final class StyleProps {
         public static final StyleProperty<Color> THUMB_COLOR = new StyleProperty<>("slider.thumb.color", Color.class);
         public static final StyleProperty<Float> TRACK_PADDING = new StyleProperty<>("slider.track.padding", Float.class);
+        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("slider.default-width", Float.class);
+        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("slider.default-height", Float.class);
+        public static final StyleProperty<Float> THUMB_SIZE = new StyleProperty<>("slider.thumb.size", Float.class);
+
 
         private StyleProps() {
         }

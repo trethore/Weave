@@ -453,5 +453,8 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         public static final StyleProperty<Color> BORDER_COLOR_UNFOCUSED = new StyleProperty<>("borderColor.unfocused", Color.class);
         public static final StyleProperty<Color> PLACEHOLDER_COLOR = new StyleProperty<>("placeholderColor", Color.class);
         public static final StyleProperty<Color> CURSOR_COLOR = new StyleProperty<>("cursorColor", Color.class);
+
+        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("text-input.default-width", Float.class);
+        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("text-input.default-height", Float.class);
     }
 }

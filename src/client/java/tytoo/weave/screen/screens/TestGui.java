@@ -1,17 +1,12 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
+import tytoo.weave.animation.Easing;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.*;
-import tytoo.weave.component.components.interactive.TextArea;
-import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.State;
-import tytoo.weave.style.ColorWave;
-import tytoo.weave.style.Styling;
 
 import java.awt.*;
 
@@ -28,10 +23,7 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.pixels(30));
 
         SimpleTextComponent titleText = SimpleTextComponent.of("Weave Test UI")
-                .setStyle(Styling.create()
-                        .color(Color.WHITE)
-                        .shadow(true)
-                        .colorWave(new ColorWave(ColorWave.createRainbow(36), 2f)))
+                .addStyleClass("test-gui-title")
                 .setScale(1.5f);
         titleText.setX(Constraints.center()).setY(Constraints.center());
 
@@ -43,41 +35,20 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 5));
 
-        TextField.create()
-                .setPlaceholder("Enter text here...")
-                .setWidth(Constraints.pixels(150))
-                .setParent(testPanel);
+        SimpleTextComponent animatedText = SimpleTextComponent.of("Animating!");
+        animatedText.setOpacity(0f);
+        animatedText.setScale(0.5f);
+        testPanel.addChildren(animatedText);
 
-        TextArea.create()
-                .setText("This is a multi-line text area.\nTry scrolling!")
-                .setPlaceholder("More text goes here...")
-                .setWidth(Constraints.pixels(200))
-                .setHeight(Constraints.pixels(80))
-                .setParent(testPanel);
+        animatedText.animate().duration(1000).opacity(0.1f).then(() ->
+                animatedText.animate().duration(1000).color(Color.CYAN).then(() ->
+                        animatedText.animate().duration(500).easing(Easing.EASE_OUT_BACK).scale(1.2f).then(() ->
+                                animatedText.animate().duration(500).easing(Easing.EASE_OUT_SINE).scale(1.0f))));
 
-        CheckBox.of("Test").setParent(testPanel).setMargin(10, 0);
-
-        SimpleTextComponent radioLabel = SimpleTextComponent.of("Selected Option: Java");
-        radioLabel.setMargin(10, 0, 0, 0);
-
-        State<String> selectedLanguage = new State<>("Java");
-        selectedLanguage.bind(v -> radioLabel.setText("Selected Option: " + v));
-
-        RadioButtonGroup<String> languageGroup = RadioButtonGroup.create(selectedLanguage)
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5f));
-
-        languageGroup.addChildren(
-                RadioButton.of("Java", "Java"),
-                RadioButton.of("Kotlin", "Kotlin"),
-                RadioButton.of("Rust", "Rust"),
-                RadioButton.of("C#", "C# (Disabled)").setEnabled(false),
-                RadioButton.of("JavaScript", "JavaScript")
-        );
-
-        testPanel.addChildren(
-                languageGroup,
-                radioLabel
-        );
+        SimpleTextComponent hoverText = SimpleTextComponent.of("Hover me!");
+        hoverText.onMouseEnter(e -> hoverText.animate().duration(200).color(Color.YELLOW).scale(1.1f).rotation(45.0f).opacity(0.5f));
+        hoverText.onMouseLeave(e -> hoverText.animate().duration(200).color(Color.WHITE).scale(1.0f).rotation(0.0f).opacity(1));
+        testPanel.addChildren(hoverText);
 
         window.addChildren(titlePanel, testPanel);
     }

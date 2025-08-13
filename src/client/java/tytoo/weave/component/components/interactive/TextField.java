@@ -9,14 +9,19 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
+import tytoo.weave.theme.ThemeManager;
 
 public class TextField extends BaseTextInput<TextField> {
     private int firstCharacterIndex = 0;
 
     protected TextField() {
         super();
-        this.setHeight(Constraints.pixels(20));
-        this.setWidth(Constraints.pixels(150));
+        var stylesheet = ThemeManager.getStylesheet();
+        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
+        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
+
+        this.setWidth(Constraints.pixels(defaultWidth));
+        this.setHeight(Constraints.pixels(defaultHeight));
 
         this.onMouseClick(this::onMouseClick);
         this.onMouseDrag(this::onMouseDragged);

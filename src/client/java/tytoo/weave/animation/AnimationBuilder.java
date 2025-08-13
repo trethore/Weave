@@ -1,13 +1,17 @@
 package tytoo.weave.animation;
 
+
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
+import tytoo.weave.theme.Stylesheet;
+import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
 import java.util.function.Consumer;
@@ -63,9 +67,18 @@ public class AnimationBuilder<C extends Component<C>> {
         return animateProperty(component.getScaleYState(), to, Interpolators.FLOAT, null, "scaleY");
     }
 
+
     public AnimationBuilder<C> color(Color to) {
         if (component instanceof TextComponent<?> textComponent) {
-            return animateProperty(textComponent.getColorState(), to, Interpolators.COLOR, null, "color");
+            State<Color> colorState = textComponent.getColorOverrideState();
+            if (colorState.get() == null) {
+                Stylesheet ss = ThemeManager.getStylesheet();
+                Color currentColor = ss.get(textComponent, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+                colorState.set(currentColor);
+            }
+            return animateProperty(colorState, to, Interpolators.COLOR, null, "color");
+        } else if (component instanceof BaseImage<?> baseImage) {
+            return animateProperty(baseImage.getColorState(), to, Interpolators.COLOR, null, "color");
         }
 
         ComponentStyle style = component.getStyle();

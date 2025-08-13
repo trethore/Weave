@@ -7,6 +7,7 @@ import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
+import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 
@@ -23,31 +24,38 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
     protected RadioButton(V value, String labelText) {
         this.value = value;
 
-        float gap = 5f;
+        var stylesheet = ThemeManager.getStylesheet();
+        float gap = stylesheet.get(this, StyleProps.GAP, 5f);
+        float outlineSize = stylesheet.get(this, StyleProps.OUTLINE_SIZE, 12f);
+        float dotSize = stylesheet.get(this, StyleProps.DOT_SIZE, 6f);
+
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, gap));
         this.setHeight(Constraints.childBased());
         this.setWidth(Constraints.sumOfChildrenWidth(0, gap));
         this.setHittable(true);
 
         this.outline = Panel.create()
-                .setWidth(Constraints.pixels(12))
-                .setHeight(Constraints.pixels(12))
+                .setWidth(Constraints.pixels(outlineSize))
+                .setHeight(Constraints.pixels(outlineSize))
                 .addStyleClass("radio-button-outline")
                 .setHittable(false)
                 .addStyleState(StyleState.NORMAL);
 
+        // Background is slightly smaller than outline
+        float backgroundSize = outlineSize - 2f;
         this.background = Panel.create()
-                .setWidth(Constraints.pixels(10))
-                .setHeight(Constraints.pixels(10))
+                .setWidth(Constraints.pixels(backgroundSize))
+                .setHeight(Constraints.pixels(backgroundSize))
                 .setX(Constraints.center())
                 .setY(Constraints.center())
                 .addStyleClass("radio-button-background")
                 .setHittable(false)
                 .addStyleState(StyleState.NORMAL);
 
+
         this.dot = Panel.create()
-                .setWidth(Constraints.pixels(6))
-                .setHeight(Constraints.pixels(6))
+                .setWidth(Constraints.pixels(dotSize))
+                .setHeight(Constraints.pixels(dotSize))
                 .setX(Constraints.center())
                 .setY(Constraints.center())
                 .addStyleClass("radio-button-dot")
@@ -97,7 +105,7 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         float targetOpacity = selected ? 1.0f : 0.0f;
         float targetScale = selected ? 1.0f : 0.0f;
 
-        long duration = ThemeManager.getStylesheet().get(this, StyleProps.ANIMATION_DURATION, 150L);
+        long duration = ThemeManager.getStylesheet().get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
         this.dot.animate().duration(duration).easing(Easing.EASE_OUT_QUAD).opacity(targetOpacity);
         this.dot.animate().duration(duration).easing(Easing.EASE_OUT_BACK).scale(targetScale);
     }
@@ -110,5 +118,14 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         // TODO: TextComponent does not currently support disabled state styling from the stylesheet.
         this.label.setStyleState(StyleState.DISABLED, !enabled);
         return self();
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Float> GAP = new StyleProperty<>("radio.gap", Float.class);
+        public static final StyleProperty<Float> OUTLINE_SIZE = new StyleProperty<>("radio.outline.size", Float.class);
+        public static final StyleProperty<Float> DOT_SIZE = new StyleProperty<>("radio.dot.size", Float.class);
+
+        private StyleProps() {
+        }
     }
 }

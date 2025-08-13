@@ -92,13 +92,15 @@ public final class RenderTextUtils {
         }
     }
 
-    public static void drawWaveText(DrawContext context, TextRenderer textRenderer, String text, float x, float y, float width, boolean shadow, ColorWave wave, @Nullable Float letterSpacing) {
+    public static void drawWaveText(DrawContext context, TextRenderer textRenderer, String text, float x, float y, float width, boolean shadow, ColorWave wave, @Nullable Float letterSpacing, float opacity) {
         double timeCycle = ((System.currentTimeMillis() / 1000.0) * wave.speed()) % 1.0;
 
         if (width <= 0) {
             if (!text.isEmpty()) {
                 Color color = wave.getColorAt((float) timeCycle);
-                context.drawText(textRenderer, text, (int) x, (int) y, color.getRGB(), shadow);
+                int alpha = (int) (color.getAlpha() * opacity);
+                Color finalColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+                context.drawText(textRenderer, text, (int) x, (int) y, finalColor.getRGB(), shadow);
             }
             return;
         }
@@ -115,7 +117,9 @@ public final class RenderTextUtils {
             float cyclicProgress = (float) (totalCycle % 1.0);
 
             Color color = wave.getColorAt(cyclicProgress);
-            context.drawText(textRenderer, character, (int) currentX, (int) y, color.getRGB(), shadow);
+            int alpha = (int) (color.getAlpha() * opacity);
+            Color finalColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+            context.drawText(textRenderer, character, (int) currentX, (int) y, finalColor.getRGB(), shadow);
             currentX += charWidth + (letterSpacing != null ? letterSpacing : 0);
         }
     }
