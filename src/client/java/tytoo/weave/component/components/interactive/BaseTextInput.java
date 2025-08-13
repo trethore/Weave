@@ -42,8 +42,11 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     private Text placeholder = null;
     private boolean isUpdatingFromState = false;
 
+
     protected BaseTextInput() {
         this.setPadding(4);
+        this.addStyleState(StyleState.NORMAL);
+        this.addStyleClass("interactive-visual");
 
         this.outlineEffect = (OutlineEffect) Effects.outline(Color.BLACK, 1.0f);
         this.addEffect(this.outlineEffect);

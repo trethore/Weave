@@ -20,6 +20,7 @@ public class Stylesheet {
             case HOVERED -> ComponentStyle.StyleProps.HOVERED_RENDERER;
             case FOCUSED -> ComponentStyle.StyleProps.FOCUSED_RENDERER;
             case ACTIVE -> ComponentStyle.StyleProps.ACTIVE_RENDERER;
+            case SELECTED -> ComponentStyle.StyleProps.SELECTED_RENDERER;
             case DISABLED -> ComponentStyle.StyleProps.DISABLED_RENDERER;
             case VALID -> ComponentStyle.StyleProps.VALID_RENDERER;
             case INVALID -> ComponentStyle.StyleProps.INVALID_RENDERER;

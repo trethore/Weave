@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.List;
 
 public class ComponentStyle implements Cloneable {
-    private final List<StyleState> statePriority = new ArrayList<>(Arrays.asList(StyleState.FOCUSED, StyleState.HOVERED, StyleState.NORMAL));
+    private final List<StyleState> statePriority = new ArrayList<>(Arrays.asList(StyleState.DISABLED, StyleState.ACTIVE, StyleState.SELECTED, StyleState.FOCUSED, StyleState.HOVERED, StyleState.NORMAL));
     private Map<StyleState, ComponentRenderer> renderers = new HashMap<>();
     @Nullable
     private ComponentRenderer baseRenderer;
@@ -79,6 +79,7 @@ public class ComponentStyle implements Cloneable {
         public static final StyleProperty<ComponentRenderer> HOVERED_RENDERER = new StyleProperty<>("renderer-hovered", ComponentRenderer.class);
         public static final StyleProperty<ComponentRenderer> FOCUSED_RENDERER = new StyleProperty<>("renderer-focused", ComponentRenderer.class);
         public static final StyleProperty<ComponentRenderer> ACTIVE_RENDERER = new StyleProperty<>("renderer-active", ComponentRenderer.class);
+        public static final StyleProperty<ComponentRenderer> SELECTED_RENDERER = new StyleProperty<>("renderer-selected", ComponentRenderer.class);
         public static final StyleProperty<ComponentRenderer> DISABLED_RENDERER = new StyleProperty<>("renderer-disabled", ComponentRenderer.class);
         public static final StyleProperty<ComponentRenderer> VALID_RENDERER = new StyleProperty<>("renderer-valid", ComponentRenderer.class);
         public static final StyleProperty<ComponentRenderer> INVALID_RENDERER = new StyleProperty<>("renderer-invalid", ComponentRenderer.class);

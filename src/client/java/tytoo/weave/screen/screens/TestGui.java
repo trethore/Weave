@@ -2,7 +2,9 @@ package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.Slider;
+import tytoo.weave.component.components.interactive.CheckBox;
+import tytoo.weave.component.components.interactive.RadioButton;
+import tytoo.weave.component.components.interactive.RadioButtonGroup;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
@@ -41,37 +43,28 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 5));
 
-        // Integer Slider
-        State<Integer> intValue = new State<>(50);
-        SimpleTextComponent intLabel = SimpleTextComponent.of("Integer Slider: 50");
-        intValue.bind(v -> intLabel.setText("Integer Slider: " + v));
+        CheckBox.of("Test").setParent(testPanel).setMargin(10, 0);
 
-        Slider<Integer> intSlider = Slider.integerSlider(Slider.Orientation.HORIZONTAL, 0, 100, 50, 5);
-        intSlider.setWidth(Constraints.relative(0.8f)).bindValue(intValue);
+        SimpleTextComponent radioLabel = SimpleTextComponent.of("Selected Option: Java");
+        radioLabel.setMargin(10, 0, 0, 0);
 
-        // Double Slider
-        State<Double> doubleValue = new State<>(0.0);
-        SimpleTextComponent doubleLabel = SimpleTextComponent.of("Double Slider: 0.00");
-        doubleValue.bind(v -> doubleLabel.setText("Double Slider: " + String.format("%.2f", v)));
+        State<String> selectedLanguage = new State<>("Java");
+        selectedLanguage.bind(v -> radioLabel.setText("Selected Option: " + v));
 
-        Slider<Double> doubleSlider = Slider.doubleSlider(Slider.Orientation.VERTICAL, -10.0, 10.0, 0.0, 0.1);
-        doubleSlider.setHeight(Constraints.pixels(100)).bindValue(doubleValue);
+        RadioButtonGroup<String> languageGroup = RadioButtonGroup.create(selectedLanguage)
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5f));
 
-        // Float Slider
-        State<Float> floatValue = new State<>(0.5f);
-        SimpleTextComponent floatLabel = SimpleTextComponent.of("Float Slider: 0.50");
-        floatValue.bind(v -> floatLabel.setText("Float Slider: " + String.format("%.2f", v)));
-
-        Slider<Float> floatSlider = Slider.floatSlider(Slider.Orientation.HORIZONTAL, 0f, 1f, 0.5f);
-        floatSlider.setWidth(Constraints.relative(0.8f)).bindValue(floatValue);
+        languageGroup.addChildren(
+                RadioButton.of("Java", "Java"),
+                RadioButton.of("Kotlin", "Kotlin"),
+                RadioButton.of("Rust", "Rust"),
+                RadioButton.of("C#", "C# (Disabled)").setEnabled(false),
+                RadioButton.of("JavaScript", "JavaScript")
+        );
 
         testPanel.addChildren(
-                intLabel,
-                intSlider,
-                doubleLabel,
-                doubleSlider,
-                floatLabel,
-                floatSlider
+                languageGroup,
+                radioLabel
         );
 
         window.addChildren(titlePanel, testPanel);

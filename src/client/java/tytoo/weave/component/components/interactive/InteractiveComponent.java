@@ -13,9 +13,9 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
 
     private boolean enabled = true;
 
+
     protected InteractiveComponent() {
         this.setFocusable(true);
-        this.addStyleState(StyleState.NORMAL);
 
         this.onEvent(e -> {
             if (!isEnabled() && !(e instanceof tytoo.weave.event.focus.FocusLostEvent)) {

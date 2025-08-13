@@ -3,17 +3,20 @@ package tytoo.weave.theme;
 import net.minecraft.client.font.TextRenderer;
 import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
+import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.Styling;
+import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
 import java.util.Map;
+import java.util.Set;
 
 public class DefaultTheme implements Theme {
     private static final Styling DEFAULT_TEXT_STYLE = Styling.create().color(Color.WHITE).shadow(true);
@@ -38,20 +41,19 @@ public class DefaultTheme implements Theme {
         stylesheet.addRule(new StyleRule(s, Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(128, 128, 128)))));
 
         // --- Interactive Components ---
-        s = new StyleSelector(InteractiveComponent.class, null, null, null);
+        s = new StyleSelector(InteractiveComponent.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
                 ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)),
                 ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 100, 100)),
                 ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(120, 120, 120)),
                 ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(60, 60, 60)),
+                ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(140, 140, 140)),
                 ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50, 150)),
                 StyleProps.ANIMATION_DURATION, 150L
         )));
 
-        // Button uses the standard InteractiveComponent colors
-
         // --- ImageButton ---
-        s = new StyleSelector(ImageButton.class, null, null, null);
+        s = new StyleSelector(ImageButton.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
                 ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(100, 100, 100, 180)),
                 ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(120, 120, 120, 180)),
@@ -63,7 +65,7 @@ public class DefaultTheme implements Theme {
         )));
 
         // --- BaseTextInput (applies to both TextField and TextArea) ---
-        s = new StyleSelector(BaseTextInput.class, null, null, null);
+        s = new StyleSelector(BaseTextInput.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
@@ -89,17 +91,16 @@ public class DefaultTheme implements Theme {
                 CheckBox.StyleProps.CHECK_THICKNESS, 2f
         )));
 
-        // The box inside the checkbox still needs state colors
-        s = new StyleSelector(CheckBox.class, null, null, null);
+        s = new StyleSelector(Panel.class, null, Set.of("checkbox-box"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
-                InteractiveComponent.StyleProps.COLOR_NORMAL, new Color(80, 80, 80),
-                InteractiveComponent.StyleProps.COLOR_HOVERED, new Color(100, 100, 100),
-                InteractiveComponent.StyleProps.COLOR_FOCUSED, new Color(120, 120, 120)
+                ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)),
+                ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 100, 100)),
+                ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(120, 120, 120)),
+                ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50, 150))
         )));
 
-
         // --- Slider ---
-        s = new StyleSelector(Slider.class, null, null, null);
+        s = new StyleSelector(Slider.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
                 Slider.StyleProps.THUMB_COLOR, new Color(160, 160, 160),
                 Slider.StyleProps.TRACK_PADDING, 2f,
@@ -108,6 +109,27 @@ public class DefaultTheme implements Theme {
                 ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
                 ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
                 ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(30, 30, 30, 150))
+        )));
+
+        // --- RadioButton ---
+
+        s = new StyleSelector(Panel.class, null, Set.of("radio-button-outline"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.NORMAL_RENDERER, new RoundedRectangleRenderer(new Color(50, 50, 50), 6f),
+                ComponentStyle.StyleProps.DISABLED_RENDERER, new RoundedRectangleRenderer(new Color(80, 80, 80), 6f)
+        )));
+
+        s = new StyleSelector(Panel.class, null, Set.of("radio-button-background"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.NORMAL_RENDERER, new RoundedRectangleRenderer(new Color(110, 110, 110), 5f),
+                ComponentStyle.StyleProps.HOVERED_RENDERER, new RoundedRectangleRenderer(new Color(140, 140, 140), 5f),
+                ComponentStyle.StyleProps.SELECTED_RENDERER, new RoundedRectangleRenderer(new Color(160, 160, 160), 5f),
+                ComponentStyle.StyleProps.DISABLED_RENDERER, new RoundedRectangleRenderer(new Color(80, 80, 80), 5f)
+        )));
+
+        s = new StyleSelector(Panel.class, null, Set.of("radio-button-dot"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.BASE_RENDERER, new RoundedRectangleRenderer(new Color(40, 160, 220), 3f)
         )));
     }
 

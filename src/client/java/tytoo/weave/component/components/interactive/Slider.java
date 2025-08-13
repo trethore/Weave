@@ -8,6 +8,7 @@ import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
@@ -33,6 +34,9 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         this.step = step;
         this.orientation = orientation;
         this.fromDouble = fromDouble;
+
+        this.addStyleState(StyleState.NORMAL);
+        this.addStyleClass("interactive-visual");
 
         this.thumb = Panel.create();
         var stylesheet = ThemeManager.getStylesheet();

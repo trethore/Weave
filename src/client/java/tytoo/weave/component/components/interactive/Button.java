@@ -3,12 +3,15 @@ package tytoo.weave.component.components.interactive;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.StyleState;
 
 public class Button extends InteractiveComponent<Button> {
 
     protected Button() {
         this.setWidth(Constraints.childBased(10));
         this.setHeight(Constraints.childBased(10));
+        this.addStyleState(StyleState.NORMAL);
+        this.addStyleClass("interactive-visual");
     }
 
     public static Button create() {

@@ -8,6 +8,7 @@ import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 
 public class ImageButton extends InteractiveComponent<ImageButton> {
@@ -20,6 +21,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         float gap = stylesheet.get(this, StyleProps.IMAGE_BUTTON_GAP, 4f);
         this.setPadding(padding);
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, gap));
+        this.addStyleState(StyleState.NORMAL);
+        this.addStyleClass("interactive-visual");
     }
 
     public static ImageButton of(Identifier imageId) {

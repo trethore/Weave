@@ -5,6 +5,7 @@ public enum StyleState {
     HOVERED("hovered"),
     FOCUSED("focused"),
     ACTIVE("active"),
+    SELECTED("selected"),
     DISABLED("disabled"),
     VALID("valid"),
     INVALID("invalid");

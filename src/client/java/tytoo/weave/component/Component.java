@@ -692,6 +692,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return this.styleClasses.contains(styleClass);
     }
 
+    public boolean hasStyleState(StyleState state) {
+        return this.activeStyleStates.contains(state);
+    }
+
     public Constraints getConstraints() {
         return this.layoutState.getConstraints();
     }

@@ -13,6 +13,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -41,9 +42,12 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         this.setHeight(Constraints.childBased());
         this.setWidth(Constraints.sumOfChildrenWidth(0, gap));
 
+
         this.box = Panel.create()
                 .setWidth(Constraints.pixels(boxSize))
-                .setHeight(Constraints.pixels(boxSize));
+                .setHeight(Constraints.pixels(boxSize))
+                .addStyleClass("checkbox-box")
+                .addStyleState(StyleState.NORMAL);
 
         CheckMark checkMark = new CheckMark(this);
         checkMark.setWidth(Constraints.relative(1.0f));
@@ -52,9 +56,13 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
         updateChildren();
 
-        this.getStyle().setBaseRenderer(null);
+        this.onMouseEnter(e -> this.box.addStyleState(StyleState.HOVERED));
+        this.onMouseLeave(e -> this.box.removeStyleState(StyleState.HOVERED));
+        this.onFocusGained(e -> this.box.addStyleState(StyleState.FOCUSED));
+        this.onFocusLost(e -> this.box.removeStyleState(StyleState.FOCUSED));
 
         this.onClick(c -> this.setChecked(!this.isChecked()));
+
 
         updateVisualState(0L);
     }

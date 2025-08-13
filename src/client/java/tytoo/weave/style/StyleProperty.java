@@ -1,23 +1,10 @@
 package tytoo.weave.style;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 
-public final class StyleProperty<T> {
-    private final String name;
-    private final Class<T> type;
-
-    public StyleProperty(String name, Class<T> type) {
-        this.name = name;
-        this.type = type;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Class<T> getType() {
-        return type;
-    }
+public record StyleProperty<T>(String name, Class<T> type) {
 
     @Override
     public boolean equals(Object o) {
@@ -33,7 +20,7 @@ public final class StyleProperty<T> {
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "StyleProperty{" +
                 "name='" + name + '\'' +
                 '}';
