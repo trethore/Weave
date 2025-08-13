@@ -65,26 +65,12 @@ public class AnimationBuilder<C extends Component<C>> {
 
     public AnimationBuilder<C> color(Color to) {
         if (component instanceof TextComponent<?> textComponent) {
-            tytoo.weave.style.Styling currentStyling = textComponent.getBaseStyle();
-            Color startColor = Color.WHITE;
-            if (currentStyling != null && currentStyling.getColor() != null) {
-                startColor = currentStyling.getColor();
-            }
-
-            State<Color> colorState = new State<>(startColor);
-            Consumer<Color> onUpdate = newColor -> {
-                tytoo.weave.style.Styling style = textComponent.getBaseStyle();
-                if (style == null) {
-                    style = tytoo.weave.style.Styling.create();
-                }
-                textComponent.setStyle(style.color(newColor));
-            };
-            return animateProperty(colorState, to, Interpolators.COLOR, onUpdate, "color");
+            return animateProperty(textComponent.getColorState(), to, Interpolators.COLOR, null, "color");
         }
 
         ComponentStyle style = component.getStyle();
         ComponentRenderer baseRenderer = style.getBaseRenderer();
-        Color startColor = new Color(0, 0, 0, 0); // default transparent
+        Color startColor = new Color(0, 0, 0, 0);
         if (baseRenderer instanceof ColorableRenderer colorable && colorable.getColor() != null) {
             startColor = colorable.getColor();
         }

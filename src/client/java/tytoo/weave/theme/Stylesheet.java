@@ -7,12 +7,11 @@ import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.ComponentRenderer;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Stylesheet {
     private final List<StyleRule> rules = new ArrayList<>();
+    private final WeakHashMap<Component<?>, Map<Set<StyleState>, Map<StyleProperty<?>, Object>>> propertyCache = new WeakHashMap<>();
 
     private static StyleProperty<ComponentRenderer> getPropertyForState(StyleState state) {
         return switch (state) {
@@ -29,23 +28,30 @@ public class Stylesheet {
 
     public void addRule(StyleRule rule) {
         this.rules.add(rule);
+        this.propertyCache.clear();
     }
 
     public void clearRules() {
         this.rules.clear();
+        this.propertyCache.clear();
+    }
+
+    public void clearCache(Component<?> component) {
+        this.propertyCache.remove(component);
     }
 
     public ComponentStyle resolveStyleFor(Component<?> component) {
         ComponentStyle style = new ComponentStyle();
+        Map<StyleProperty<?>, Object> properties = getProperties(component);
 
-        ComponentRenderer baseRenderer = get(component, ComponentStyle.StyleProps.BASE_RENDERER, null);
+        ComponentRenderer baseRenderer = (ComponentRenderer) properties.get(ComponentStyle.StyleProps.BASE_RENDERER);
         if (baseRenderer != null) {
             style.setBaseRenderer(baseRenderer);
         }
 
         for (StyleState state : StyleState.values()) {
             StyleProperty<ComponentRenderer> prop = getPropertyForState(state);
-            ComponentRenderer stateRenderer = get(component, prop, null);
+            ComponentRenderer stateRenderer = (ComponentRenderer) properties.get(prop);
             style.setRenderer(state, stateRenderer);
         }
         return style;
@@ -53,24 +59,41 @@ public class Stylesheet {
 
     @SuppressWarnings("unchecked")
     public <T> T get(Component<?> component, StyleProperty<T> property, T defaultValue) {
+        Object value = getProperties(component).get(property);
+        if (property.type().isInstance(value)) {
+            return (T) value;
+        }
+        return defaultValue;
+    }
+
+    private Map<StyleProperty<?>, Object> getProperties(Component<?> component) {
+        Set<StyleState> currentStates = EnumSet.copyOf(component.getActiveStyleStates());
+        Map<StyleProperty<?>, Object> cachedProperties = this.propertyCache
+                .computeIfAbsent(component, k -> new HashMap<>())
+                .get(currentStates);
+
+        if (cachedProperties != null) {
+            return cachedProperties;
+        }
+
+        Map<StyleProperty<?>, Object> computedProperties = computePropertiesForState(component);
+        this.propertyCache.get(component).put(currentStates, computedProperties);
+        return computedProperties;
+    }
+
+    private Map<StyleProperty<?>, Object> computePropertiesForState(Component<?> component) {
+        Map<StyleProperty<?>, Object> properties = new HashMap<>();
         List<StyleRule> matchingRules = new ArrayList<>();
+
         for (StyleRule rule : this.rules) {
-            if (rule.getSelector().matches(component) && rule.getProperties().containsKey(property)) {
+            if (rule.getSelector().matches(component)) {
                 matchingRules.add(rule);
             }
         }
-
-        if (matchingRules.isEmpty()) {
-            return defaultValue;
+        matchingRules.sort(Comparator.comparingInt(StyleRule::getSpecificity));
+        for (StyleRule rule : matchingRules) {
+            properties.putAll(rule.getProperties());
         }
-
-        matchingRules.sort(Comparator.comparingInt(StyleRule::getSpecificity).reversed());
-
-        try {
-            return (T) matchingRules.getFirst().getProperties().get(property);
-        } catch (ClassCastException e) {
-            // This indicates a developer error in the stylesheet definition.
-            return defaultValue;
-        }
+        return properties;
     }
 }

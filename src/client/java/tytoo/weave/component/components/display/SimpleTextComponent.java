@@ -2,7 +2,7 @@ package tytoo.weave.component.components.display;
 
 import net.minecraft.text.Text;
 
-public final class SimpleTextComponent extends TextComponent<SimpleTextComponent> {
+public class SimpleTextComponent extends TextComponent<SimpleTextComponent> {
     private SimpleTextComponent(Text text) {
         super(text);
     }
@@ -12,6 +12,6 @@ public final class SimpleTextComponent extends TextComponent<SimpleTextComponent
     }
 
     public static SimpleTextComponent of(Text text) {
-        return new SimpleTextComponent(Text.of(text));
+        return new SimpleTextComponent(text);
     }
 }

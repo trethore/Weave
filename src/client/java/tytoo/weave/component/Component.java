@@ -566,6 +566,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     private void invalidateStyleCache() {
         this.style = null;
+        ThemeManager.getStylesheet().clearCache(this);
     }
 
     public T removeStyleState(StyleState state) {

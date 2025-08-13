@@ -7,6 +7,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.state.State;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.Styling;
 import tytoo.weave.style.TextSegment;
@@ -14,20 +15,25 @@ import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.RenderTextUtils;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TextComponent<T extends TextComponent<T>> extends Component<T> {
+    private final State<Color> colorState = new State<>(null);
     private List<TextSegment> segments = new ArrayList<>();
     private Styling baseStyle;
     private Styling hoverStyle;
-
     private transient Text cachedText = null;
     private transient int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
 
     protected TextComponent(Text text) {
         parseText(text);
+        this.colorState.addListener(c -> invalidateCache());
+
+        Styling themeStyle = ThemeManager.getTheme().getDefaultTextStyle();
+        this.colorState.set(themeStyle.getColor());
 
         this.getConstraints().setWidth((component, parentWidth) -> {
             Styling styling = getActiveStyling();
@@ -55,7 +61,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         this.cachedText = null;
     }
 
-    protected Text getDrawableText() {
+    public Text getDrawableText() {
         boolean isHovered = isHovered();
         int currentHoverState = isHovered ? 1 : 0;
 
@@ -75,6 +81,11 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 if (hoverStyle != null) finalStyle = finalStyle.mergeWith(hoverStyle);
                 if (segment.getHoverStyling() != null) finalStyle = finalStyle.mergeWith(segment.getHoverStyling());
             }
+
+            if (this.colorState.get() != null) {
+                finalStyle = finalStyle.color(this.colorState.get());
+            }
+
             composedText.append(Text.literal(segment.getText()).setStyle(finalStyle.toMinecraftStyle()));
         }
 
@@ -164,6 +175,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         T clone = super.clone();
 
         ((TextComponent<?>) clone).segments = new ArrayList<>(this.segments);
+        ((TextComponent<?>) clone).colorState.set(this.colorState.get());
         ((TextComponent<?>) clone).invalidateCache();
         return clone;
     }
@@ -200,6 +212,11 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     public T setStyle(Styling style) {
         this.baseStyle = style;
+        if (style != null && style.getColor() != null) {
+            this.colorState.set(style.getColor());
+        } else {
+            this.colorState.set(null);
+        }
         invalidateCache();
         return self();
     }
@@ -218,6 +235,16 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     public T setHoverStyle(Styling style) {
         this.hoverStyle = style;
+        invalidateCache();
+        return self();
+    }
+
+    public State<Color> getColorState() {
+        return this.colorState;
+    }
+
+    public T setColor(Color color) {
+        this.colorState.set(color);
         invalidateCache();
         return self();
     }
