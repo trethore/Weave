@@ -9,10 +9,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseScrollEvent;
-import tytoo.weave.theme.ThemeManager;
-import tytoo.weave.utils.render.Render2DUtils;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +31,7 @@ public class TextArea extends BaseTextInput<TextArea> {
         return new TextArea();
     }
 
-    private List<String> getLines() {
+    public List<String> getLines() {
         return Arrays.asList(getText().split("\n", -1));
     }
 
@@ -49,59 +46,13 @@ public class TextArea extends BaseTextInput<TextArea> {
         int fontHeight = textRenderer.fontHeight;
         float lineHeight = fontHeight + 1;
 
-        if (getText().isEmpty() && !isFocused()) {
-            if (getPlaceholder() != null) {
-                Color placeholderColor = ThemeManager.getStylesheet().get(this, StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
-                context.drawText(textRenderer, getPlaceholder(), (int) getInnerLeft(), (int) (getInnerTop() + 3), placeholderColor.getRGB(), true);
-            }
+        if (getText().isEmpty() && !isFocused() && getPlaceholder() != null) {
+            getPlaceholderRenderer().render(context, this);
         } else {
+            getSelectionRenderer().render(context, this);
+
             List<String> lines = getLines();
             float yOffset = getInnerTop() + scrollY + 1;
-
-            int selectionStart = Math.min(getCursorPos(), getSelectionAnchor());
-            int selectionEnd = Math.max(getCursorPos(), getSelectionAnchor());
-
-            Color selectionColor = ThemeManager.getStylesheet().get(this, StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
-
-            if (selectionStart != selectionEnd) {
-                int absPos = 0;
-                for (int i = 0; i < lines.size(); i++) {
-                    String lineText = lines.get(i);
-                    float lineY = yOffset + i * lineHeight;
-                    if (lineY + lineHeight < getInnerTop() || lineY > getInnerTop() + getInnerHeight()) {
-                        absPos += lineText.length() + 1;
-                        continue;
-                    }
-
-                    int lineStartAbs = absPos;
-                    int lineEndAbs = lineStartAbs + lineText.length();
-
-                    int selForLineStart = Math.max(selectionStart, lineStartAbs);
-                    int selForLineEnd = Math.min(selectionEnd, lineEndAbs);
-
-                    if (selForLineStart < selForLineEnd) {
-                        int colStart = selForLineStart - lineStartAbs;
-                        int colEnd = selForLineEnd - lineStartAbs;
-
-                        String preSelection = lineText.substring(0, colStart);
-                        float highlightX1 = getInnerLeft() + textRenderer.getWidth(preSelection);
-
-                        String selected = lineText.substring(colStart, colEnd);
-                        float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
-
-                        Render2DUtils.drawRect(context, highlightX1, lineY, highlightX2 - highlightX1, lineHeight, selectionColor);
-                    }
-
-                    if (selectionEnd > lineEndAbs && selectionStart <= lineEndAbs) {
-                        float highlightX1 = getInnerLeft() + textRenderer.getWidth(lineText);
-                        float highlightWidth = 2;
-                        Render2DUtils.drawRect(context, highlightX1, lineY, highlightWidth, lineHeight, selectionColor);
-                    }
-
-                    absPos += lineText.length() + 1;
-                }
-            }
-
             for (int i = 0; i < lines.size(); i++) {
                 float lineY = yOffset + i * lineHeight;
                 if (lineY + lineHeight < getInnerTop() || lineY > getInnerTop() + getInnerHeight()) continue;
@@ -110,20 +61,7 @@ public class TextArea extends BaseTextInput<TextArea> {
                 context.drawText(textRenderer, lines.get(i), (int) getInnerLeft(), (int) textY, -1, true);
             }
 
-            long cursorBlinkInterval = ThemeManager.getStylesheet().get(this, StyleProps.CURSOR_BLINK_INTERVAL, 500L);
-            boolean shouldDrawCursor = (System.currentTimeMillis() - getLastActionTime()) < cursorBlinkInterval || (System.currentTimeMillis() / cursorBlinkInterval) % 2 == 0;
-
-            if (isFocused() && shouldDrawCursor && selectionStart == selectionEnd) {
-                Point pos2d = getCursorPos2D(getCursorPos());
-                float lineY = yOffset + pos2d.y * lineHeight;
-
-                if (lineY + lineHeight >= getInnerTop() && lineY <= getInnerTop() + getInnerHeight()) {
-                    String lineToCursor = lines.get(pos2d.y).substring(0, pos2d.x);
-                    float cursorX = getInnerLeft() + textRenderer.getWidth(lineToCursor); //
-                    Color cursorColor = ThemeManager.getStylesheet().get(this, StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
-                    Render2DUtils.drawRect(context, cursorX, lineY, 1, lineHeight, cursorColor);
-                }
-            }
+            getCursorRenderer().render(context, this);
         }
 
         context.disableScissor();
@@ -141,13 +79,13 @@ public class TextArea extends BaseTextInput<TextArea> {
         boolean shift = Screen.hasShiftDown();
         switch (event.getKeyCode()) {
             case GLFW.GLFW_KEY_UP: {
-                Point pos2d = getCursorPos2D(getCursorPos());
+                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y - 1, this.lastDesiredCol), shift);
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN: {
-                Point pos2d = getCursorPos2D(getCursorPos());
+                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y + 1, this.lastDesiredCol), shift);
                 return true;
@@ -169,13 +107,13 @@ public class TextArea extends BaseTextInput<TextArea> {
                 this.lastDesiredCol = -1;
                 return true;
             case GLFW.GLFW_KEY_HOME: {
-                Point pos2d = getCursorPos2D(getCursorPos());
+                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
                 setCursorPos(getPosFrom2D(pos2d.y, 0), shift);
                 this.lastDesiredCol = -1;
                 return true;
             }
             case GLFW.GLFW_KEY_END: {
-                Point pos2d = getCursorPos2D(getCursorPos());
+                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
                 String line = getLines().get(pos2d.y);
                 setCursorPos(getPosFrom2D(pos2d.y, line.length()), shift);
                 this.lastDesiredCol = -1;
@@ -228,18 +166,18 @@ public class TextArea extends BaseTextInput<TextArea> {
         clampScroll();
     }
 
-    private Point getCursorPos2D(int pos) {
+    public java.awt.Point getCursorPos2D(int pos) {
         int charCount = 0;
         List<String> lines = getLines();
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             if (pos <= charCount + line.length()) {
-                return new Point(pos - charCount, i);
+                return new java.awt.Point(pos - charCount, i);
             }
             charCount += line.length() + 1;
         }
         String lastLine = lines.getLast();
-        return new Point(lastLine.length(), lines.size() - 1);
+        return new java.awt.Point(lastLine.length(), lines.size() - 1);
     }
 
     private int getPosFrom2D(int line, int col) {
@@ -276,7 +214,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     protected void ensureCursorVisible() {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
-        Point pos2d = getCursorPos2D(getCursorPos());
+        java.awt.Point pos2d = getCursorPos2D(getCursorPos());
         float cursorY = pos2d.y * lineHeight;
         if (cursorY + scrollY < 0) {
             scrollY = -cursorY;
@@ -304,5 +242,9 @@ public class TextArea extends BaseTextInput<TextArea> {
         super.arrange(x, y);
         clampScroll();
         ensureCursorVisible();
+    }
+
+    public float getScrollY() {
+        return scrollY;
     }
 }

@@ -2,9 +2,9 @@ package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.CheckBox;
-import tytoo.weave.component.components.interactive.RadioButton;
-import tytoo.weave.component.components.interactive.RadioButtonGroup;
+import tytoo.weave.component.components.interactive.*;
+import tytoo.weave.component.components.interactive.TextArea;
+import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
@@ -42,6 +42,18 @@ public class TestGui extends WeaveScreen {
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 5));
+
+        TextField.create()
+                .setPlaceholder("Enter text here...")
+                .setWidth(Constraints.pixels(150))
+                .setParent(testPanel);
+
+        TextArea.create()
+                .setText("This is a multi-line text area.\nTry scrolling!")
+                .setPlaceholder("More text goes here...")
+                .setWidth(Constraints.pixels(200))
+                .setHeight(Constraints.pixels(80))
+                .setParent(testPanel);
 
         CheckBox.of("Test").setParent(testPanel).setMargin(10, 0);
 

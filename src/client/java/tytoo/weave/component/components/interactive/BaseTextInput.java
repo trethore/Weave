@@ -11,6 +11,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 
@@ -40,8 +41,10 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     private Predicate<String> validator = null;
     @Nullable
     private Text placeholder = null;
+    private CursorRenderer cursorRenderer = new DefaultCursorRenderer();
+    private SelectionRenderer selectionRenderer = new DefaultSelectionRenderer();
+    private PlaceholderRenderer placeholderRenderer = new DefaultPlaceholderRenderer();
     private boolean isUpdatingFromState = false;
-
 
     protected BaseTextInput() {
         this.setPadding(4);
@@ -390,6 +393,38 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     public T setPlaceholder(@Nullable Text placeholder) {
         this.placeholder = placeholder;
+        return self();
+    }
+
+    public T setPlaceholder(@Nullable String placeholder) {
+        this.placeholder = placeholder == null ? null : Text.of(placeholder);
+        return self();
+    }
+
+    public CursorRenderer getCursorRenderer() {
+        return cursorRenderer;
+    }
+
+    public T setCursorRenderer(CursorRenderer cursorRenderer) {
+        this.cursorRenderer = cursorRenderer;
+        return self();
+    }
+
+    public SelectionRenderer getSelectionRenderer() {
+        return selectionRenderer;
+    }
+
+    public T setSelectionRenderer(SelectionRenderer selectionRenderer) {
+        this.selectionRenderer = selectionRenderer;
+        return self();
+    }
+
+    public PlaceholderRenderer getPlaceholderRenderer() {
+        return placeholderRenderer;
+    }
+
+    public T setPlaceholderRenderer(PlaceholderRenderer placeholderRenderer) {
+        this.placeholderRenderer = placeholderRenderer;
         return self();
     }
 

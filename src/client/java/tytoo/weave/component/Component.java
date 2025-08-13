@@ -1,5 +1,6 @@
 package tytoo.weave.component;
 
+import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
@@ -34,6 +35,7 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -59,6 +61,23 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         this.layoutState = new LayoutState(this);
         this.renderState = new RenderState(this);
         this.eventState = new EventState();
+    }
+
+    private static void updateNamedParts(Component<?> clone, Component<?> original, Map<Component<?>, Component<?>> originalToCloneMap) {
+        for (Field field : clone.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(NamedPart.class)) {
+                try {
+                    field.setAccessible(true);
+                    Object originalPart = field.get(original);
+                    if (originalPart instanceof Component<?>) {
+                        Component<?> clonedPart = originalToCloneMap.get(originalPart);
+                        field.set(clone, clonedPart);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Failed to update named child reference during clone", e);
+                }
+            }
+        }
     }
 
     public LayoutState getLayoutState() {
@@ -603,12 +622,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clonedComponent.parent = null;
             clonedComponent.invalidateLayout();
 
-            // Get the state objects that were created by the cloned component's constructor
             LayoutState clonedLayoutState = clonedComponent.getLayoutState();
             EventState clonedEventState = clonedComponent.getEventState();
             RenderState clonedRenderState = clonedComponent.getRenderState();
 
-            // Copy LayoutState properties
             clonedLayoutState.getConstraints().setX(this.layoutState.getConstraints().getXConstraint());
             clonedLayoutState.getConstraints().setY(this.layoutState.getConstraints().getYConstraint());
             clonedLayoutState.getConstraints().setWidth(this.layoutState.getConstraints().getWidthConstraint());
@@ -617,19 +634,18 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clonedLayoutState.setPadding(new EdgeInsets(this.layoutState.getPadding().top(), this.layoutState.getPadding().right(), this.layoutState.getPadding().bottom(), this.layoutState.getPadding().left()));
             clonedLayoutState.setLayoutData(this.getLayoutData());
 
-            // Copy EventState properties
             for (Map.Entry<EventType<?>, List<Consumer<?>>> entry : this.eventState.getEventListeners().entrySet()) {
                 clonedEventState.getEventListeners().put(entry.getKey(), new ArrayList<>(entry.getValue()));
             }
 
-            // Clone children
+            Map<Component<?>, Component<?>> originalToCloneMap = Maps.newIdentityHashMap();
             clonedComponent.children = new LinkedList<>();
             for (Component<?> child : this.children) {
                 Component<?> childClone = child.clone();
                 clonedComponent.addChild(childClone);
+                originalToCloneMap.put(child, childClone);
             }
 
-            // Copy RenderState properties
             clonedRenderState.rotation.set(this.getRotation());
             clonedRenderState.opacity.set(this.getOpacity());
             clonedRenderState.scaleX.set(this.getScaleX());
@@ -637,20 +653,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clonedRenderState.setVisible(this.renderState.isVisible());
             clonedRenderState.setEffects(new ArrayList<>(this.renderState.getEffects()));
 
-            // Copy other properties
             clonedComponent.setStyle(this.style != null ? this.style.clone() : null);
             clonedComponent.id = this.id;
             clonedComponent.styleClasses.addAll(this.styleClasses);
-            clonedComponent.updateClonedChildReferences(this);
+            updateNamedParts(clonedComponent, this, originalToCloneMap);
 
             return clonedComponent;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Component is Cloneable but clone() failed", e);
         }
-    }
-
-    protected void updateClonedChildReferences(Component<T> original) {
-        // Default implementation is empty.
     }
 
     public AnimationBuilder<T> animate() {

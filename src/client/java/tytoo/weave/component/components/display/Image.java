@@ -4,7 +4,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.WeaveClient;
-import tytoo.weave.component.Component;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
@@ -20,7 +20,9 @@ import java.io.File;
 import java.net.URL;
 
 public class Image extends BasePanel<Image> {
-    private BaseImage<?> imagePart;
+    @NamedPart
+    private final BaseImage<?> imagePart;
+    @NamedPart
     private TextComponent<?> labelPart;
     private float gap = 2;
 
@@ -54,22 +56,6 @@ public class Image extends BasePanel<Image> {
             }
         }, McUtils.getMc().orElseThrow());
         return image;
-    }
-
-    @Override
-    protected void updateClonedChildReferences(Component<Image> original) {
-        super.updateClonedChildReferences(original);
-        Image originalImage = (Image) original;
-
-        int imageIndex = original.getChildren().indexOf(originalImage.imagePart);
-        if (imageIndex != -1) {
-            this.imagePart = (BaseImage<?>) this.getChildren().get(imageIndex);
-        }
-
-        int labelIndex = original.getChildren().indexOf(originalImage.labelPart);
-        if (labelIndex != -1) {
-            this.labelPart = (TextComponent<?>) this.getChildren().get(labelIndex);
-        }
     }
 
     @Nullable

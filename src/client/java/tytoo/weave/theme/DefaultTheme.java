@@ -67,10 +67,10 @@ public class DefaultTheme implements Theme {
         // --- BaseTextInput (applies to both TextField and TextArea) ---
         s = new StyleSelector(BaseTextInput.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
-                Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
-                Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
-                Map.entry(ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
-                Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(20, 20, 20))),
+                Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
                 Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(15, 15, 15, 150))),
                 Map.entry(BaseTextInput.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128)),
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0)),

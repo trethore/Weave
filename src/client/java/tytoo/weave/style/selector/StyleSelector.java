@@ -31,14 +31,18 @@ public class StyleSelector {
     private int calculateSpecificity() {
         int s = 0;
         if (id != null) {
-            s += 1000;
+            s += 10000;
         }
-        s += styleClasses.size() * 100;
-        s += states.size() * 10;
+        s += styleClasses.size() * 1000;
+        s += states.size() * 100;
 
-        if (!this.componentType.equals(Component.class)) {
-            s += 1;
+        int depth = 0;
+        Class<?> current = this.componentType;
+        while (current != null && Component.class.isAssignableFrom(current)) {
+            depth++;
+            current = current.getSuperclass();
         }
+        s += depth;
         return s;
     }
 

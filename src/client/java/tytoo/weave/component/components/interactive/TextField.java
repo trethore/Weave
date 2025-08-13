@@ -9,16 +9,9 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
-import tytoo.weave.style.renderer.textfield.CursorRenderer;
-import tytoo.weave.style.renderer.textfield.DefaultCursorRenderer;
-import tytoo.weave.theme.ThemeManager;
-import tytoo.weave.utils.render.Render2DUtils;
-
-import java.awt.*;
 
 public class TextField extends BaseTextInput<TextField> {
     private int firstCharacterIndex = 0;
-    private CursorRenderer cursorRenderer = new DefaultCursorRenderer();
 
     protected TextField() {
         super();
@@ -46,17 +39,9 @@ public class TextField extends BaseTextInput<TextField> {
         return firstCharacterIndex;
     }
 
+
     public boolean hasSelection() {
         return getCursorPos() != getSelectionAnchor();
-    }
-
-    public CursorRenderer getCursorRenderer() {
-        return cursorRenderer;
-    }
-
-    public TextField setCursorRenderer(CursorRenderer cursorRenderer) {
-        this.cursorRenderer = cursorRenderer;
-        return this;
     }
 
     @Override
@@ -64,56 +49,21 @@ public class TextField extends BaseTextInput<TextField> {
         super.draw(context);
 
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        int fontHeight = textRenderer.fontHeight;
-        float textY = this.getInnerTop() + (this.getInnerHeight() - (fontHeight - 1)) / 2.0f + 1f;
+        float textY = this.getInnerTop() + (this.getInnerHeight() - (textRenderer.fontHeight - 1)) / 2.0f + 1f;
 
         boolean hasText = !getText().isEmpty();
         if (hasText || isFocused()) {
+            getSelectionRenderer().render(context, this);
+
             String visibleText = textRenderer.trimToWidth(getText().substring(this.firstCharacterIndex), (int) this.getInnerWidth());
-
-            int selectionStart = Math.min(getCursorPos(), getSelectionAnchor());
-            int selectionEnd = Math.max(getCursorPos(), getSelectionAnchor());
-            if (selectionStart != selectionEnd) {
-                int visibleSelectionStart = Math.max(0, selectionStart - this.firstCharacterIndex);
-                int visibleSelectionEnd = Math.min(visibleText.length(), selectionEnd - this.firstCharacterIndex);
-
-                if (visibleSelectionStart < visibleSelectionEnd) {
-                    String preSelection = visibleText.substring(0, visibleSelectionStart);
-                    float highlightX1 = this.getInnerLeft() + textRenderer.getWidth(preSelection);
-
-                    String selected = visibleText.substring(visibleSelectionStart, visibleSelectionEnd);
-                    float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
-                    Color selectionColor = ThemeManager.getStylesheet().get(this, StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
-
-                    float highlightY = textY - 2;
-                    float highlightHeight = fontHeight + 1;
-                    if (selectionColor != null) {
-                        Render2DUtils.drawRect(context, highlightX1, highlightY, highlightX2 - highlightX1, highlightHeight, selectionColor);
-                    }
-                }
-            }
-
             if (!visibleText.isEmpty()) {
                 context.drawText(textRenderer, Text.of(visibleText), (int) this.getInnerLeft(), (int) textY, -1, true);
             }
 
-            if (this.cursorRenderer != null) {
-                this.cursorRenderer.render(context, this);
-            }
-
+            getCursorRenderer().render(context, this);
         } else {
-            if (getPlaceholder() != null) {
-                Color placeholderColor = ThemeManager.getStylesheet().get(this, StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
-                if (placeholderColor != null) {
-                    context.drawText(textRenderer, getPlaceholder(), (int) this.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
-                }
-            }
+            getPlaceholderRenderer().render(context, this);
         }
-    }
-
-    @Override
-    protected void setCursorPos(int pos, boolean shiftPressed) {
-        super.setCursorPos(pos, shiftPressed);
     }
 
     public TextField setPlaceholder(String placeholder) {
