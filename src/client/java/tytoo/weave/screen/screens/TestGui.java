@@ -1,16 +1,18 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
-import tytoo.weave.animation.Easing;
 import tytoo.weave.component.components.display.SimpleTextComponent;
+import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.Slider;
+import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-
-import java.awt.*;
+import tytoo.weave.state.State;
 
 public class TestGui extends WeaveScreen {
+
 
     public TestGui() {
         super(Text.literal("Test GUI"));
@@ -35,20 +37,19 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 5));
 
-        SimpleTextComponent animatedText = SimpleTextComponent.of("Animating!");
-        animatedText.setOpacity(0f);
-        animatedText.setScale(0.5f);
-        testPanel.addChildren(animatedText);
+        TextField textField = TextField.create()
+                .setPlaceholder("My Size is default!");
 
-        animatedText.animate().duration(1000).opacity(0.1f).then(() ->
-                animatedText.animate().duration(1000).color(Color.CYAN).then(() ->
-                        animatedText.animate().duration(500).easing(Easing.EASE_OUT_BACK).scale(1.2f).then(() ->
-                                animatedText.animate().duration(500).easing(Easing.EASE_OUT_SINE).scale(1.0f))));
+        Button button = Button.of("I should also have a default size!");
 
-        SimpleTextComponent hoverText = SimpleTextComponent.of("Hover me!");
-        hoverText.onMouseEnter(e -> hoverText.animate().duration(200).color(Color.YELLOW).scale(1.1f).rotation(45.0f).opacity(0.5f));
-        hoverText.onMouseLeave(e -> hoverText.animate().duration(200).color(Color.WHITE).scale(1.0f).rotation(0.0f).opacity(1));
-        testPanel.addChildren(hoverText);
+        State<Integer> sliderValue = new State<>(50);
+        SimpleTextComponent sliderLabel = SimpleTextComponent.of("Value: 50");
+        sliderValue.bind(v -> sliderLabel.setText("Value: " + v));
+
+        Slider<Integer> slider = Slider.integerSlider(Slider.Orientation.HORIZONTAL, 0, 100, 50);
+        slider.bindValue(sliderValue);
+
+        testPanel.addChildren(textField, button, slider, sliderLabel);
 
         window.addChildren(titlePanel, testPanel);
     }

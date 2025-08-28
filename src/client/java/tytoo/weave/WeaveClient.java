@@ -11,6 +11,7 @@ import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import tytoo.weave.screen.screens.TestGui;
+import tytoo.weave.ui.CursorManager;
 import tytoo.weave.utils.FontManager;
 
 public class WeaveClient implements ClientModInitializer {
@@ -29,7 +30,10 @@ public class WeaveClient implements ClientModInitializer {
             }
         });
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> FontManager.closeAll());
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            FontManager.closeAll();
+            CursorManager.destroy();
+        });
         LOGGER.info("Weave initialized!");
     }
 

@@ -11,7 +11,9 @@ import tytoo.weave.event.focus.FocusLostEvent;
 import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
+import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.McUtils;
 
 import java.util.Optional;
@@ -159,6 +161,7 @@ public class UIManager {
             if (newHovered != oldHovered) {
                 state.setHoveredComponent(newHovered);
 
+                updateCursor(newHovered);
                 if (oldHovered != null) {
                     bubbleEvent(oldHovered, new MouseLeaveEvent(oldHovered, (float) mouseX, (float) mouseY), Component::fireEvent);
                 }
@@ -167,6 +170,20 @@ public class UIManager {
                 }
             }
         });
+    }
+
+    private static void updateCursor(@Nullable Component<?> component) {
+        Component<?> current = component;
+        while (current != null) {
+            CursorType cursorType = ThemeManager.getStylesheet().get(current, CommonStyleProperties.CURSOR, null);
+            if (cursorType != null) {
+                CursorManager.setCursor(cursorType);
+                return;
+            }
+            current = current.getParent();
+        }
+
+        CursorManager.setCursor(CursorType.ARROW);
     }
 
     private static void setFocusedComponent(UIState state, @Nullable Component<?> component) {
@@ -187,6 +204,12 @@ public class UIManager {
         for (Component<?> c = start; c != null; c = c.getParent()) {
             if (event.isCancelled()) break;
             dispatcher.accept(c, event);
+        }
+    }
+
+    public static void onClose(Screen screen) {
+        if (screenStates.remove(screen) != null) {
+            CursorManager.setCursor(CursorType.ARROW);
         }
     }
 }

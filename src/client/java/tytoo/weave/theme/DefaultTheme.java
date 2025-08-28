@@ -9,11 +9,13 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
+import tytoo.weave.ui.CursorType;
 import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
@@ -72,6 +74,11 @@ public class DefaultTheme implements Theme {
                 StyleProps.ANIMATION_DURATION, 150L
         )));
 
+        s = new StyleSelector(InteractiveComponent.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                CommonStyleProperties.CURSOR, CursorType.HAND
+        )));
+
         // --- Button ---
         s = new StyleSelector(Button.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.of(
@@ -112,6 +119,11 @@ public class DefaultTheme implements Theme {
                 Map.entry(BaseTextInput.StyleProps.DEFAULT_HEIGHT, 20f)
         )));
 
+        s = new StyleSelector(BaseTextInput.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                CommonStyleProperties.CURSOR, CursorType.I_BEAM
+        )));
+
         // --- CheckBox ---
         s = new StyleSelector(CheckBox.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.of(
@@ -132,7 +144,6 @@ public class DefaultTheme implements Theme {
         // --- Slider ---
         s = new StyleSelector(Slider.class, null, Set.of("interactive-visual"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
-                Slider.StyleProps.THUMB_COLOR, new Color(160, 160, 160),
                 Slider.StyleProps.TRACK_PADDING, 2f,
                 Slider.StyleProps.DEFAULT_WIDTH, 150f,
                 Slider.StyleProps.DEFAULT_HEIGHT, 20f,
@@ -142,6 +153,23 @@ public class DefaultTheme implements Theme {
                 ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
                 ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(50, 50, 50)),
                 ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(30, 30, 30, 150))
+        )));
+
+        s = new StyleSelector(Slider.class, null, Set.of("slider-horizontal"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                CommonStyleProperties.CURSOR, CursorType.EW_RESIZE
+        )));
+
+        s = new StyleSelector(Slider.class, null, Set.of("slider-vertical"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                CommonStyleProperties.CURSOR, CursorType.NS_RESIZE
+        )));
+
+        s = new StyleSelector(Panel.class, null, Set.of("slider-thumb"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(160, 160, 160)),
+                ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(180, 180, 180)),
+                ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(200, 200, 200))
         )));
 
         // --- RadioButton ---

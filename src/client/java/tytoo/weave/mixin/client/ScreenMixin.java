@@ -27,6 +27,11 @@ public abstract class ScreenMixin {
         UIManager.onInit(self());
     }
 
+    @Inject(method = "removed", at = @At("HEAD"))
+    private void onRemoved(CallbackInfo ci) {
+        UIManager.onClose(self());
+    }
+
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
         if (UIManager.onKeyPressed(self(), keyCode, scanCode, modifiers)) {

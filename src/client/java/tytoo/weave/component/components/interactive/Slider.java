@@ -11,7 +11,6 @@ import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 
-import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -38,9 +37,14 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         this.addStyleState(StyleState.NORMAL);
         this.addStyleClass("interactive-visual");
 
-        this.thumb = Panel.create();
+        if (orientation == Orientation.HORIZONTAL) {
+            this.addStyleClass("slider-horizontal");
+        } else {
+            this.addStyleClass("slider-vertical");
+        }
+
+        this.thumb = Panel.create().addStyleClass("slider-thumb").addStyleState(StyleState.NORMAL);
         var stylesheet = ThemeManager.getStylesheet();
-        Color thumbColor = stylesheet.get(this, StyleProps.THUMB_COLOR, new Color(160, 160, 160)); // This was already good
         this.trackPadding = stylesheet.get(this, StyleProps.TRACK_PADDING, 4f);
 
         float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
@@ -61,6 +65,11 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
             thumb.setX(Constraints.center());
         }
         this.addChild(thumb);
+
+        this.onMouseEnter(e -> thumb.addStyleState(StyleState.HOVERED));
+        this.onMouseLeave(e -> thumb.removeStyleState(StyleState.HOVERED));
+        this.onFocusGained(e -> thumb.addStyleState(StyleState.FOCUSED));
+        this.onFocusLost(e -> thumb.removeStyleState(StyleState.FOCUSED));
 
         this.onMouseClick(this::handleMouseClick);
         this.onMouseDrag(this::handleMouseDrag);
@@ -290,7 +299,6 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Color> THUMB_COLOR = new StyleProperty<>("slider.thumb.color", Color.class);
         public static final StyleProperty<Float> TRACK_PADDING = new StyleProperty<>("slider.track.padding", Float.class);
         public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("slider.default-width", Float.class);
         public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("slider.default-height", Float.class);

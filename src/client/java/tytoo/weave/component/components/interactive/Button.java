@@ -15,6 +15,8 @@ public class Button extends InteractiveComponent<Button> {
         float minHeight = stylesheet.get(this, StyleProps.MIN_HEIGHT, 20f);
         float padding = stylesheet.get(this, StyleProps.PADDING, 5f);
 
+        this.setWidth(Constraints.childBased(padding));
+        this.setHeight(Constraints.childBased(padding));
         this.setMinWidth(minWidth);
         this.setMinHeight(minHeight);
         this.setPadding(padding);
