@@ -38,12 +38,27 @@ public class GridLayout implements Layout {
 
     @Override
     public void arrangeChildren(Component<?> parent) {
-        List<Component<?>> children = parent.getChildren();
-        if (children.isEmpty()) return;
+        List<Component<?>> managedChildren = parent.getChildren().stream()
+                .filter(Component::isVisible)
+                .filter(Component::isManagedByLayout)
+                .toList();
 
-        Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(children);
-        PlacementResult placement = calculatePlacement(children, gridDataMap);
-        applyArrangement(parent, children, placement, gridDataMap);
+        if (!managedChildren.isEmpty()) {
+            Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(managedChildren);
+            PlacementResult placement = calculatePlacement(managedChildren, gridDataMap);
+            applyArrangement(parent, managedChildren, placement, gridDataMap);
+        }
+
+        List<Component<?>> unmanagedChildren = parent.getChildren().stream()
+                .filter(Component::isVisible)
+                .filter(c -> !c.isManagedByLayout())
+                .toList();
+
+        for (Component<?> child : unmanagedChildren) {
+            float childX = child.getConstraints().getXConstraint().calculateX(child, parent.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right());
+            float childY = child.getConstraints().getYConstraint().calculateY(child, parent.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom());
+            child.arrange(parent.getInnerLeft() + childX, parent.getInnerTop() + childY);
+        }
     }
 
     private Map<Component<?>, GridData> getGridDataForChildren(List<Component<?>> children) {

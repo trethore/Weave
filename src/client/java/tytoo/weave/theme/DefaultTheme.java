@@ -2,6 +2,7 @@ package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
 import tytoo.weave.component.components.display.TextComponent;
+import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
@@ -197,6 +198,38 @@ public class DefaultTheme implements Theme {
         s = new StyleSelector(Panel.class, null, Set.of("radio-button-dot"), null);
         stylesheet.addRule(new StyleRule(s, Map.of(
                 ComponentStyle.StyleProps.BASE_RENDERER, new RoundedRectangleRenderer(new Color(40, 160, 220), 3f)
+        )));
+
+        // --- ComboBox ---
+        s = new StyleSelector(ComboBox.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComboBox.StyleProps.DEFAULT_WIDTH, 150f,
+                ComboBox.StyleProps.DEFAULT_HEIGHT, 20f,
+                ComboBox.StyleProps.DROPDOWN_MAX_HEIGHT, 100f
+        )));
+
+        // The main combo box visual style, using the same background as text inputs
+        s = new StyleSelector(ComboBox.class, null, Set.of("interactive-visual"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
+                Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(15, 15, 15, 150)))
+        )));
+
+        // The dropdown panel itself
+        s = new StyleSelector(Panel.class, null, Set.of("combo-box-dropdown"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(30, 30, 30, 240))
+        )));
+
+        // Buttons for each option in the dropdown
+        s = new StyleSelector(Button.class, null, Set.of("combo-box-option"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 0)),
+                ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)),
+                Button.StyleProps.PADDING, 3f
         )));
     }
 

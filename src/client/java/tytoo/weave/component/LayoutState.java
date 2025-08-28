@@ -16,6 +16,7 @@ public class LayoutState {
     private float measuredWidth, measuredHeight;
     private float finalX, finalY, finalWidth, finalHeight;
     private boolean layoutDirty = true;
+    private boolean managed = true;
 
     public LayoutState(Component<?> owner) {
         this.owner = owner;
@@ -158,5 +159,13 @@ public class LayoutState {
 
     public void setLayoutDirty(boolean layoutDirty) {
         this.layoutDirty = layoutDirty;
+    }
+
+    public boolean isManaged() {
+        return managed;
+    }
+
+    public void setManaged(boolean managed) {
+        this.managed = managed;
     }
 }

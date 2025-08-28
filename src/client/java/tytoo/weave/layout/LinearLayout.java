@@ -54,14 +54,27 @@ public class LinearLayout implements Layout {
     public void arrangeChildren(Component<?> parent) {
         List<Component<?>> visibleChildren = parent.getChildren().stream()
                 .filter(Component::isVisible)
+                .filter(Component::isManagedByLayout)
                 .collect(Collectors.toList());
 
-        if (visibleChildren.isEmpty()) return;
+        if (!visibleChildren.isEmpty()) {
+            if (orientation == Orientation.HORIZONTAL) {
+                applyHorizontalLayout(parent, visibleChildren);
+            } else {
+                applyVerticalLayout(parent, visibleChildren);
+            }
+        }
 
-        if (orientation == Orientation.HORIZONTAL) {
-            applyHorizontalLayout(parent, visibleChildren);
-        } else {
-            applyVerticalLayout(parent, visibleChildren);
+        // Arrange unmanaged children according to their own constraints
+        List<Component<?>> unmanagedChildren = parent.getChildren().stream()
+                .filter(Component::isVisible)
+                .filter(c -> !c.isManagedByLayout())
+                .toList();
+
+        for (Component<?> child : unmanagedChildren) {
+            float childX = child.getConstraints().getXConstraint().calculateX(child, parent.getInnerWidth(), child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right());
+            float childY = child.getConstraints().getYConstraint().calculateY(child, parent.getInnerHeight(), child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom());
+            child.arrange(parent.getInnerLeft() + childX, parent.getInnerTop() + childY);
         }
     }
 

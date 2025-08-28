@@ -3,6 +3,7 @@ package tytoo.weave.screen.screens;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.component.components.interactive.Slider;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
@@ -49,7 +50,18 @@ public class TestGui extends WeaveScreen {
         Slider<Integer> slider = Slider.integerSlider(Slider.Orientation.HORIZONTAL, 0, 100, 50);
         slider.bindValue(sliderValue);
 
-        testPanel.addChildren(textField, button, slider, sliderLabel);
+        State<String> comboBoxValue = new State<>(null);
+        SimpleTextComponent comboBoxLabel = SimpleTextComponent.of("Selected: null");
+        comboBoxValue.bind(v -> comboBoxLabel.setText("Selected: " + v));
+
+        ComboBox<String> comboBox = ComboBox.create(comboBoxValue)
+                .setPlaceholder("-- Please choose an option --")
+                .addOption("Option 1", "option_1")
+                .addOption("Another Option", "option_2")
+                .addOption("The Third Choice", "option_3")
+                .addOption("A much, much longer option to test text clipping", "long_option");
+
+        testPanel.addChildren(textField, button, slider, sliderLabel,  comboBoxLabel,comboBox);
 
         window.addChildren(titlePanel, testPanel);
     }

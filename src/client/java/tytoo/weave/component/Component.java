@@ -824,4 +824,14 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
         return self();
     }
+
+    public boolean isManagedByLayout() {
+        return this.layoutState.isManaged();
+    }
+
+    public T setManagedByLayout(boolean managed) {
+        this.layoutState.setManaged(managed);
+        invalidateLayout();
+        return self();
+    }
 }
