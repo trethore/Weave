@@ -41,7 +41,6 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
                 .setHittable(false)
                 .addStyleState(StyleState.NORMAL);
 
-        // Background is slightly smaller than outline
         float backgroundSize = outlineSize - 2f;
         this.background = Panel.create()
                 .setWidth(Constraints.pixels(backgroundSize))

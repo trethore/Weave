@@ -2,24 +2,23 @@ package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
 import tytoo.weave.component.components.display.TextComponent;
-import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.InteractiveComponent.StyleProps;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
-import tytoo.weave.style.ColorWave;
-import tytoo.weave.style.CommonStyleProperties;
-import tytoo.weave.style.ComponentStyle;
-import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.*;
+import tytoo.weave.style.renderer.ParentStyledColorRenderer;
 import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
+import tytoo.weave.style.renderer.StyledColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.ui.CursorType;
 import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,9 +46,28 @@ public class DefaultTheme implements Theme {
 
         s = new StyleSelector(Separator.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.of(
-                ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(128, 128, 128)),
-                Separator.StyleProps.THICKNESS, 1f
-        )));
+                ComponentStyle.StyleProps.BASE_RENDERER, new StyledColorRenderer(Separator.StyleProps.COLOR, new Color(128, 128, 128))),
+                Separator.StyleProps.THICKNESS, 1f,
+                Separator.StyleProps.LABEL_GAP, 6f,
+                Separator.StyleProps.LABEL_TEXT_SCALE, 1.0f,
+                Separator.StyleProps.COLOR, new Color(128, 128, 128),
+                Separator.StyleProps.SMALL_LINE_RATIO, 0.15f
+        )))
+
+        // When a separator has a label, disable its base renderer; lines are drawn by children.
+        s = new StyleSelector(Separator.class, null, Set.of("separator-with-label"), null);
+        {
+            Map<StyleProperty<?>, Object> p = new HashMap<>();
+            p.put(ComponentStyle.StyleProps.BASE_RENDERER, null);
+            stylesheet.addRule(new StyleRule(s, p));
+        }
+
+        // Style for the line segments used when a separator has a label
+        s = new StyleSelector(Panel.class, null, Set.of("separator-line"), null);
+        stylesheet.addRule(new StyleRule(s, Map.of(
+                ComponentStyle.StyleProps.BASE_RENDERER, new ParentStyledColorRenderer(Separator.StyleProps.COLOR, new Color(128, 128, 128))),
+                Separator.StyleProps.COLOR, new Color(128, 128, 128)
+        )))
 
         // --- TextComponent ---
         s = new StyleSelector(TextComponent.class, null, null, null);

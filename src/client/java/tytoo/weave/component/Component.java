@@ -378,11 +378,11 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return onEvent(FocusLostEvent.TYPE, listener);
     }
 
-    public T onEvent(Consumer<tytoo.weave.event.Event> listener) {
-        return onEvent(tytoo.weave.event.Event.ANY, listener);
+    public T onEvent(Consumer<Event> listener) {
+        return onEvent(Event.ANY, listener);
     }
 
-    public <E extends tytoo.weave.event.Event> T onEvent(EventType<E> type, Consumer<E> listener) {
+    public <E extends Event> T onEvent(EventType<E> type, Consumer<E> listener) {
         this.eventState.getEventListeners().computeIfAbsent(type, k -> new ArrayList<>()).add(listener);
         return self();
     }
@@ -409,7 +409,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public ComponentStyle getStyle() {
         if (this.style == null) {
-            this.style = tytoo.weave.theme.ThemeManager.getStylesheet().resolveStyleFor(this);
+            this.style = ThemeManager.getStylesheet().resolveStyleFor(this);
         }
         return style;
     }

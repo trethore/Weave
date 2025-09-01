@@ -304,8 +304,6 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         return self();
     }
 
-    // --- Getters and Setters ---
-
     public long getLastActionTime() {
         return lastActionTime;
     }

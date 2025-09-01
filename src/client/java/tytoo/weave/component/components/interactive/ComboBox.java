@@ -45,6 +45,12 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @Nullable
     private Panel dropdownPanel;
     private boolean expanded = false;
+    @Nullable
+    private Float dropdownMaxHeightOverride = null;
+    private boolean includePlaceholderOption = false;
+    @Nullable
+    private ScrollPanel dropdownScrollPanel;
+    private float savedDropdownScrollY = 0f;
 
     public ComboBox(State<T> valueState) {
         this.valueState = valueState;
@@ -99,16 +105,18 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         super.updateVisualState(duration);
         if (this.outlineEffect == null) return;
 
+        this.outlineEffect.setColor(resolveBorderColor());
+    }
+
+    private Color resolveBorderColor() {
         var stylesheet = ThemeManager.getStylesheet();
-        Color outlineColor;
         if (isFocused() || expanded) {
-            outlineColor = stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+            return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
         } else if (hasStyleState(StyleState.HOVERED)) {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
+            return stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
         } else {
-            outlineColor = stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+            return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
-        this.outlineEffect.setColor(outlineColor);
     }
 
     private void toggleDropdown() {
@@ -125,7 +133,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         addStyleState(StyleState.ACTIVE);
 
         var stylesheet = ThemeManager.getStylesheet();
-        float dropdownMaxHeight = stylesheet.get(this, StyleProps.DROPDOWN_MAX_HEIGHT, 100f);
+        float dropdownMaxHeight = this.dropdownMaxHeightOverride != null
+                ? this.dropdownMaxHeightOverride
+                : stylesheet.get(this, StyleProps.DROPDOWN_MAX_HEIGHT, 100f);
 
         McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState).ifPresent(uiState -> {
             Component<?> root = uiState.getRoot();
@@ -140,7 +150,31 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                         .addStyleClass("combo-box-dropdown");
 
                 ScrollPanel scrollPanel = new ScrollPanel();
+                this.dropdownScrollPanel = scrollPanel;
                 this.dropdownPanel.addChild(scrollPanel);
+
+                if (this.includePlaceholderOption) {
+                    Button optionButton = Button.create()
+                            .setWidth(Constraints.relative(1.0f))
+                            .onClick(e -> {
+                                this.setValue(null);
+                                closeDropdown();
+                            });
+                    optionButton.addStyleClass("combo-box-option");
+
+                    TextRenderer textRenderer = getEffectiveTextRenderer();
+                    float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+                    float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
+                    optionButton.setHeight(Constraints.pixels(rowHeight));
+
+                    OptionLabel label = new OptionLabel(optionButton, Objects.requireNonNullElse(this.placeholder, ""));
+                    label.setWidth(Constraints.relative(1.0f));
+                    label.setHeight(Constraints.relative(1.0f));
+                    label.setHittable(false);
+                    optionButton.addChild(label);
+
+                    scrollPanel.addChild(optionButton);
+                }
 
                 for (Option<T> option : this.options) {
                     Button optionButton = Button.create()
@@ -167,7 +201,12 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
                 scrollPanel.getContentPanel().measure(this.getWidth(), Float.MAX_VALUE);
                 float contentHeight = scrollPanel.getContentPanel().getMeasuredHeight();
-                this.dropdownPanel.setHeight(Constraints.pixels(Math.min(contentHeight, dropdownMaxHeight)));
+                float viewHeight = Math.min(contentHeight, dropdownMaxHeight);
+                this.dropdownPanel.setHeight(Constraints.pixels(viewHeight));
+
+                float maxScroll = Math.min(0, -(contentHeight - viewHeight));
+                float clampedScroll = Math.max(maxScroll, Math.min(0, this.savedDropdownScrollY));
+                scrollPanel.setScrollY(clampedScroll);
 
                 root.addChild(this.dropdownPanel);
                 this.dropdownPanel.bringToFront();
@@ -181,6 +220,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         removeStyleState(StyleState.ACTIVE);
 
         if (this.dropdownPanel != null) {
+            if (this.dropdownScrollPanel != null) {
+                this.savedDropdownScrollY = this.dropdownScrollPanel.getScrollY();
+            }
             Optional<Screen> screen = McUtils.getMc().map(mc -> mc.currentScreen);
             screen.flatMap(UIManager::getState).ifPresent(uiState -> {
                 Component<?> root = uiState.getRoot();
@@ -189,6 +231,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 }
             });
             this.dropdownPanel = null;
+            this.dropdownScrollPanel = null;
         }
     }
 
@@ -253,6 +296,16 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         return this;
     }
 
+    public ComboBox<T> setDropdownMaxHeight(float maxHeight) {
+        this.dropdownMaxHeightOverride = maxHeight;
+        return this;
+    }
+
+    public ComboBox<T> setIncludePlaceholderOption(boolean include) {
+        this.includePlaceholderOption = include;
+        return this;
+    }
+
     @Nullable
     public String getPlaceholder() {
         return this.placeholder;
@@ -288,8 +341,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             float w = getWidth();
             float h = getHeight();
 
-            Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Color color = stylesheet.get(this.comboBox, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+            Color color = this.comboBox.outlineEffect != null ? this.comboBox.outlineEffect.getColor() : this.comboBox.resolveBorderColor();
 
             boolean pointingUp = this.comboBox.expanded;
             Render2DUtils.drawTriangle(context, x, y, w, h, pointingUp, color);

@@ -54,6 +54,15 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         return contentPanel;
     }
 
+    public float getScrollY() {
+        return this.scrollY.get();
+    }
+
+    public ScrollPanel setScrollY(float value) {
+        this.scrollY.set(value);
+        return this;
+    }
+
     @Override
     public void addChild(Component<?> child) {
         this.contentPanel.addChild(child);

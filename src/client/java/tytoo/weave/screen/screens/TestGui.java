@@ -7,6 +7,7 @@ import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.component.components.interactive.Slider;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
@@ -38,6 +39,10 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 5));
 
+        Separator coolSeparator = Separator.horizontal()
+                .setLabel("A Separator")
+                .setLabelAlignment(Separator.LabelAlignment.LEFT);
+
         TextField textField = TextField.create()
                 .setPlaceholder("My Size is default!");
 
@@ -56,6 +61,8 @@ public class TestGui extends WeaveScreen {
 
         ComboBox<String> comboBox = ComboBox.create(comboBoxValue)
                 .setPlaceholder("-- Please choose an option --")
+                .setDropdownMaxHeight(60f)
+                .setIncludePlaceholderOption(true)
                 .addOption("Option 1", "option_1")
                 .addOption("Another Option", "option_2")
                 .addOption("The Third Choice", "option_3")
@@ -65,7 +72,7 @@ public class TestGui extends WeaveScreen {
             comboBox.addOption("Option " + i, "option_" + i);
         }
 
-        testPanel.addChildren(textField, button, slider, sliderLabel, comboBoxLabel,comboBox);
+        testPanel.addChildren(coolSeparator, textField, button, slider, sliderLabel, comboBoxLabel, comboBox);
 
         window.addChildren(titlePanel, testPanel);
     }
