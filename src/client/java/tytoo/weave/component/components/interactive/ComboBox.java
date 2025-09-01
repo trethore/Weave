@@ -69,6 +69,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
         SelectedLabel label = new SelectedLabel(this);
         label.setLayoutData(LinearLayout.Data.grow(1));
+        label.setHeight(Constraints.relative(1.0f));
         this.selectedLabel = label;
 
         ArrowIcon arrow = new ArrowIcon(this);
@@ -140,13 +141,25 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 this.dropdownPanel.addChild(scrollPanel);
 
                 for (Option<T> option : this.options) {
-                    Button optionButton = Button.of(option.label())
+                    Button optionButton = Button.create()
                             .setWidth(Constraints.relative(1.0f))
                             .onClick(e -> {
                                 this.setValue(option.value());
                                 closeDropdown();
                             });
                     optionButton.addStyleClass("combo-box-option");
+
+                    TextRenderer textRenderer = getEffectiveTextRenderer();
+                    float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+                    float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
+                    optionButton.setHeight(Constraints.pixels(rowHeight));
+
+                    OptionLabel label = new OptionLabel(optionButton, option.label());
+                    label.setWidth(Constraints.relative(1.0f));
+                    label.setHeight(Constraints.relative(1.0f));
+                    label.setHittable(false);
+                    optionButton.addChild(label);
+
                     scrollPanel.addChild(optionButton);
                 }
 
@@ -317,6 +330,43 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
             Color color = stylesheet.get(this.comboBox, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+            int colorRgb = color != null ? color.getRGB() : -1;
+            context.drawText(textRenderer, toDraw, (int) x, (int) y, colorRgb, true);
+        }
+    }
+
+    private static class OptionLabel extends Component<OptionLabel> {
+        private final Component<?> styleContext;
+        private final String text;
+
+        public OptionLabel(Component<?> styleContext, String text) {
+            this.styleContext = styleContext;
+            this.text = text == null ? "" : text;
+        }
+
+        @Override
+        public void draw(DrawContext context) {
+            TextRenderer textRenderer = getEffectiveTextRenderer();
+
+            float x = getInnerLeft();
+            float innerHeight = getInnerHeight();
+            float y = getInnerTop() + (innerHeight - (textRenderer.fontHeight - 1)) / 2.0f + 1f;
+
+            int maxWidth = (int) getInnerWidth();
+            if (maxWidth <= 0) return;
+
+            String toDraw = this.text;
+            int textWidth = textRenderer.getWidth(toDraw);
+            if (textWidth > maxWidth) {
+                String ellipsis = "...";
+                int ellipsisWidth = textRenderer.getWidth(ellipsis);
+                int available = Math.max(0, maxWidth - ellipsisWidth);
+                String trimmed = textRenderer.trimToWidth(toDraw, available);
+                toDraw = trimmed + ellipsis;
+            }
+
+            Stylesheet stylesheet = ThemeManager.getStylesheet();
+            Color color = stylesheet.get(this.styleContext, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
             int colorRgb = color != null ? color.getRGB() : -1;
             context.drawText(textRenderer, toDraw, (int) x, (int) y, colorRgb, true);
         }
