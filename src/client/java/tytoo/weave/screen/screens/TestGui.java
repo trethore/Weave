@@ -53,7 +53,7 @@ public class TestGui extends WeaveScreen {
         coolSeparator.addLocalStyleRule(new StyleRule(
                 new StyleSelector(TextComponent.class, null, Set.of("separator-label"), null),
                 Map.of(TextComponent.StyleProps.TEXT_COLOR, new Color(220, 190, 90),
-                        TextComponent.StyleProps.TEXT_SCALE, 1.2f)
+                        TextComponent.StyleProps.TEXT_SCALE, 0.8f)
         ));
         coolSeparator.addLocalStyleRule(new StyleRule(
                 new StyleSelector(Panel.class, null, Set.of("separator-line-left"), null),
@@ -68,6 +68,7 @@ public class TestGui extends WeaveScreen {
                 .setPlaceholder("My Size is default!");
 
         Button button = Button.of("I should also have a default size!");
+        button.setEnabled(false);
 
         State<Integer> sliderValue = new State<>(50);
         SimpleTextComponent sliderLabel = SimpleTextComponent.of("Value: 50");

@@ -114,7 +114,6 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         super.setEnabled(enabled);
         this.outline.setStyleState(StyleState.DISABLED, !enabled);
         this.background.setStyleState(StyleState.DISABLED, !enabled);
-        // TODO: TextComponent does not currently support disabled state styling from the stylesheet.
         this.label.setStyleState(StyleState.DISABLED, !enabled);
         return self();
     }

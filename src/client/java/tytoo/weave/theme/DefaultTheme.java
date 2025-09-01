@@ -76,6 +76,11 @@ public class DefaultTheme implements Theme {
                 Map.entry(TextComponent.StyleProps.SHADOW, true)
         )));
 
+        s = new StyleSelector(TextComponent.class, null, null, Set.of(StyleState.DISABLED));
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(TextComponent.StyleProps.TEXT_COLOR, new Color(120, 120, 120))
+        )));
+
         s = new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
@@ -249,8 +254,7 @@ public class DefaultTheme implements Theme {
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(60, 60, 60))),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80))),
-                Map.entry(ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(90, 90, 90))),
-                Map.entry(Button.StyleProps.PADDING, 3f)
+                Map.entry(ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(100, 100, 100)))
         )));
     }
 

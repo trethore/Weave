@@ -1,5 +1,6 @@
 package tytoo.weave.component.components.layout;
 
+import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
@@ -31,7 +32,6 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         super.addChild(this.contentPanel);
 
         this.contentPanel.setY((c, parentHeight, componentHeight) -> this.scrollY.get());
-        this.scrollY.addListener((v) -> this.contentPanel.invalidateLayout());
 
         this.onMouseScroll(event -> {
             float contentHeight = this.contentPanel.getFinalHeight();
@@ -41,8 +41,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
             float newScroll = scrollY.get() + (float) (event.getScrollY() * this.scrollSpeed);
             float maxScroll = Math.min(0, -(contentHeight - viewHeight));
-
             scrollY.set(Math.max(maxScroll, Math.min(0, newScroll)));
+            arrangeContent();
         });
     }
 
@@ -60,6 +60,7 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     public ScrollPanel setScrollY(float value) {
         this.scrollY.set(value);
+        arrangeContent();
         return this;
     }
 
@@ -99,5 +100,19 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
             return null;
         }
         return super.hitTest(x, y);
+    }
+
+    private void arrangeContent() {
+        if (this.contentPanel == null) return;
+        float childWidthWithMargin = this.contentPanel.getMeasuredWidth() + this.contentPanel.getMargin().left() + this.contentPanel.getMargin().right();
+        float childX = this.contentPanel.getConstraints().getXConstraint().calculateX(this.contentPanel, this.getInnerWidth(), childWidthWithMargin);
+        float childY = this.scrollY.get();
+        this.contentPanel.arrange(this.getInnerLeft() + childX, this.getInnerTop() + childY);
+    }
+
+    @Override
+    public void draw(DrawContext context) {
+        arrangeContent();
+        super.draw(context);
     }
 }

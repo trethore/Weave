@@ -19,6 +19,7 @@ import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
+import tytoo.weave.ui.UIState;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -90,7 +91,25 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.addEffect(this.outlineEffect);
 
         this.onClick(e -> toggleDropdown());
-        this.onFocusLost(e -> closeDropdown());
+        this.onFocusLost(e -> {
+            if (!this.expanded) return;
+
+            Optional<Component<?>> newFocused = McUtils.getMc().map(mc -> mc.currentScreen)
+                    .flatMap(UIManager::getState)
+                    .map(UIState::getFocusedComponent);
+
+            if (newFocused.isPresent() && this.dropdownPanel != null) {
+                Component<?> current = newFocused.get();
+                while (current != null) {
+                    if (current == this.dropdownPanel) {
+                        return;
+                    }
+                    current = current.getParent();
+                }
+            }
+
+            closeDropdown();
+        });
 
         updateSelectedLabel();
         updateVisualState(0L);
@@ -144,10 +163,28 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 float absBottom = this.getTop() + this.getHeight();
                 this.dropdownPanel = Panel.create()
                         .setManagedByLayout(false)
-                        .setX(Constraints.pixels(absLeft - root.getInnerLeft()))
-                        .setY(Constraints.pixels(absBottom - root.getInnerTop()))
+                        .setFocusable(true)
                         .setWidth(Constraints.pixels(this.getWidth()))
                         .addStyleClass("combo-box-dropdown");
+
+                this.dropdownPanel.onFocusLost(ev -> {
+                    Optional<Component<?>> newFocused = McUtils.getMc().map(mc -> mc.currentScreen)
+                            .flatMap(UIManager::getState)
+                            .map(UIState::getFocusedComponent);
+                    if (newFocused.isPresent()) {
+                        Component<?> current = newFocused.get();
+                        while (current != null) {
+                            if (current == this.dropdownPanel) {
+                                return;
+                            }
+                            current = current.getParent();
+                        }
+                    }
+                    closeDropdown();
+                });
+
+                this.dropdownPanel.setX((c, parentWidth, componentWidth) -> this.getLeft() - root.getInnerLeft());
+                this.dropdownPanel.setY((c, parentHeight, componentHeight) -> (this.getTop() + this.getHeight()) - root.getInnerTop());
 
                 ScrollPanel scrollPanel = new ScrollPanel();
                 this.dropdownScrollPanel = scrollPanel;
@@ -161,6 +198,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                                 closeDropdown();
                             });
                     optionButton.addStyleClass("combo-box-option");
+                    if (this.valueState.get() == null) {
+                        optionButton.addStyleState(StyleState.SELECTED);
+                    }
 
                     TextRenderer textRenderer = getEffectiveTextRenderer();
                     float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
@@ -184,6 +224,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                                 closeDropdown();
                             });
                     optionButton.addStyleClass("combo-box-option");
+                    if (Objects.equals(this.valueState.get(), option.value())) {
+                        optionButton.addStyleState(StyleState.SELECTED);
+                    }
 
                     TextRenderer textRenderer = getEffectiveTextRenderer();
                     float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
@@ -315,6 +358,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.placeholder = placeholder;
         updateSelectedLabel();
         return this;
+    }
+
+    @Override
+    public void draw(DrawContext context) {
+        super.draw(context);
     }
 
     public record Option<T>(String label, T value) {

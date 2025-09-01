@@ -1,5 +1,7 @@
 package tytoo.weave.component.components.interactive;
 
+import tytoo.weave.component.Component;
+import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.style.StyleProperty;
@@ -86,8 +88,18 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
             setStyleState(StyleState.FOCUSED, false);
             setStyleState(StyleState.ACTIVE, false);
         }
+        applyDisabledToDescendantTexts(this, !enabled);
         updateVisualState();
         return self();
+    }
+
+    private void applyDisabledToDescendantTexts(Component<?> component, boolean disabled) {
+        if (component instanceof TextComponent<?> textComponent) {
+            textComponent.setStyleState(StyleState.DISABLED, disabled);
+        }
+        for (Component<?> child : component.getChildren()) {
+            applyDisabledToDescendantTexts(child, disabled);
+        }
     }
 
     public static final class StyleProps {

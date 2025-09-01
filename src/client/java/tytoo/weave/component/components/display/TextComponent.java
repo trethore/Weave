@@ -7,10 +7,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.state.State;
-import tytoo.weave.style.ColorWave;
-import tytoo.weave.style.StyleProperty;
-import tytoo.weave.style.Styling;
-import tytoo.weave.style.TextSegment;
+import tytoo.weave.style.*;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
@@ -81,6 +78,13 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
             if (isHovered) {
                 if (segment.getHoverStyling() != null) finalStyle = finalStyle.mergeWith(segment.getHoverStyling());
+            }
+
+            if (this.hasStyleState(StyleState.DISABLED)) {
+                Color disabledColor = ThemeManager.getStylesheet().get(this, StyleProps.TEXT_COLOR, null);
+                if (disabledColor != null) {
+                    finalStyle = finalStyle.color(disabledColor);
+                }
             }
 
             if (this.colorOverride.get() != null) {
