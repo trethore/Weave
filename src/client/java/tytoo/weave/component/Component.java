@@ -29,8 +29,10 @@ import tytoo.weave.layout.Layout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.EdgeInsets;
+import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.ComponentRenderer;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
@@ -47,13 +49,13 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected final EventState eventState;
     protected final Set<String> styleClasses = new HashSet<>();
     private final Set<StyleState> activeStyleStates = EnumSet.noneOf(StyleState.class);
+    private final List<StyleRule> localStyleRules = new ArrayList<>();
     protected Component<?> parent;
     protected List<Component<?>> children = new LinkedList<>();
     @Nullable
     protected String id;
     @Nullable
     protected TextRenderer textRenderer;
-
     @Nullable
     private ComponentStyle style;
 
@@ -420,6 +422,58 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             invalidateLayout();
         }
         return self();
+    }
+
+    public List<StyleRule> getLocalStyleRules() {
+        return Collections.unmodifiableList(this.localStyleRules);
+    }
+
+    public T addLocalStyleRule(StyleRule rule) {
+        if (rule != null) {
+            this.localStyleRules.add(rule);
+            invalidateSubtreeStyleCache();
+        }
+        return self();
+    }
+
+    public T addLocalStyleRules(Collection<StyleRule> rules) {
+        if (rules != null && !rules.isEmpty()) {
+            this.localStyleRules.addAll(rules);
+            invalidateSubtreeStyleCache();
+        }
+        return self();
+    }
+
+    public T clearLocalStyles() {
+        if (!this.localStyleRules.isEmpty()) {
+            this.localStyleRules.clear();
+            invalidateSubtreeStyleCache();
+        }
+        return self();
+    }
+
+    public T addLocalStylesheet(Stylesheet stylesheet) {
+        if (stylesheet != null) {
+            addLocalStyleRules(stylesheet.getRules());
+        }
+        return self();
+    }
+
+    public T addLocalStylesheet(java.util.function.Consumer<Stylesheet> builder) {
+        if (builder != null) {
+            Stylesheet s = new Stylesheet();
+            builder.accept(s);
+            addLocalStylesheet(s);
+        }
+        return self();
+    }
+
+    public void invalidateSubtreeStyleCache() {
+        invalidateStyleCache();
+        invalidateLayout();
+        for (Component<?> child : this.children) {
+            child.invalidateSubtreeStyleCache();
+        }
     }
 
     public T addChildren(Component<?>... components) {

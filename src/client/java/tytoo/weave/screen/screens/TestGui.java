@@ -2,6 +2,7 @@ package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
+import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.Button;
 import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.component.components.interactive.Slider;
@@ -12,10 +13,16 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
+import tytoo.weave.style.ComponentStyle;
+import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.renderer.SolidColorRenderer;
+import tytoo.weave.style.selector.StyleSelector;
+
+import java.awt.*;
+import java.util.Map;
+import java.util.Set;
 
 public class TestGui extends WeaveScreen {
-
-
     public TestGui() {
         super(Text.literal("Test GUI"));
 
@@ -41,7 +48,21 @@ public class TestGui extends WeaveScreen {
 
         Separator coolSeparator = Separator.horizontal()
                 .setLabel("A Separator")
-                .setLabelAlignment(Separator.LabelAlignment.LEFT);
+                .setLabelAlignment(Separator.LabelAlignment.LEFT_WITH_LINE);
+
+        coolSeparator.addLocalStyleRule(new StyleRule(
+                new StyleSelector(TextComponent.class, null, Set.of("separator-label"), null),
+                Map.of(TextComponent.StyleProps.TEXT_COLOR, new Color(220, 190, 90),
+                        TextComponent.StyleProps.TEXT_SCALE, 1.2f)
+        ));
+        coolSeparator.addLocalStyleRule(new StyleRule(
+                new StyleSelector(Panel.class, null, Set.of("separator-line-left"), null),
+                Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(160, 70, 70)))
+        ));
+        coolSeparator.addLocalStyleRule(new StyleRule(
+                new StyleSelector(Panel.class, null, Set.of("separator-line-right"), null),
+                Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(70, 160, 70)))
+        ));
 
         TextField textField = TextField.create()
                 .setPlaceholder("My Size is default!");

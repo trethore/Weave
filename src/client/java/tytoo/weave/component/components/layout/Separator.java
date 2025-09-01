@@ -88,7 +88,10 @@ public class Separator extends BasePanel<Separator> {
 
         this.leftLine = Panel.create().addStyleClass("separator-line");
         this.rightLine = Panel.create().addStyleClass("separator-line");
+        this.leftLine.addStyleClass("separator-line-left");
+        this.rightLine.addStyleClass("separator-line-right");
         this.label = SimpleTextComponent.of("");
+        this.label.addStyleClass("separator-label");
 
         this.leftLine.setHeight(Constraints.pixels(thickness));
         this.rightLine.setHeight(Constraints.pixels(thickness));

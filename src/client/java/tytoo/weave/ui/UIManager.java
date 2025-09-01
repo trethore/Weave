@@ -212,4 +212,13 @@ public class UIManager {
             CursorManager.setCursor(CursorType.ARROW);
         }
     }
+
+    public static void invalidateAllStyles() {
+        for (UIState state : screenStates.values()) {
+            Component<?> root = state.getRoot();
+            if (root != null) {
+                root.invalidateSubtreeStyleCache();
+            }
+        }
+    }
 }

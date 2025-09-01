@@ -36,6 +36,10 @@ public class Stylesheet {
         this.propertyCache.clear();
     }
 
+    public List<StyleRule> getRules() {
+        return Collections.unmodifiableList(this.rules);
+    }
+
     public void clearCache(Component<?> component) {
         this.propertyCache.remove(component);
     }
@@ -83,9 +87,10 @@ public class Stylesheet {
 
     private Map<StyleProperty<?>, Object> computePropertiesForState(Component<?> component) {
         Map<StyleProperty<?>, Object> properties = new HashMap<>();
-        List<StyleRule> matchingRules = new ArrayList<>();
+        List<StyleRule> aggregated = collectRulesFor(component);
 
-        for (StyleRule rule : this.rules) {
+        List<StyleRule> matchingRules = new ArrayList<>();
+        for (StyleRule rule : aggregated) {
             if (rule.getSelector().matches(component)) {
                 matchingRules.add(rule);
             }
@@ -95,5 +100,18 @@ public class Stylesheet {
             properties.putAll(rule.getProperties());
         }
         return properties;
+    }
+
+    private List<StyleRule> collectRulesFor(Component<?> component) {
+        List<StyleRule> aggregated = new ArrayList<>(this.rules);
+
+        LinkedList<Component<?>> chain = new LinkedList<>();
+        for (Component<?> c = component; c != null; c = c.getParent()) {
+            chain.addFirst(c);
+        }
+        for (Component<?> c : chain) {
+            aggregated.addAll(c.getLocalStyleRules());
+        }
+        return aggregated;
     }
 }

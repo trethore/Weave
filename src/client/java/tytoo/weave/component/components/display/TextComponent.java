@@ -35,14 +35,18 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
         this.getConstraints().setWidth((component, parentWidth) -> {
             Stylesheet stylesheet = ThemeManager.getStylesheet();
+            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
             Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
-            return RenderTextUtils.getStyledTextWidth(getEffectiveTextRenderer(), getDrawableText(), letterSpacing);
+            float baseWidth = RenderTextUtils.getStyledTextWidth(getEffectiveTextRenderer(), getDrawableText(), letterSpacing);
+            return baseWidth * (textScale != null ? textScale : 1.0f);
         });
         this.getConstraints().setHeight((component, parentHeight) -> {
             TextRenderer textRenderer = getEffectiveTextRenderer();
             Stylesheet stylesheet = ThemeManager.getStylesheet();
             Float lineHeightMultiplier = stylesheet.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, 1.0f);
-            return (float) textRenderer.fontHeight * (lineHeightMultiplier != null ? lineHeightMultiplier : 1.0f);
+            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
+            float scale = textScale != null ? textScale : 1.0f;
+            return (float) textRenderer.fontHeight * (lineHeightMultiplier != null ? lineHeightMultiplier : 1.0f) * scale;
         });
     }
 
@@ -115,6 +119,17 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
             ColorWave colorWave = stylesheet.get(this, StyleProps.COLOR_WAVE, null);
+            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
+            float scale = textScale != null ? textScale : 1.0f;
+
+            boolean pushed = false;
+            if (scale != 1.0f) {
+                pushed = true;
+                context.getMatrices().push();
+                context.getMatrices().translate(getLeft(), getTop(), 0);
+                context.getMatrices().scale(scale, scale, 1.0f);
+                context.getMatrices().translate(-getLeft(), -getTop(), 0);
+            }
 
             if (colorWave != null) {
                 StringBuilder sb = new StringBuilder();
@@ -122,12 +137,17 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                     sb.append(segment.getText());
                 }
                 Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
-                drawWaveText(context, sb.toString(), hasShadow(), colorWave, letterSpacing, getOpacity());
+                // Use unscaled width for wave computation to match pre-scale coordinate space
+                float widthForWave = getWidth() / scale;
+                drawWaveText(context, sb.toString(), hasShadow(), colorWave, letterSpacing, getOpacity(), widthForWave);
             } else {
                 drawScaledContent(context, getDrawableText(), hasShadow());
             }
 
             drawChildren(context);
+            if (pushed) {
+                context.getMatrices().pop();
+            }
         } finally {
             context.getMatrices().pop();
         }
@@ -157,14 +177,15 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 ss.get(this, StyleProps.FONT, null),
                 ss.get(this, StyleProps.LETTER_SPACING, null),
                 ss.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, null),
+                ss.get(this, StyleProps.TEXT_SCALE, null),
                 colorOverride.get(),
                 getOpacity()
         );
     }
 
-    private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave, @Nullable Float letterSpacing, float opacity) {
+    private void drawWaveText(DrawContext context, String text, boolean shadow, ColorWave wave, @Nullable Float letterSpacing, float opacity, float widthForWave) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
-        RenderTextUtils.drawWaveText(context, textRenderer, text, getLeft(), getTop(), getWidth(), shadow, wave, letterSpacing, opacity);
+        RenderTextUtils.drawWaveText(context, textRenderer, text, getLeft(), getTop(), widthForWave, shadow, wave, letterSpacing, opacity);
     }
 
     private Styling getBaseStylingFromStylesheet() {
@@ -260,6 +281,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         public static final StyleProperty<TextRenderer> FONT = new StyleProperty<>("font", TextRenderer.class);
         public static final StyleProperty<Float> LETTER_SPACING = new StyleProperty<>("letter-spacing", Float.class);
         public static final StyleProperty<Float> LINE_HEIGHT_MULTIPLIER = new StyleProperty<>("line-height-multiplier", Float.class);
+        public static final StyleProperty<Float> TEXT_SCALE = new StyleProperty<>("text-scale", Float.class);
 
         private StyleProps() {
         }
