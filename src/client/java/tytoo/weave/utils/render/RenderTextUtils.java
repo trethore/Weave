@@ -34,31 +34,16 @@ public final class RenderTextUtils {
 
     public static void drawText(DrawContext context, TextRenderer textRenderer, Text text, float x, float y, boolean shadow, @Nullable Float letterSpacing) {
         if (letterSpacing == null || letterSpacing == 0) {
-            context.drawText(
-                    textRenderer,
-                    text,
-                    (int) x,
-                    (int) y,
-                    -1,
-                    shadow
-            );
-            return;
+            context.drawText(textRenderer, text, (int) x, (int) y, -1, shadow);
+        } else {
+            final float[] currentX = {x};
+            text.asOrderedText().accept((index, style, codePoint) -> {
+                Text charText = Text.literal(new String(Character.toChars(codePoint))).setStyle(style);
+                context.drawText(textRenderer, charText, (int) currentX[0], (int) y, -1, shadow);
+                currentX[0] += textRenderer.getWidth(charText) + letterSpacing;
+                return true;
+            });
         }
-
-        final float[] currentX = {x};
-        text.asOrderedText().accept((index, style, codePoint) -> {
-            Text charText = Text.literal(new String(Character.toChars(codePoint))).setStyle(style);
-            context.drawText(
-                    textRenderer,
-                    charText,
-                    (int) currentX[0],
-                    (int) y,
-                    -1,
-                    shadow
-            );
-            currentX[0] += textRenderer.getWidth(charText) + letterSpacing;
-            return true;
-        });
     }
 
     public static void drawWrappedText(DrawContext context, TextRenderer textRenderer, Text text, float x, float y, float wrapWidth, boolean shadow, WrappedTextComponent.Alignment alignment) {
@@ -80,14 +65,7 @@ public final class RenderTextUtils {
                 }
             }
 
-            context.drawText(
-                    textRenderer,
-                    line,
-                    (int) lineX,
-                    (int) yOffset,
-                    -1,
-                    shadow
-            );
+            context.drawText(textRenderer, line, (int) lineX, (int) yOffset, -1, shadow);
             yOffset += textRenderer.fontHeight;
         }
     }

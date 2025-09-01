@@ -226,10 +226,11 @@ public class DefaultTheme implements Theme {
 
         // Buttons for each option in the dropdown
         s = new StyleSelector(Button.class, null, Set.of("combo-box-option"), null);
-        stylesheet.addRule(new StyleRule(s, Map.of(
-                ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 0)),
-                ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)),
-                Button.StyleProps.PADDING, 3f
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(60, 60, 60))),
+                Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80))),
+                Map.entry(ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(90, 90, 90))),
+                Map.entry(Button.StyleProps.PADDING, 3f)
         )));
     }
 
