@@ -53,6 +53,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
             return Optional.empty();
         }, net.minecraft.text.Style.EMPTY);
         invalidateCache();
+        invalidateLayout();
     }
 
     private void invalidateCache() {
@@ -214,6 +215,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         this.segments.clear();
         this.segments.add(new TextSegment(text, Styling.create()));
         invalidateCache();
+        invalidateLayout();
         return self();
     }
 
@@ -225,6 +227,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         TextSegment segment = new TextSegment(text, styling);
         this.segments.add(segment);
         invalidateCache();
+        invalidateLayout();
         return segment;
     }
 
@@ -232,6 +235,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         TextSegment segment = new TextSegment(text, styling, hoverStyling);
         this.segments.add(segment);
         invalidateCache();
+        invalidateLayout();
         return segment;
     }
 

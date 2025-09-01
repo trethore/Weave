@@ -61,7 +61,11 @@ public class TestGui extends WeaveScreen {
                 .addOption("The Third Choice", "option_3")
                 .addOption("A much, much longer option to test text clipping", "long_option");
 
-        testPanel.addChildren(textField, button, slider, sliderLabel,comboBox, comboBoxLabel);
+        for (int i = 4; i <= 30; i++) {
+            comboBox.addOption("Option " + i, "option_" + i);
+        }
+
+        testPanel.addChildren(textField, button, slider, sliderLabel, comboBoxLabel,comboBox);
 
         window.addChildren(titlePanel, testPanel);
     }

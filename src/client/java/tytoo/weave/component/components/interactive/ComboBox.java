@@ -103,6 +103,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         Color outlineColor;
         if (isFocused() || expanded) {
             outlineColor = stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+        } else if (hasStyleState(StyleState.HOVERED)) {
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
         } else {
             outlineColor = stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
@@ -269,6 +271,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("combo-box.default-width", Float.class);
         public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("combo-box.default-height", Float.class);
         public static final StyleProperty<Float> DROPDOWN_MAX_HEIGHT = new StyleProperty<>("combo-box.dropdown-max-height", Float.class);
+        public static final StyleProperty<Color> BORDER_COLOR_HOVERED = new StyleProperty<>("combo-box.borderColor.hovered", Color.class);
     }
 
     private static class ArrowIcon extends Component<ArrowIcon> {

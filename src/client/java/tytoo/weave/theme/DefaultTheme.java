@@ -112,6 +112,7 @@ public class DefaultTheme implements Theme {
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0)),
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0)),
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160)),
+                Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120)),
                 Map.entry(BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80)),
                 Map.entry(BaseTextInput.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150)),
                 Map.entry(BaseTextInput.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY),
@@ -215,7 +216,8 @@ public class DefaultTheme implements Theme {
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
                 Map.entry(ComponentStyle.StyleProps.FOCUSED_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
                 Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(0, 0, 0, 200))),
-                Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(15, 15, 15, 150)))
+                Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(15, 15, 15, 150))),
+                Map.entry(ComboBox.StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120))
         )));
 
         // The dropdown panel itself

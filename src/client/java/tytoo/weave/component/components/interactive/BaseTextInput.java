@@ -77,6 +77,8 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
             outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
         } else if (isFocused()) {
             outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+        } else if (hasStyleState(StyleState.HOVERED)) {
+            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
         } else {
             outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
@@ -450,6 +452,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         public static final StyleProperty<Color> BORDER_COLOR_VALID = new StyleProperty<>("borderColor.valid", Color.class);
         public static final StyleProperty<Color> BORDER_COLOR_INVALID = new StyleProperty<>("borderColor.invalid", Color.class);
         public static final StyleProperty<Color> BORDER_COLOR_FOCUSED = new StyleProperty<>("borderColor.focused", Color.class);
+        public static final StyleProperty<Color> BORDER_COLOR_HOVERED = new StyleProperty<>("borderColor.hovered", Color.class);
         public static final StyleProperty<Color> BORDER_COLOR_UNFOCUSED = new StyleProperty<>("borderColor.unfocused", Color.class);
         public static final StyleProperty<Color> PLACEHOLDER_COLOR = new StyleProperty<>("placeholderColor", Color.class);
         public static final StyleProperty<Color> CURSOR_COLOR = new StyleProperty<>("cursorColor", Color.class);
