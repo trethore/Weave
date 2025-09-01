@@ -1,10 +1,11 @@
 package tytoo.weave.component.components.interactive;
 
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
-import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
@@ -15,9 +16,11 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
+import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -30,9 +33,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @NamedPart
     protected final Panel displayPanel;
     @NamedPart
-    protected final TextComponent<?> selectedLabel;
+    protected final SelectedLabel selectedLabel;
     @NamedPart
-    protected final TextComponent<?> arrowIcon;
+    protected final Component<?> arrowIcon;
     private final State<T> valueState;
     private final List<Option<T>> options = new ArrayList<>();
     private final OutlineEffect outlineEffect;
@@ -64,10 +67,14 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 .addStyleClass("combo-box-display")
                 .addEffect(Effects.scissor());
 
-        this.selectedLabel = SimpleTextComponent.of("")
-                .setLayoutData(LinearLayout.Data.grow(1));
+        SelectedLabel label = new SelectedLabel(this);
+        label.setLayoutData(LinearLayout.Data.grow(1));
+        this.selectedLabel = label;
 
-        this.arrowIcon = SimpleTextComponent.of("▼");
+        ArrowIcon arrow = new ArrowIcon(this);
+        arrow.setWidth(Constraints.pixels(defaultHeight));
+        arrow.setHeight(Constraints.relative(1.0f));
+        this.arrowIcon = arrow;
 
         this.displayPanel.addChildren(this.selectedLabel, this.arrowIcon);
         this.addChild(this.displayPanel);
@@ -249,5 +256,69 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("combo-box.default-width", Float.class);
         public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("combo-box.default-height", Float.class);
         public static final StyleProperty<Float> DROPDOWN_MAX_HEIGHT = new StyleProperty<>("combo-box.dropdown-max-height", Float.class);
+    }
+
+    private static class ArrowIcon extends Component<ArrowIcon> {
+        private final ComboBox<?> comboBox;
+
+        public ArrowIcon(ComboBox<?> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        @Override
+        public void draw(DrawContext context) {
+            float x = getLeft();
+            float y = getTop();
+            float w = getWidth();
+            float h = getHeight();
+
+            Stylesheet stylesheet = ThemeManager.getStylesheet();
+            Color color = stylesheet.get(this.comboBox, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+
+            boolean pointingUp = this.comboBox.expanded;
+            Render2DUtils.drawTriangle(context, x, y, w, h, pointingUp, color);
+        }
+    }
+
+    private static class SelectedLabel extends Component<SelectedLabel> {
+        private final ComboBox<?> comboBox;
+        private String text = "";
+
+        public SelectedLabel(ComboBox<?> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        public SelectedLabel setText(String text) {
+            if (text == null) text = "";
+            this.text = text;
+            return this;
+        }
+
+        @Override
+        public void draw(DrawContext context) {
+            TextRenderer textRenderer = getEffectiveTextRenderer();
+
+            float x = getInnerLeft();
+            float innerHeight = getInnerHeight();
+            float y = getInnerTop() + (innerHeight - (textRenderer.fontHeight - 1)) / 2.0f + 1f;
+
+            int maxWidth = (int) getInnerWidth();
+            if (maxWidth <= 0) return;
+
+            String toDraw = this.text;
+            int textWidth = textRenderer.getWidth(toDraw);
+            if (textWidth > maxWidth) {
+                String ellipsis = "...";
+                int ellipsisWidth = textRenderer.getWidth(ellipsis);
+                int available = Math.max(0, maxWidth - ellipsisWidth);
+                String trimmed = textRenderer.trimToWidth(toDraw, available);
+                toDraw = trimmed + ellipsis;
+            }
+
+            Stylesheet stylesheet = ThemeManager.getStylesheet();
+            Color color = stylesheet.get(this.comboBox, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+            int colorRgb = color != null ? color.getRGB() : -1;
+            context.drawText(textRenderer, toDraw, (int) x, (int) y, colorRgb, true);
+        }
     }
 }

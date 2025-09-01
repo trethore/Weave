@@ -144,10 +144,30 @@ public final class Render2DUtils {
 
         int colorRgb = color.getRGB();
         buffer.vertex(matrix, p1.x, p1.y, 0).color(colorRgb);
-        buffer.vertex(matrix, p2.x, p2.y, 0).color(colorRgb);
         buffer.vertex(matrix, p3.x, p3.y, 0).color(colorRgb);
-
+        buffer.vertex(matrix, p2.x, p2.y, 0).color(colorRgb);
         endRender(buffer);
+    }
+
+    public static void drawTriangle(DrawContext context, float x, float y, float width, float height, boolean pointingUp, Color color) {
+        float left = x;
+        float right = x + width;
+        float top = y;
+        float bottom = y + height;
+
+        float margin = Math.min(width, height) * 0.25f;
+
+        if (pointingUp) {
+            Vector2f apex = new Vector2f((left + right) * 0.5f, top + margin);
+            Vector2f baseLeft = new Vector2f(left + margin, bottom - margin);
+            Vector2f baseRight = new Vector2f(right - margin, bottom - margin);
+            drawTriangle(context, apex, baseRight, baseLeft, color);
+        } else {
+            Vector2f apex = new Vector2f((left + right) * 0.5f, bottom - margin);
+            Vector2f baseLeft = new Vector2f(left + margin, top + margin);
+            Vector2f baseRight = new Vector2f(right - margin, top + margin);
+            drawTriangle(context, apex, baseLeft, baseRight, color);
+        }
     }
 
     public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, Color color) {
