@@ -26,13 +26,11 @@ public final class StyleTransitionRegistry {
     private static final WeakHashMap<Component<?>, Map<Object, Object>> LAST_VALUES = new WeakHashMap<>();
 
     static {
-        // Padding
         registerStyleProperty(Component.class, LayoutStyleProperties.PADDING, null,
                 Interpolators.EDGE_INSETS,
                 Component::setAnimatedPadding,
                 Component::commitAnimatedPadding);
 
-        // Border width/color/radius
         registerStyleProperty(Component.class, LayoutStyleProperties.BORDER_WIDTH, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedBorderWidth,
@@ -46,7 +44,6 @@ public final class StyleTransitionRegistry {
                 Component::setAnimatedBorderRadius,
                 Component::commitAnimatedBorderRadius);
 
-        // Overlay border width/color/radius
         registerStyleProperty(Component.class, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedOverlayBorderWidth,
@@ -60,7 +57,6 @@ public final class StyleTransitionRegistry {
                 Component::setAnimatedOverlayBorderRadius,
                 Component::commitAnimatedOverlayBorderRadius);
 
-        // Background color of base renderer when colorable
         registerComputed(Component.class, Keys.BACKGROUND_COLOR,
                 (ss, c) -> {
                     ComponentRenderer r = c.getStyle().getRenderer(c);
@@ -74,7 +70,6 @@ public final class StyleTransitionRegistry {
                 },
                 null);
 
-        // Background color of overlay renderer when colorable
         registerComputed(Component.class, Keys.OVERLAY_BACKGROUND_COLOR,
                 (ss, c) -> {
                     ComponentRenderer r = c.getStyle().getOverlayRenderer(c);
@@ -88,13 +83,11 @@ public final class StyleTransitionRegistry {
                 },
                 null);
 
-        // TextComponent base text color transition via animated intermediate (respects user overrides)
         registerStyleProperty(TextComponent.class, TextComponent.StyleProps.TEXT_COLOR, null,
                 Interpolators.COLOR,
                 TextComponent::applyAnimatedTextColor,
                 TextComponent::clearAnimatedTextColor);
 
-        // ComboBox outline color transition (focus/active/hover)
         registerComputed(ComboBox.class, Keys.COMBOBOX_OUTLINE_COLOR,
                 (ss, c) -> {
                     if (c.isFocused() || c.hasStyleState(StyleState.ACTIVE)) {
@@ -109,7 +102,6 @@ public final class StyleTransitionRegistry {
                 ComboBox::applyOutlineColor,
                 null);
 
-        // BaseTextInput outline color transition (computed from validation/hover/focus)
         registerComputed(BaseTextInput.class, Keys.TEXT_INPUT_OUTLINE_COLOR,
                 (ss, c) -> {
                     BaseTextInput.ValidationState vState = c.getValidationState();
@@ -180,7 +172,6 @@ public final class StyleTransitionRegistry {
         T last = (T) map.get(reg.key);
 
         if (last == null) {
-            // Seed current value and also apply immediately so visuals match stylesheet.
             map.put(reg.key, toValue);
             reg.applyUpdate.accept(comp, toValue);
             return;
