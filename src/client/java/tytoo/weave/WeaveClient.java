@@ -12,7 +12,7 @@ import tytoo.weave.utils.FontManager;
 
 public class WeaveClient implements ClientModInitializer {
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static String MOD_ID = "weave-ui";
+    public static final String MOD_ID = "weave-ui";
 
     @Override
     public void onInitializeClient() {
