@@ -5,14 +5,7 @@ import tytoo.weave.constraint.HeightConstraint;
 
 import java.util.List;
 
-public class SumOfChildrenHeightConstraint implements HeightConstraint {
-    private final float padding;
-    private final float gap;
-
-    public SumOfChildrenHeightConstraint(float padding, float gap) {
-        this.padding = padding;
-        this.gap = gap;
-    }
+public record SumOfChildrenHeightConstraint(float padding, float gap) implements HeightConstraint {
 
     @Override
     public float calculateHeight(Component<?> component, float parentHeight) {

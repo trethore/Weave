@@ -58,21 +58,29 @@ public final class Render2DUtils {
         endRender(buffer);
     }
 
+    private static void drawHLine(DrawContext context, float x, float y, float length, float thickness, Color color) {
+        drawRect(context, x, y, length, thickness, color);
+    }
+
+    private static void drawVLine(DrawContext context, float x, float y, float thickness, float length, Color color) {
+        drawRect(context, x, y, thickness, length, color);
+    }
+
     public static void drawOutline(DrawContext context, float x, float y, float width, float height, float lineWidth, Color color) {
         drawOutline(context, x, y, width, height, lineWidth, color, true);
     }
 
     public static void drawOutline(DrawContext context, float x, float y, float width, float height, float lineWidth, Color color, boolean inside) {
         if (inside) {
-            drawRect(context, x, y, width, lineWidth, color);
-            drawRect(context, x, y + height - lineWidth, width, lineWidth, color);
-            drawRect(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
-            drawRect(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+            drawHLine(context, x, y, width, lineWidth, color);
+            drawHLine(context, x, y + height - lineWidth, width, lineWidth, color);
+            drawVLine(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+            drawVLine(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
         } else {
-            drawRect(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
-            drawRect(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
-            drawRect(context, x - lineWidth, y, lineWidth, height, color);
-            drawRect(context, x + width, y, lineWidth, height, color);
+            drawHLine(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
+            drawHLine(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
+            drawVLine(context, x - lineWidth, y, lineWidth, height, color);
+            drawVLine(context, x + width, y, lineWidth, height, color);
         }
     }
 
@@ -150,22 +158,20 @@ public final class Render2DUtils {
     }
 
     public static void drawTriangle(DrawContext context, float x, float y, float width, float height, boolean pointingUp, Color color) {
-        float left = x;
         float right = x + width;
-        float top = y;
         float bottom = y + height;
 
         float margin = Math.min(width, height) * 0.25f;
 
         if (pointingUp) {
-            Vector2f apex = new Vector2f((left + right) * 0.5f, top + margin);
-            Vector2f baseLeft = new Vector2f(left + margin, bottom - margin);
+            Vector2f apex = new Vector2f((x + right) * 0.5f, y + margin);
+            Vector2f baseLeft = new Vector2f(x + margin, bottom - margin);
             Vector2f baseRight = new Vector2f(right - margin, bottom - margin);
             drawTriangle(context, apex, baseRight, baseLeft, color);
         } else {
-            Vector2f apex = new Vector2f((left + right) * 0.5f, bottom - margin);
-            Vector2f baseLeft = new Vector2f(left + margin, top + margin);
-            Vector2f baseRight = new Vector2f(right - margin, top + margin);
+            Vector2f apex = new Vector2f((x + right) * 0.5f, bottom - margin);
+            Vector2f baseLeft = new Vector2f(x + margin, y + margin);
+            Vector2f baseRight = new Vector2f(right - margin, y + margin);
             drawTriangle(context, apex, baseLeft, baseRight, color);
         }
     }

@@ -9,18 +9,8 @@ import tytoo.weave.constraint.constraints.Constraints;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LinearLayout implements Layout {
-    private final Orientation orientation;
-    private final Alignment alignment;
-    private final CrossAxisAlignment crossAxisAlignment;
-    private final float gap;
-
-    private LinearLayout(Orientation orientation, Alignment alignment, CrossAxisAlignment crossAxisAlignment, float gap) {
-        this.orientation = orientation;
-        this.alignment = alignment;
-        this.crossAxisAlignment = crossAxisAlignment;
-        this.gap = gap;
-    }
+public record LinearLayout(Orientation orientation, Alignment alignment, CrossAxisAlignment crossAxisAlignment,
+                           float gap) implements Layout {
 
     public static LinearLayout of(Orientation orientation, Alignment alignment, float gap) {
         return new LinearLayout(orientation, alignment, CrossAxisAlignment.CENTER, gap);

@@ -8,14 +8,7 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class StyledColorRenderer implements ComponentRenderer {
-    private final StyleProperty<Color> colorProperty;
-    private final Color defaultColor;
-
-    public StyledColorRenderer(StyleProperty<Color> colorProperty, Color defaultColor) {
-        this.colorProperty = colorProperty;
-        this.defaultColor = defaultColor;
-    }
+public record StyledColorRenderer(StyleProperty<Color> colorProperty, Color defaultColor) implements ComponentRenderer {
 
     @Override
     public void render(DrawContext context, Component<?> component) {
@@ -25,4 +18,3 @@ public class StyledColorRenderer implements ComponentRenderer {
         }
     }
 }
-

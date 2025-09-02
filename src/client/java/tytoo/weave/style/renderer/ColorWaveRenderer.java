@@ -5,14 +5,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.utils.render.Render2DUtils;
 
-public class ColorWaveRenderer implements ComponentRenderer {
-    private final ColorWave wave;
-    private final float angle;
-
-    public ColorWaveRenderer(ColorWave wave, float angle) {
-        this.wave = wave;
-        this.angle = angle;
-    }
+public record ColorWaveRenderer(ColorWave wave, float angle) implements ComponentRenderer {
 
     @Override
     public void render(DrawContext context, Component<?> component) {

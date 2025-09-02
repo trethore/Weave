@@ -34,9 +34,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @NamedPart
     protected final Panel displayPanel;
     @NamedPart
-    protected final SelectedLabel selectedLabel;
-    @NamedPart
     protected final Component<?> arrowIcon;
+    @NamedPart
+    private final SelectedLabel selectedLabel;
     private final State<T> valueState;
     private final List<Option<T>> options = new ArrayList<>();
     private final OutlineEffect outlineEffect;
@@ -159,8 +159,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState).ifPresent(uiState -> {
             Component<?> root = uiState.getRoot();
             if (root != null) {
-                float absLeft = this.getLeft();
-                float absBottom = this.getTop() + this.getHeight();
                 this.dropdownPanel = Panel.create()
                         .setManagedByLayout(false)
                         .setFocusable(true)

@@ -9,19 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GridLayout implements Layout {
-    private final int columns;
-    private final float horizontalGap;
-    private final float verticalGap;
+public record GridLayout(int columns, float horizontalGap, float verticalGap) implements Layout {
 
-    private GridLayout(int columns, float horizontalGap, float verticalGap) {
+    public GridLayout {
         if (columns <= 0) {
             WeaveClient.LOGGER.error("GridLayout column count must be positive, but was {}.", columns);
             throw new IllegalArgumentException("Number of columns must be positive.");
         }
-        this.columns = columns;
-        this.horizontalGap = horizontalGap;
-        this.verticalGap = verticalGap;
     }
 
     public static GridLayout of(int columns) {

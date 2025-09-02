@@ -5,14 +5,7 @@ import tytoo.weave.constraint.WidthConstraint;
 
 import java.util.List;
 
-public class SumOfChildrenWidthConstraint implements WidthConstraint {
-    private final float padding;
-    private final float gap;
-
-    public SumOfChildrenWidthConstraint(float padding, float gap) {
-        this.padding = padding;
-        this.gap = gap;
-    }
+public record SumOfChildrenWidthConstraint(float padding, float gap) implements WidthConstraint {
 
     @Override
     public float calculateWidth(Component<?> component, float parentWidth) {

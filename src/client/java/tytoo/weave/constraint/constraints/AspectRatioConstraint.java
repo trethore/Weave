@@ -4,12 +4,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 
-public class AspectRatioConstraint implements WidthConstraint, HeightConstraint {
-    private final float ratio;
-
-    public AspectRatioConstraint(float ratio) {
-        this.ratio = ratio;
-    }
+public record AspectRatioConstraint(float ratio) implements WidthConstraint, HeightConstraint {
 
     @Override
     public float calculateWidth(Component<?> component, float parentWidth) {

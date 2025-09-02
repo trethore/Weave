@@ -7,19 +7,11 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class ShadowEffect implements Effect {
-    private final Color color;
-    private final float offsetX;
-    private final float offsetY;
-    private final float size;
-    private final float cornerRadius;
+public record ShadowEffect(Color color, float offsetX, float offsetY, float size,
+                           float cornerRadius) implements Effect {
 
-    public ShadowEffect(Color color, float offsetX, float offsetY, float size, float cornerRadius) {
-        this.color = color;
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-        this.size = Math.max(1, size);
-        this.cornerRadius = cornerRadius;
+    public ShadowEffect {
+        size = Math.max(1, size);
     }
 
     @Override

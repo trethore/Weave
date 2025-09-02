@@ -7,14 +7,8 @@ import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 import tytoo.weave.utils.McUtils;
 
-public class RelativeConstraint implements XConstraint, YConstraint, WidthConstraint, HeightConstraint {
-    private final float value;
-    private final float offset;
-
-    public RelativeConstraint(float value, float offset) {
-        this.value = value;
-        this.offset = offset;
-    }
+public record RelativeConstraint(float value,
+                                 float offset) implements XConstraint, YConstraint, WidthConstraint, HeightConstraint {
 
     @Override
     public float calculateX(Component<?> component, float parentWidth, float componentWidth) {

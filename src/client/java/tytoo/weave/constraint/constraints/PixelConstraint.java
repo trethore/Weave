@@ -6,12 +6,7 @@ import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
 import tytoo.weave.constraint.YConstraint;
 
-public class PixelConstraint implements XConstraint, YConstraint, WidthConstraint, HeightConstraint {
-    private final float value;
-
-    public PixelConstraint(float value) {
-        this.value = value;
-    }
+public record PixelConstraint(float value) implements XConstraint, YConstraint, WidthConstraint, HeightConstraint {
 
     @Override
     public float calculateX(Component<?> component, float parentWidth, float componentWidth) {

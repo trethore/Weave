@@ -6,12 +6,7 @@ import tytoo.weave.constraint.WidthConstraint;
 
 import java.util.function.ToDoubleFunction;
 
-public class ChildBasedSizeConstraint implements WidthConstraint, HeightConstraint {
-    private final float padding;
-
-    public ChildBasedSizeConstraint(float padding) {
-        this.padding = padding;
-    }
+public record ChildBasedSizeConstraint(float padding) implements WidthConstraint, HeightConstraint {
 
     private float calculateMaxSize(Component<?> component, ToDoubleFunction<Component<?>> measureFunc) {
         if (component.getChildren().isEmpty()) {

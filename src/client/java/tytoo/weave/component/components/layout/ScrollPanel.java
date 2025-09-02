@@ -9,27 +9,26 @@ import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
-import tytoo.weave.utils.render.Render2DUtils;
-import tytoo.weave.utils.McUtils;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.McUtils;
+import tytoo.weave.utils.render.Render2DUtils;
 
-import java.awt.Color;
+import java.awt.*;
 
 public class ScrollPanel extends BasePanel<ScrollPanel> {
     private final BasePanel<?> contentPanel;
     private final State<Float> scrollY = new State<>(0f);
-    private float scrollSpeed = 10f;
-    private float gap = 2f;
-    private boolean verticalScrollbarEnabled = false;
-    private boolean draggingScrollbarThumb = false;
-
     private final float scrollbarWidth = 6f;
     private final float scrollbarThumbMinHeight = 16f;
     private final Color scrollbarTrackColor = new Color(0, 0, 0, 80);
     private final Color scrollbarThumbColor = new Color(220, 220, 220, 200);
     private final Color scrollbarThumbHoverColor = new Color(235, 235, 235, 220);
     private final Color scrollbarThumbActiveColor = new Color(245, 245, 245, 230);
+    private float scrollSpeed = 10f;
+    private float gap = 2f;
+    private boolean verticalScrollbarEnabled = false;
+    private boolean draggingScrollbarThumb = false;
     private float scrollbarGap = 3f;
 
     public ScrollPanel() {
@@ -198,25 +197,20 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         float contentHeight = this.contentPanel.getFinalHeight();
         float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, StyleProps.WIDTH, this.scrollbarWidth);
         float trackX = viewLeft + viewWidth - effectiveScrollbarWidth;
-        float trackY = viewTop;
-        float trackW = effectiveScrollbarWidth;
-        float trackH = viewHeight;
 
         float visibleRatio = Math.max(0f, Math.min(1f, viewHeight / Math.max(1f, contentHeight)));
         float thumbMinH = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_MIN_HEIGHT, this.scrollbarThumbMinHeight);
-        float thumbH = Math.max(thumbMinH, trackH * visibleRatio);
-        if (thumbH > trackH) thumbH = trackH;
-        float thumbW = effectiveScrollbarWidth;
+        float thumbH = Math.max(thumbMinH, viewHeight * visibleRatio);
+        if (thumbH > viewHeight) thumbH = viewHeight;
 
         float maxScroll = Math.min(0, -(contentHeight - viewHeight));
         float range = -maxScroll;
         float progress = range <= 0.0001f ? 0f : (-this.scrollY.get()) / range;
         progress = Math.max(0f, Math.min(1f, progress));
 
-        float thumbY = trackY + (trackH - thumbH) * progress;
-        float thumbX = trackX;
+        float thumbY = viewTop + (viewHeight - thumbH) * progress;
 
-        return new float[]{trackX, trackY, trackW, trackH, thumbX, thumbY, thumbW, thumbH};
+        return new float[]{trackX, viewTop, effectiveScrollbarWidth, viewHeight, trackX, thumbY, effectiveScrollbarWidth, thumbH};
     }
 
     private boolean isPointInsideScrollbarThumb(float x, float y) {
@@ -282,16 +276,6 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         }).orElse(false);
     }
 
-    public static final class StyleProps {
-        public static final StyleProperty<Float> WIDTH = new StyleProperty<>("scroll-panel.scrollbar.width", Float.class);
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("scroll-panel.scrollbar.gap", Float.class);
-        public static final StyleProperty<Float> THUMB_MIN_HEIGHT = new StyleProperty<>("scroll-panel.scrollbar.thumbMinHeight", Float.class);
-        public static final StyleProperty<Color> TRACK_COLOR = new StyleProperty<>("scroll-panel.scrollbar.trackColor", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR = new StyleProperty<>("scroll-panel.scrollbar.thumbColor", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR_HOVERED = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.hovered", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR_ACTIVE = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.active", Color.class);
-    }
-
     @Override
     public void measure(float availableWidth, float availableHeight) {
         super.measure(availableWidth, availableHeight);
@@ -314,5 +298,15 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
             if (viewWidth - reserved < 0) reserved = Math.max(0, viewWidth);
             this.contentPanel.measure(viewWidth - reserved, viewHeight);
         }
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Float> WIDTH = new StyleProperty<>("scroll-panel.scrollbar.width", Float.class);
+        public static final StyleProperty<Float> GAP = new StyleProperty<>("scroll-panel.scrollbar.gap", Float.class);
+        public static final StyleProperty<Float> THUMB_MIN_HEIGHT = new StyleProperty<>("scroll-panel.scrollbar.thumbMinHeight", Float.class);
+        public static final StyleProperty<Color> TRACK_COLOR = new StyleProperty<>("scroll-panel.scrollbar.trackColor", Color.class);
+        public static final StyleProperty<Color> THUMB_COLOR = new StyleProperty<>("scroll-panel.scrollbar.thumbColor", Color.class);
+        public static final StyleProperty<Color> THUMB_COLOR_HOVERED = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.hovered", Color.class);
+        public static final StyleProperty<Color> THUMB_COLOR_ACTIVE = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.active", Color.class);
     }
 }
