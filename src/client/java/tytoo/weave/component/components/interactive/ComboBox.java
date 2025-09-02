@@ -181,8 +181,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                     closeDropdown();
                 });
 
-                this.dropdownPanel.setX((c, parentWidth, componentWidth) -> this.getLeft() - root.getInnerLeft());
-                this.dropdownPanel.setY((c, parentHeight, componentHeight) -> (this.getTop() + this.getHeight()) - root.getInnerTop());
+                float anchoredX = this.getLeft() - root.getInnerLeft();
+                float anchoredY = (float) Math.ceil((this.getTop() + this.getHeight()) - root.getInnerTop()); // ceil the Y to avoid sub-pixel rendering artifacts
+
+                this.dropdownPanel.setX(Constraints.pixels(anchoredX));
+                this.dropdownPanel.setY(Constraints.pixels(anchoredY));
 
                 ScrollPanel scrollPanel = new ScrollPanel();
                 this.dropdownScrollPanel = scrollPanel;
