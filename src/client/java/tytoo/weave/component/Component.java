@@ -169,6 +169,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public void addChild(Component<?> child) {
         this.children.add(child);
         child.parent = this;
+        // Parent affects style resolution for descendant/part selectors; refresh the child's subtree styles.
+        child.invalidateSubtreeStyleCache();
         invalidateLayout();
     }
 
@@ -187,6 +189,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public void removeChild(Component<?> child) {
         this.children.remove(child);
         child.parent = null;
+        // Detaching can change which rules match; refresh the child's subtree styles.
+        child.invalidateSubtreeStyleCache();
         invalidateLayout();
     }
 

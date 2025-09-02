@@ -61,7 +61,8 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
                 .setY(Constraints.center())
                 .setOpacity(0f)
                 .setScale(0f)
-                .setHittable(false);
+                .setHittable(false)
+                .addStyleState(StyleState.NORMAL);
 
         this.outline.addChild(this.background);
         this.background.addChild(this.dot);

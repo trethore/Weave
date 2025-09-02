@@ -12,6 +12,7 @@ import tytoo.weave.style.*;
 import tytoo.weave.style.renderer.ParentStyledColorRenderer;
 import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
+import tytoo.weave.style.renderer.StyledCircleRenderer;
 import tytoo.weave.style.renderer.StyledColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.style.value.StyleVariable;
@@ -231,7 +232,7 @@ public class DefaultTheme implements Theme {
         s = StyleSelector.part(RadioButton.class, "dot", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(CommonStyleProperties.ACCENT_COLOR, new Var<>(PRIMARY_ACCENT)),
-                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new StyledColorRenderer(CommonStyleProperties.ACCENT_COLOR, new Color(40, 160, 220)))
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new StyledCircleRenderer(CommonStyleProperties.ACCENT_COLOR, new Color(40, 160, 220)))
         )));
 
         // --- ComboBox ---
