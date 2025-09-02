@@ -1,12 +1,16 @@
 package tytoo.weave.state;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 class ComputedState<T> extends State<T> {
     private final Supplier<T> computer;
     private final Set<State<?>> dependencies = new HashSet<>();
+    private final Map<State<?>, Consumer<?>> dependencyListeners = new HashMap<>();
 
     ComputedState(Supplier<T> computer) {
         super(null);
@@ -19,9 +23,14 @@ class ComputedState<T> extends State<T> {
     }
 
     private void recompute() {
-        for (State<?> oldDependency : dependencies) {
-            oldDependency.removeListener(this::onDependencyChanged);
+        for (Map.Entry<State<?>, Consumer<?>> entry : dependencyListeners.entrySet()) {
+            @SuppressWarnings("unchecked")
+            Consumer<Object> listener = (Consumer<Object>) entry.getValue();
+            @SuppressWarnings("unchecked")
+            State<Object> dep = (State<Object>) entry.getKey();
+            dep.removeListener(listener);
         }
+        dependencyListeners.clear();
         dependencies.clear();
 
         State.computationStack.get().push(this);
@@ -35,7 +44,11 @@ class ComputedState<T> extends State<T> {
 
     void addDependency(State<?> state) {
         if (dependencies.add(state)) {
-            state.addListener(this::onDependencyChanged);
+            Consumer<Object> l = ignored -> recompute();
+            dependencyListeners.put(state, l);
+            @SuppressWarnings("unchecked")
+            State<Object> dep = (State<Object>) state;
+            dep.addListener(l);
         }
     }
 

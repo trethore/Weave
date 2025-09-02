@@ -1,15 +1,18 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
+import tytoo.weave.component.components.display.ProgressBar;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.interactive.ComboBox;
-import tytoo.weave.component.components.interactive.RadioButton;
-import tytoo.weave.component.components.interactive.RadioButtonGroup;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
+import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.selector.StyleSelector;
+
+import java.util.Map;
 
 
 public class TestGui extends WeaveScreen {
@@ -34,25 +37,30 @@ public class TestGui extends WeaveScreen {
                 .setLayoutData(LinearLayout.Data.grow(1))
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.relative(1.0f))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.CENTER, 8));
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 10));
 
-        State<String> selectedRadioState = new State<>("Option 1");
-        RadioButtonGroup<String> radioGroup = RadioButtonGroup.create(selectedRadioState);
-        radioGroup.addChildren(
-                RadioButton.of("Option 1", "Option 1"),
-                RadioButton.of("Option 2", "Option 2"),
-                RadioButton.of("Option 3", "Option 3")
-        );
+        State<Float> selectedPercent = new State<>(0f);
+        ComboBox<Float> percentCombo = ComboBox.create(selectedPercent)
+                .setDropdownMaxHeight(60f)
+                .addOption("0%", 0f)
+                .addOption("25%", 25f)
+                .addOption("50%", 50f)
+                .addOption("75%", 75f)
+                .addOption("100%", 100f);
 
-        State<String> comboValue = new State<>(null);
-        ComboBox<String> comboBox = ComboBox.create(comboValue)
-                .setPlaceholder("Select an option")
-                .setIncludePlaceholderOption(true)
-                .addOption("Option A", "A")
-                .addOption("Option B", "B")
-                .addOption("Option C", "C");
+        ProgressBar barRtl = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
+        barRtl.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
+                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.RIGHT_TO_LEFT))));
 
-        testPanel.addChildren(radioGroup, comboBox);
+        ProgressBar barLtr = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
+        barLtr.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
+                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT))));
+
+        ProgressBar barCenter = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
+        barCenter.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
+                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.CENTER_OUT))));
+
+        testPanel.addChildren(percentCombo, barRtl, barLtr, barCenter);
 
         window.addChildren(titlePanel, testPanel);
     }

@@ -1,6 +1,7 @@
 package tytoo.weave.theme;
 
 import net.minecraft.client.font.TextRenderer;
+import tytoo.weave.component.components.display.ProgressBar;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.interactive.Button;
@@ -9,11 +10,7 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.style.*;
-import tytoo.weave.style.renderer.ParentStyledColorRenderer;
-import tytoo.weave.style.renderer.RoundedRectangleRenderer;
-import tytoo.weave.style.renderer.SolidColorRenderer;
-import tytoo.weave.style.renderer.StyledCircleRenderer;
-import tytoo.weave.style.renderer.StyledColorRenderer;
+import tytoo.weave.style.renderer.*;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.style.value.StyleVariable;
 import tytoo.weave.style.value.Var;
@@ -93,6 +90,24 @@ public class DefaultTheme implements Theme {
         s = new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
+        )));
+
+        // --- ProgressBar ---
+        s = new StyleSelector(ProgressBar.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new ProgressBarRenderer()),
+                Map.entry(ProgressBar.StyleProps.THICKNESS, 8f),
+                Map.entry(ProgressBar.StyleProps.DEFAULT_WIDTH, 150f),
+                Map.entry(ProgressBar.StyleProps.VALUE_COLOR, new Color(40, 160, 220)),
+                Map.entry(ProgressBar.StyleProps.BACKGROUND_COLOR, new Color(80, 80, 80)),
+                Map.entry(ProgressBar.StyleProps.ANIMATION_DURATION, 250L),
+                Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT)
+        )));
+
+        s = new StyleSelector(ProgressBar.class, null, null, Set.of(StyleState.HOVERED));
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ProgressBar.StyleProps.VALUE_COLOR, new Color(90, 190, 240)),
+                Map.entry(ProgressBar.StyleProps.BACKGROUND_COLOR, new Color(110, 110, 110))
         )));
 
         // --- Interactive Components ---
