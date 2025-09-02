@@ -217,7 +217,12 @@ public class UIManager {
     }
 
     public static void onClose(Screen screen) {
-        if (screenStates.remove(screen) != null) {
+        UIState removed = screenStates.remove(screen);
+        if (removed != null) {
+            Component<?> root = removed.getRoot();
+            if (root != null) {
+                Animator.getInstance().stopAll(root);
+            }
             CursorManager.setCursor(CursorType.ARROW);
         }
     }

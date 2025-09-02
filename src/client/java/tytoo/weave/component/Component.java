@@ -10,7 +10,6 @@ import org.joml.Vector4f;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.animation.Animator;
 import tytoo.weave.animation.Easing;
-import tytoo.weave.animation.Interpolators;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -65,12 +64,14 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private Color lastBackgroundColor;
     private Color lastBorderColor;
     private Float lastBorderWidth;
+    private Float lastBorderRadius;
     private Color lastOverlayBorderColor;
     private Float lastOverlayBorderWidth;
     private Float lastOverlayBorderRadius;
     private EdgeInsets lastPadding;
     private Color animatedBorderColor;
     private Float animatedBorderWidth;
+    private Float animatedBorderRadius;
     private Color animatedOverlayBorderColor;
     private Float animatedOverlayBorderWidth;
     private Float animatedOverlayBorderRadius;
@@ -684,103 +685,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         Long duration = stylesheet.get(this, CommonStyleProperties.TRANSITION_DURATION, 0L);
         if (duration == null || duration <= 0) return;
-
         Easing.EasingFunction easing = stylesheet.get(this, CommonStyleProperties.TRANSITION_EASING, Easing.EASE_OUT_SINE);
-        ComponentRenderer renderer = getStyle().getRenderer(this);
-        if (renderer instanceof ColorableRenderer colorable) {
-            Color newColor = colorable.getColor();
-            if (newColor != null && lastBackgroundColor != null && !newColor.equals(lastBackgroundColor)) {
-                State<Color> state = new State<>(lastBackgroundColor);
-                state.addListener(colorable::setColor);
-                new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                        .animateProperty(state, newColor, Interpolators.COLOR, colorable::setColor, "background-color");
-            }
-        }
-
-        Float toBorderWidth = stylesheet.get(this, LayoutStyleProperties.BORDER_WIDTH, 0.0f);
-        if (lastBorderWidth == null) lastBorderWidth = toBorderWidth;
-        if (toBorderWidth != null && lastBorderWidth != null && Math.abs(toBorderWidth - lastBorderWidth) > 0.001f) {
-            State<Float> s = new State<>(lastBorderWidth);
-            s.addListener(v -> animatedBorderWidth = v);
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toBorderWidth, Interpolators.FLOAT, v -> animatedBorderWidth = v, "border-width")
-                    .then(() -> {
-                        animatedBorderWidth = null;
-                        lastBorderWidth = toBorderWidth;
-                    });
-        }
-
-        Color toBorderColor = stylesheet.get(this, LayoutStyleProperties.BORDER_COLOR, null);
-        if (lastBorderColor == null) lastBorderColor = toBorderColor;
-        if (toBorderColor != null && lastBorderColor != null && !toBorderColor.equals(lastBorderColor)) {
-            State<Color> s = new State<>(lastBorderColor);
-            s.addListener(c -> animatedBorderColor = c);
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toBorderColor, Interpolators.COLOR, c -> animatedBorderColor = c, "border-color")
-                    .then(() -> {
-                        animatedBorderColor = null;
-                        lastBorderColor = toBorderColor;
-                    });
-        }
-
-        EdgeInsets toPadding = stylesheet.get(this, LayoutStyleProperties.PADDING, null);
-        if (lastPadding == null) lastPadding = toPadding;
-        if (toPadding != null && lastPadding != null && !lastPadding.equals(toPadding)) {
-            State<EdgeInsets> s = new State<>(lastPadding);
-            s.addListener(p -> {
-                animatedPadding = p;
-                invalidateLayout();
-            });
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toPadding, Interpolators.EDGE_INSETS, p -> {
-                        animatedPadding = p;
-                        invalidateLayout();
-                    }, "padding")
-                    .then(() -> {
-                        animatedPadding = null;
-                        lastPadding = toPadding;
-                        invalidateLayout();
-                    });
-        }
-
-        Float toOverlayBorderWidth = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f);
-        if (lastOverlayBorderWidth == null) lastOverlayBorderWidth = toOverlayBorderWidth;
-        if (toOverlayBorderWidth != null && lastOverlayBorderWidth != null && Math.abs(toOverlayBorderWidth - lastOverlayBorderWidth) > 0.001f) {
-            State<Float> s = new State<>(lastOverlayBorderWidth);
-            s.addListener(v -> animatedOverlayBorderWidth = v);
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toOverlayBorderWidth, Interpolators.FLOAT, v -> animatedOverlayBorderWidth = v, "overlay-border-width")
-                    .then(() -> {
-                        animatedOverlayBorderWidth = null;
-                        lastOverlayBorderWidth = toOverlayBorderWidth;
-                    });
-        }
-
-        Color toOverlayBorderColor = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null);
-        if (lastOverlayBorderColor == null) lastOverlayBorderColor = toOverlayBorderColor;
-        if (toOverlayBorderColor != null && lastOverlayBorderColor != null && !toOverlayBorderColor.equals(lastOverlayBorderColor)) {
-            State<Color> s = new State<>(lastOverlayBorderColor);
-            s.addListener(c -> animatedOverlayBorderColor = c);
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toOverlayBorderColor, Interpolators.COLOR, c -> animatedOverlayBorderColor = c, "overlay-border-color")
-                    .then(() -> {
-                        animatedOverlayBorderColor = null;
-                        lastOverlayBorderColor = toOverlayBorderColor;
-                    });
-        }
-
-        Float toOverlayBorderRadius = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f);
-        if (lastOverlayBorderRadius == null) lastOverlayBorderRadius = toOverlayBorderRadius;
-        if (toOverlayBorderRadius != null && lastOverlayBorderRadius != null && Math.abs(toOverlayBorderRadius - lastOverlayBorderRadius) > 0.001f) {
-            State<Float> s = new State<>(lastOverlayBorderRadius);
-            s.addListener(v -> animatedOverlayBorderRadius = v);
-            new AnimationBuilder<>(self()).duration(duration).easing(easing)
-                    .animateProperty(s, toOverlayBorderRadius, Interpolators.FLOAT, v -> animatedOverlayBorderRadius = v, "overlay-border-radius")
-                    .then(() -> {
-                        animatedOverlayBorderRadius = null;
-                        lastOverlayBorderRadius = toOverlayBorderRadius;
-                    });
-        }
+        tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
     }
 
     private Matrix4f getInverseTransformationMatrix() {
@@ -960,6 +866,71 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return this.styleVariables;
     }
 
+    public void setAnimatedPadding(EdgeInsets padding) {
+        this.animatedPadding = padding;
+        invalidateLayout();
+    }
+
+    public void commitAnimatedPadding(EdgeInsets padding) {
+        this.animatedPadding = null;
+        this.lastPadding = padding;
+        invalidateLayout();
+    }
+
+    public void setAnimatedBorderWidth(Float width) {
+        this.animatedBorderWidth = width;
+    }
+
+    public void commitAnimatedBorderWidth(Float width) {
+        this.animatedBorderWidth = null;
+        this.lastBorderWidth = width;
+    }
+
+    public void setAnimatedBorderColor(Color color) {
+        this.animatedBorderColor = color;
+    }
+
+    public void commitAnimatedBorderColor(Color color) {
+        this.animatedBorderColor = null;
+        this.lastBorderColor = color;
+    }
+
+    public void setAnimatedBorderRadius(Float radius) {
+        this.animatedBorderRadius = radius;
+    }
+
+    public void commitAnimatedBorderRadius(Float radius) {
+        this.animatedBorderRadius = null;
+        this.lastBorderRadius = radius;
+    }
+
+    public void setAnimatedOverlayBorderWidth(Float width) {
+        this.animatedOverlayBorderWidth = width;
+    }
+
+    public void commitAnimatedOverlayBorderWidth(Float width) {
+        this.animatedOverlayBorderWidth = null;
+        this.lastOverlayBorderWidth = width;
+    }
+
+    public void setAnimatedOverlayBorderColor(Color color) {
+        this.animatedOverlayBorderColor = color;
+    }
+
+    public void commitAnimatedOverlayBorderColor(Color color) {
+        this.animatedOverlayBorderColor = null;
+        this.lastOverlayBorderColor = color;
+    }
+
+    public void setAnimatedOverlayBorderRadius(Float radius) {
+        this.animatedOverlayBorderRadius = radius;
+    }
+
+    public void commitAnimatedOverlayBorderRadius(Float radius) {
+        this.animatedOverlayBorderRadius = null;
+        this.lastOverlayBorderRadius = radius;
+    }
+
     public boolean isLayoutDirty() {
         return this.layoutState.isLayoutDirty();
     }
@@ -1085,7 +1056,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         Color borderColor = animatedBorderColor != null ? animatedBorderColor : stylesheet.get(this, LayoutStyleProperties.BORDER_COLOR, null);
         if (borderColor == null) return;
 
-        Float radius = stylesheet.get(this, LayoutStyleProperties.BORDER_RADIUS, 0.0f);
+        Float radius = animatedBorderRadius != null ? animatedBorderRadius : stylesheet.get(this, LayoutStyleProperties.BORDER_RADIUS, 0.0f);
         if (radius != null && radius > 0f) {
             Render2DUtils.drawRoundedOutline(context, getLeft(), getTop(), getWidth(), getHeight(), radius, borderWidth, borderColor);
         } else {
@@ -1093,6 +1064,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
         lastBorderColor = borderColor;
         lastBorderWidth = borderWidth;
+        lastBorderRadius = radius;
     }
 
     private void drawOverlayBorder(DrawContext context) {

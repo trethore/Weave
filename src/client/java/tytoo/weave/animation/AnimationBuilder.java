@@ -36,13 +36,17 @@ public class AnimationBuilder<C extends Component<C>> {
         return this;
     }
 
-    public <T> AnimationBuilder<C> animateProperty(State<T> state, T toValue, PropertyInterpolator<T> interpolator, @Nullable Consumer<T> onUpdate, String propertyKey) {
+    public <T> AnimationBuilder<C> animateProperty(State<T> state, T toValue, PropertyInterpolator<T> interpolator, @Nullable Consumer<T> onUpdate, Object propertyKey) {
         if (onUpdate != null) {
             state.addListener(onUpdate);
         }
         Animation<T> animation = new Animation<>(state, toValue, duration, easing, interpolator, null);
         Animator.getInstance().add(new AnimationKey(component, propertyKey), animation);
         return this;
+    }
+
+    public <T> AnimationBuilder<C> animateProperty(State<T> state, T toValue, PropertyInterpolator<T> interpolator, @Nullable Consumer<T> onUpdate, String propertyKey) {
+        return animateProperty(state, toValue, interpolator, onUpdate, (Object) propertyKey);
     }
 
     public AnimationBuilder<C> opacity(float to) {
@@ -102,6 +106,6 @@ public class AnimationBuilder<C extends Component<C>> {
         Animator.getInstance().add(new AnimationKey(component, "then_timer_" + System.nanoTime()), timer);
     }
 
-    public record AnimationKey(Component<?> component, String property) {
+    public record AnimationKey(Component<?> component, Object property) {
     }
 }

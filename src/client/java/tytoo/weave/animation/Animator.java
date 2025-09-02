@@ -12,6 +12,7 @@ import java.util.function.Function;
 public class Animator {
     private static final Animator INSTANCE = new Animator();
     private static final Map<Class<? extends Component<?>>, Function<? extends Component<?>, ? extends AnimationBuilder<?>>> BUILDER_PROVIDERS = new ConcurrentHashMap<>();
+    private static volatile TimeSource timeSource = () -> System.nanoTime() / 1_000_000L;
     private final Map<Object, Animation<?>> animations = new ConcurrentHashMap<>();
 
     private Animator() {
@@ -37,6 +38,14 @@ public class Animator {
             currentClass = currentClass.getSuperclass();
         }
         return new AnimationBuilder<>(component);
+    }
+
+    public static long nowMillis() {
+        return timeSource.nowMillis();
+    }
+
+    public static void setTimeSource(TimeSource source) {
+        if (source != null) timeSource = source;
     }
 
     public void add(Object key, Animation<?> animation) {
@@ -84,12 +93,22 @@ public class Animator {
 
     public void stopAll(Component<?> component) {
         animations.entrySet().removeIf(entry -> {
-            if (entry.getKey() instanceof AnimationBuilder.AnimationKey animKey && animKey.component() == component) {
-                Animation<?> animation = entry.getValue();
-                animation.finish();
-                return true;
+            if (entry.getKey() instanceof AnimationBuilder.AnimationKey animKey) {
+                Component<?> c = animKey.component();
+                for (Component<?> cur = c; cur != null; cur = cur.getParent()) {
+                    if (cur == component) {
+                        Animation<?> animation = entry.getValue();
+                        animation.finish();
+                        return true;
+                    }
+                }
             }
             return false;
         });
+    }
+
+    @FunctionalInterface
+    public interface TimeSource {
+        long nowMillis();
     }
 }

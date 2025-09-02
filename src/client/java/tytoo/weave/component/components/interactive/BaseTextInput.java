@@ -12,7 +12,6 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.textfield.*;
-import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
@@ -48,11 +47,11 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     protected BaseTextInput() {
         this.setPadding(4);
-        this.addStyleState(StyleState.NORMAL);
         this.addStyleClass("interactive-visual");
 
         this.outlineEffect = (OutlineEffect) Effects.outline(Color.BLACK, 1.0f);
         this.addEffect(this.outlineEffect);
+        this.addStyleState(StyleState.NORMAL);
 
         this.onCharTyped(this::onCharTyped);
         this.onKeyPress(this::onKeyPressed);
@@ -65,25 +64,6 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     @Override
     protected void updateVisualState(long duration) {
         super.updateVisualState(duration);
-        if (this.outlineEffect == null) return;
-
-        var stylesheet = ThemeManager.getStylesheet();
-        Color outlineColor;
-        ValidationState vState = validationState.get();
-
-        if (vState == ValidationState.VALID) {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
-        } else if (vState == ValidationState.INVALID) {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
-        } else if (isFocused()) {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
-        } else if (hasStyleState(StyleState.HOVERED)) {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
-        } else {
-            outlineColor = stylesheet.get(this, StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
-        }
-
-        this.outlineEffect.setColor(outlineColor);
     }
 
     protected abstract boolean handleNavigation(KeyPressEvent event);
@@ -435,6 +415,14 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
             ((BaseTextInput<?>) clone).setValidator(this.validator);
         }
         return clone;
+    }
+
+    public ValidationState getValidationState() {
+        return this.validationState.get();
+    }
+
+    public void applyOutlineColor(Color color) {
+        if (this.outlineEffect != null) this.outlineEffect.setColor(color);
     }
 
     public enum ValidationState {

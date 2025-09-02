@@ -26,7 +26,7 @@ public class Animation<T> {
     }
 
     void start() {
-        this.startTime = System.currentTimeMillis();
+        this.startTime = Animator.nowMillis();
         this.startValue = this.target.get();
     }
 
@@ -39,7 +39,7 @@ public class Animation<T> {
             return;
         }
 
-        long elapsed = System.currentTimeMillis() - startTime;
+        long elapsed = Animator.nowMillis() - startTime;
         float progress = Math.min(1.0f, (float) elapsed / duration);
         float easedProgress = easing.ease(progress);
 

@@ -21,6 +21,7 @@ import java.util.Optional;
 
 public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     private final State<Color> colorOverride = new State<>(null);
+    private Color animatedTextColor = null;
     private List<TextSegment> segments = new ArrayList<>();
     private transient Text cachedText = null;
     private transient int lastHoverState = -1; // -1: initial, 0: not hovered, 1: hovered
@@ -182,6 +183,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 ss.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, null),
                 ss.get(this, StyleProps.TEXT_SCALE, null),
                 colorOverride.get(),
+                animatedTextColor,
                 getOpacity()
         );
     }
@@ -193,8 +195,12 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     private Styling getBaseStylingFromStylesheet() {
         Stylesheet ss = ThemeManager.getStylesheet();
+        Color baseColor = ss.get(this, StyleProps.TEXT_COLOR, null);
+        if (this.animatedTextColor != null && this.colorOverride.get() == null) {
+            baseColor = this.animatedTextColor;
+        }
         return Styling.create()
-                .color(ss.get(this, StyleProps.TEXT_COLOR, null))
+                .color(baseColor)
                 .bold(ss.get(this, StyleProps.BOLD, null))
                 .italic(ss.get(this, StyleProps.ITALIC, null))
                 .underline(ss.get(this, StyleProps.UNDERLINE, null))
@@ -206,6 +212,20 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 .font(ss.get(this, StyleProps.FONT, null))
                 .letterSpacing(ss.get(this, StyleProps.LETTER_SPACING, null))
                 .lineHeightMultiplier(ss.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, null));
+    }
+
+    public void applyAnimatedTextColor(Color color) {
+        if (this.colorOverride.get() != null) {
+            this.animatedTextColor = null;
+            return;
+        }
+        this.animatedTextColor = color;
+        invalidateCache();
+    }
+
+    public void clearAnimatedTextColor(Color ignored) {
+        this.animatedTextColor = null;
+        invalidateCache();
     }
 
     protected boolean hasShadow() {

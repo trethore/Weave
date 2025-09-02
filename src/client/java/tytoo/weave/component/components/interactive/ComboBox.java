@@ -65,7 +65,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.setWidth(Constraints.pixels(defaultWidth));
         this.setHeight(Constraints.pixels(defaultHeight));
         this.addStyleClass("interactive-visual");
-        this.addStyleState(StyleState.NORMAL);
 
         this.displayPanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
@@ -89,6 +88,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
         this.outlineEffect = (OutlineEffect) Effects.outline(Color.BLACK, 1.0f);
         this.addEffect(this.outlineEffect);
+        this.outlineEffect.setColor(resolveBorderColor());
+        this.addStyleState(StyleState.NORMAL);
 
         this.onClick(e -> toggleDropdown());
         this.onFocusLost(e -> {
@@ -122,9 +123,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @Override
     protected void updateVisualState(long duration) {
         super.updateVisualState(duration);
-        if (this.outlineEffect == null) return;
-
-        this.outlineEffect.setColor(resolveBorderColor());
     }
 
     private Color resolveBorderColor() {
@@ -136,6 +134,10 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         } else {
             return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
+    }
+
+    public void applyOutlineColor(Color color) {
+        if (this.outlineEffect != null) this.outlineEffect.setColor(color);
     }
 
     private void toggleDropdown() {
