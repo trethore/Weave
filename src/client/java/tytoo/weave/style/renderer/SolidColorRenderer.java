@@ -6,7 +6,7 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class SolidColorRenderer implements ColorableRenderer {
+public class SolidColorRenderer implements ColorableRenderer, CloneableRenderer {
     private Color color;
 
     public SolidColorRenderer(Color color) {
@@ -26,5 +26,10 @@ public class SolidColorRenderer implements ColorableRenderer {
         if (color != null) {
             Render2DUtils.drawRect(context, component.getLeft(), component.getTop(), component.getWidth(), component.getHeight(), color);
         }
+    }
+
+    @Override
+    public ComponentRenderer copy() {
+        return new SolidColorRenderer(color);
     }
 }

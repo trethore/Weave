@@ -1,5 +1,7 @@
 package tytoo.weave.animation;
 
+import tytoo.weave.style.EdgeInsets;
+
 import java.awt.*;
 
 public final class Interpolators {
@@ -11,6 +13,13 @@ public final class Interpolators {
         int a = clamp((int) (start.getAlpha() + (end.getAlpha() - start.getAlpha()) * progress));
         return new Color(r, g, b, a);
     };
+
+    public static final PropertyInterpolator<EdgeInsets> EDGE_INSETS = (start, end, progress) -> new EdgeInsets(
+            start.top() + (end.top() - start.top()) * progress,
+            start.right() + (end.right() - start.right()) * progress,
+            start.bottom() + (end.bottom() - start.bottom()) * progress,
+            start.left() + (end.left() - start.left()) * progress
+    );
 
     private Interpolators() {
     }

@@ -175,7 +175,7 @@ public class UIManager {
     private static void updateCursor(@Nullable Component<?> component) {
         Component<?> current = component;
         while (current != null) {
-            if (current.getActiveStyleStates().contains(tytoo.weave.style.StyleState.DISABLED)) {
+            if (current.getActiveStyleStates().contains(StyleState.DISABLED)) {
                 CursorManager.setCursor(CursorType.NOT_ALLOWED);
                 return;
             }

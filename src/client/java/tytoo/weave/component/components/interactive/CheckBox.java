@@ -5,6 +5,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2f;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
@@ -26,6 +27,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
     private final State<Boolean> checkedState = new State<>(false);
     private final List<Consumer<Boolean>> checkChangedListeners = new ArrayList<>();
+    @NamedPart
     private final Panel box;
     @Nullable
     private TextComponent<?> prefixLabel;
@@ -46,7 +48,6 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         this.box = Panel.create()
                 .setWidth(Constraints.pixels(boxSize))
                 .setHeight(Constraints.pixels(boxSize))
-                .addStyleClass("checkbox-box")
                 .addStyleState(StyleState.NORMAL);
 
         CheckMark checkMark = new CheckMark(this);

@@ -5,7 +5,9 @@ import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.renderer.CloneableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
+import tytoo.weave.style.value.StyleValue;
 
 import java.util.*;
 
@@ -23,6 +25,19 @@ public class Stylesheet {
             case DISABLED -> ComponentStyle.StyleProps.DISABLED_RENDERER;
             case VALID -> ComponentStyle.StyleProps.VALID_RENDERER;
             case INVALID -> ComponentStyle.StyleProps.INVALID_RENDERER;
+        };
+    }
+
+    private static StyleProperty<ComponentRenderer> getOverlayPropertyForState(StyleState state) {
+        return switch (state) {
+            case NORMAL -> ComponentStyle.StyleProps.NORMAL_OVERLAY_RENDERER;
+            case HOVERED -> ComponentStyle.StyleProps.HOVERED_OVERLAY_RENDERER;
+            case FOCUSED -> ComponentStyle.StyleProps.FOCUSED_OVERLAY_RENDERER;
+            case ACTIVE -> ComponentStyle.StyleProps.ACTIVE_OVERLAY_RENDERER;
+            case SELECTED -> ComponentStyle.StyleProps.SELECTED_OVERLAY_RENDERER;
+            case DISABLED -> ComponentStyle.StyleProps.DISABLED_OVERLAY_RENDERER;
+            case VALID -> ComponentStyle.StyleProps.VALID_OVERLAY_RENDERER;
+            case INVALID -> ComponentStyle.StyleProps.INVALID_OVERLAY_RENDERER;
         };
     }
 
@@ -50,13 +65,38 @@ public class Stylesheet {
 
         ComponentRenderer baseRenderer = (ComponentRenderer) properties.get(ComponentStyle.StyleProps.BASE_RENDERER);
         if (baseRenderer != null) {
-            style.setBaseRenderer(baseRenderer);
+            if (baseRenderer instanceof CloneableRenderer cloneable) {
+                style.setBaseRenderer(cloneable.copy());
+            } else {
+                style.setBaseRenderer(baseRenderer);
+            }
+        }
+
+        ComponentRenderer baseOverlay = (ComponentRenderer) properties.get(ComponentStyle.StyleProps.BASE_OVERLAY_RENDERER);
+        if (baseOverlay != null) {
+            if (baseOverlay instanceof CloneableRenderer cloneable) {
+                style.setBaseOverlayRenderer(cloneable.copy());
+            } else {
+                style.setBaseOverlayRenderer(baseOverlay);
+            }
         }
 
         for (StyleState state : StyleState.values()) {
             StyleProperty<ComponentRenderer> prop = getPropertyForState(state);
             ComponentRenderer stateRenderer = (ComponentRenderer) properties.get(prop);
-            style.setRenderer(state, stateRenderer);
+            if (stateRenderer instanceof CloneableRenderer cloneableState) {
+                style.setRenderer(state, cloneableState.copy());
+            } else {
+                style.setRenderer(state, stateRenderer);
+            }
+            ComponentRenderer overlayRenderer = (ComponentRenderer) properties.get(getOverlayPropertyForState(state));
+            if (overlayRenderer != null) {
+                if (overlayRenderer instanceof CloneableRenderer cloneableOverlay) {
+                    style.setOverlayRenderer(state, cloneableOverlay.copy());
+                } else {
+                    style.setOverlayRenderer(state, overlayRenderer);
+                }
+            }
         }
         return style;
     }
@@ -64,10 +104,18 @@ public class Stylesheet {
     @SuppressWarnings("unchecked")
     public <T> T get(Component<?> component, StyleProperty<T> property, T defaultValue) {
         Object value = getProperties(component).get(property);
-        if (property.type().isInstance(value)) {
-            return (T) value;
+        Object resolved = resolveValue(component, value);
+        if (property.type().isInstance(resolved)) {
+            return (T) resolved;
         }
         return defaultValue;
+    }
+
+    private Object resolveValue(Component<?> component, Object value) {
+        if (value instanceof StyleValue<?> styleValue) {
+            return styleValue.resolve(component);
+        }
+        return value;
     }
 
     private Map<StyleProperty<?>, Object> getProperties(Component<?> component) {

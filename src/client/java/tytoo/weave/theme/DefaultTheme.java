@@ -14,6 +14,8 @@ import tytoo.weave.style.renderer.RoundedRectangleRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.renderer.StyledColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
+import tytoo.weave.style.value.StyleVariable;
+import tytoo.weave.style.value.Var;
 import tytoo.weave.ui.CursorType;
 import tytoo.weave.utils.McUtils;
 
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class DefaultTheme implements Theme {
+    private static final StyleVariable<Color> PRIMARY_ACCENT = new StyleVariable<>("weave.color.primary", new Color(40, 160, 220));
     private final Stylesheet stylesheet;
 
     public DefaultTheme() {
@@ -63,7 +66,12 @@ public class DefaultTheme implements Theme {
         }
 
         // Style for the line segments used when a separator has a label
-        s = new StyleSelector(Panel.class, null, Set.of("separator-line"), null);
+        s = StyleSelector.part(Separator.class, "leftLine", Panel.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new ParentStyledColorRenderer(Separator.StyleProps.COLOR, new Color(128, 128, 128))),
+                Map.entry(Separator.StyleProps.COLOR, new Color(128, 128, 128))
+        )));
+        s = StyleSelector.part(Separator.class, "rightLine", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new ParentStyledColorRenderer(Separator.StyleProps.COLOR, new Color(128, 128, 128))),
                 Map.entry(Separator.StyleProps.COLOR, new Color(128, 128, 128))
@@ -95,6 +103,7 @@ public class DefaultTheme implements Theme {
                 Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(60, 60, 60))),
                 Map.entry(ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(140, 140, 140))),
                 Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new SolidColorRenderer(new Color(50, 50, 50, 150))),
+                Map.entry(CommonStyleProperties.TRANSITION_DURATION, 150L),
                 Map.entry(StyleProps.ANIMATION_DURATION, 150L)
         )));
 
@@ -158,7 +167,7 @@ public class DefaultTheme implements Theme {
                 Map.entry(CheckBox.StyleProps.CHECK_THICKNESS, 2f)
         )));
 
-        s = new StyleSelector(Panel.class, null, Set.of("checkbox-box"), null);
+        s = StyleSelector.part(CheckBox.class, "box", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(80, 80, 80))),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 100, 100))),
@@ -190,7 +199,7 @@ public class DefaultTheme implements Theme {
                 Map.entry(CommonStyleProperties.CURSOR, CursorType.NS_RESIZE)
         )));
 
-        s = new StyleSelector(Panel.class, null, Set.of("slider-thumb"), null);
+        s = StyleSelector.part(Slider.class, "thumb", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(160, 160, 160))),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(180, 180, 180))),
@@ -205,13 +214,13 @@ public class DefaultTheme implements Theme {
                 Map.entry(RadioButton.StyleProps.DOT_SIZE, 6f)
         )));
 
-        s = new StyleSelector(Panel.class, null, Set.of("radio-button-outline"), null);
+        s = StyleSelector.part(RadioButton.class, "outline", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new RoundedRectangleRenderer(new Color(50, 50, 50), 6f)),
                 Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new RoundedRectangleRenderer(new Color(80, 80, 80), 6f))
         )));
 
-        s = new StyleSelector(Panel.class, null, Set.of("radio-button-background"), null);
+        s = StyleSelector.part(RadioButton.class, "background", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new RoundedRectangleRenderer(new Color(110, 110, 110), 5f)),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new RoundedRectangleRenderer(new Color(140, 140, 140), 5f)),
@@ -219,9 +228,10 @@ public class DefaultTheme implements Theme {
                 Map.entry(ComponentStyle.StyleProps.DISABLED_RENDERER, new RoundedRectangleRenderer(new Color(80, 80, 80), 5f))
         )));
 
-        s = new StyleSelector(Panel.class, null, Set.of("radio-button-dot"), null);
+        s = StyleSelector.part(RadioButton.class, "dot", Panel.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
-                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new RoundedRectangleRenderer(new Color(40, 160, 220), 3f))
+                Map.entry(CommonStyleProperties.ACCENT_COLOR, new Var<>(PRIMARY_ACCENT)),
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new StyledColorRenderer(CommonStyleProperties.ACCENT_COLOR, new Color(40, 160, 220)))
         )));
 
         // --- ComboBox ---

@@ -84,6 +84,15 @@ public final class Render2DUtils {
         }
     }
 
+    public static void drawRoundedOutline(DrawContext context, float x, float y, float width, float height, float radius, float lineWidth, Color color) {
+        int thickness = Math.max(1, Math.round(lineWidth));
+        for (int i = 0; i < thickness; i++) {
+            float inset = i;
+            float r = Math.max(0, radius - i);
+            drawRoundedRect(context, x + inset, y + inset, width - inset * 2, height - inset * 2, r, color);
+        }
+    }
+
     public static void drawImage(DrawContext context, Identifier id, float x1, float y1, float x2, float y2, int rotation, boolean parity, Color color) {
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
         int[][] texCoords = {{0, 1}, {1, 1}, {1, 0}, {0, 0}};

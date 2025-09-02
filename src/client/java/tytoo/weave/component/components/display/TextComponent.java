@@ -141,7 +141,6 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                     sb.append(segment.getText());
                 }
                 Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
-                // Use unscaled width for wave computation to match pre-scale coordinate space
                 float widthForWave = getWidth() / scale;
                 drawWaveText(context, sb.toString(), hasShadow(), colorWave, letterSpacing, getOpacity(), widthForWave);
             } else {

@@ -45,7 +45,6 @@ public class RadioButtonGroup<V> extends BasePanel<RadioButtonGroup<V>> {
         if (!Objects.equals(selectedValueState.get(), value)) {
             this.selectedValueState.set(value);
         } else {
-            // If the state was already correct, we still need to enforce the visual selection
             updateSelectionFromValue(value);
         }
     }

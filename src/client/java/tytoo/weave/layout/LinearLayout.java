@@ -55,7 +55,6 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
             }
         }
 
-        // Arrange unmanaged children according to their own constraints
         List<Component<?>> unmanagedChildren = parent.getChildren().stream()
                 .filter(Component::isVisible)
                 .filter(c -> !c.isManagedByLayout())

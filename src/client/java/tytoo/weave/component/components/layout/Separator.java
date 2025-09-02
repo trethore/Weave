@@ -1,6 +1,7 @@
 package tytoo.weave.component.components.layout;
 
 import org.jetbrains.annotations.Nullable;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
@@ -16,10 +17,13 @@ public class Separator extends BasePanel<Separator> {
     private final float labelGap;
 
     @Nullable
+    @NamedPart
     private SimpleTextComponent label;
     @Nullable
+    @NamedPart
     private Panel leftLine;
     @Nullable
+    @NamedPart
     private Panel rightLine;
 
     private LabelAlignment labelAlignment = LabelAlignment.CENTER;
@@ -86,12 +90,9 @@ public class Separator extends BasePanel<Separator> {
         this.setWidth(Constraints.relative(1.0f));
         this.setHeight(Constraints.childBased());
 
-        Panel left = Panel.create().addStyleClass("separator-line");
-        left.addStyleClass("separator-line-left");
-        Panel right = Panel.create().addStyleClass("separator-line");
-        right.addStyleClass("separator-line-right");
+        Panel left = Panel.create();
+        Panel right = Panel.create();
         SimpleTextComponent lbl = SimpleTextComponent.of("");
-        lbl.addStyleClass("separator-label");
 
         this.leftLine = left;
         this.rightLine = right;

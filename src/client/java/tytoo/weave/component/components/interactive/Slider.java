@@ -2,6 +2,7 @@ package tytoo.weave.component.components.interactive;
 
 import tytoo.weave.animation.Easing;
 import tytoo.weave.animation.Interpolators;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.mouse.MouseClickEvent;
@@ -19,6 +20,7 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
     private final State<N> valueState;
     private final Orientation orientation;
     private final Function<Double, N> fromDouble;
+    @NamedPart
     private final Panel thumb;
     private final State<Float> visualProgressState;
     private final float trackPadding;
@@ -43,7 +45,7 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
             this.addStyleClass("slider-vertical");
         }
 
-        this.thumb = Panel.create().addStyleClass("slider-thumb").addStyleState(StyleState.NORMAL);
+        this.thumb = Panel.create().addStyleState(StyleState.NORMAL);
         var stylesheet = ThemeManager.getStylesheet();
         this.trackPadding = stylesheet.get(this, StyleProps.TRACK_PADDING, 4f);
 

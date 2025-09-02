@@ -6,13 +6,17 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class RoundedRectangleRenderer implements ColorableRenderer {
+public class RoundedRectangleRenderer implements ColorableRenderer, CloneableRenderer {
     private final float radius;
     private Color color;
 
     public RoundedRectangleRenderer(Color color, float radius) {
         this.color = color;
         this.radius = radius;
+    }
+
+    public float getRadius() {
+        return radius;
     }
 
     @Override
@@ -30,5 +34,10 @@ public class RoundedRectangleRenderer implements ColorableRenderer {
         if (color != null) {
             Render2DUtils.drawRoundedRect(context, component.getLeft(), component.getTop(), component.getWidth(), component.getHeight(), radius, color);
         }
+    }
+
+    @Override
+    public ComponentRenderer copy() {
+        return new RoundedRectangleRenderer(color, radius);
     }
 }

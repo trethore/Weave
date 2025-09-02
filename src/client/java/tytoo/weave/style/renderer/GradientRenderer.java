@@ -6,10 +6,16 @@ import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public record GradientRenderer(Color startColor, Color endColor, float angle) implements ComponentRenderer {
+public record GradientRenderer(Color startColor, Color endColor,
+                               float angle) implements ComponentRenderer, CloneableRenderer {
 
     @Override
     public void render(DrawContext context, Component<?> component) {
         Render2DUtils.drawGradientRect(context, component.getLeft(), component.getTop(), component.getWidth(), component.getHeight(), startColor, endColor, angle);
+    }
+
+    @Override
+    public ComponentRenderer copy() {
+        return new GradientRenderer(startColor, endColor, angle);
     }
 }

@@ -9,6 +9,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.animation.Animator;
+import tytoo.weave.animation.Easing;
+import tytoo.weave.animation.Interpolators;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -27,18 +29,19 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.state.State;
-import tytoo.weave.style.ComponentStyle;
-import tytoo.weave.style.EdgeInsets;
-import tytoo.weave.style.StyleRule;
-import tytoo.weave.style.StyleState;
+import tytoo.weave.style.*;
+import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.McUtils;
+import tytoo.weave.utils.render.Render2DUtils;
 
+import java.awt.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 
@@ -50,6 +53,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected final Set<String> styleClasses = new HashSet<>();
     private final Set<StyleState> activeStyleStates = EnumSet.noneOf(StyleState.class);
     private final List<StyleRule> localStyleRules = new ArrayList<>();
+    private final Map<String, Object> styleVariables = new HashMap<>();
     protected Component<?> parent;
     protected List<Component<?>> children = new LinkedList<>();
     @Nullable
@@ -58,6 +62,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     protected TextRenderer textRenderer;
     @Nullable
     private ComponentStyle style;
+    private Color lastBackgroundColor;
+    private Color lastBorderColor;
+    private Float lastBorderWidth;
+    private Color lastOverlayBorderColor;
+    private Float lastOverlayBorderWidth;
+    private Float lastOverlayBorderRadius;
+    private EdgeInsets lastPadding;
+    private Color animatedBorderColor;
+    private Float animatedBorderWidth;
+    private Color animatedOverlayBorderColor;
+    private Float animatedOverlayBorderWidth;
+    private Float animatedOverlayBorderRadius;
+    private EdgeInsets animatedPadding;
 
     public Component() {
         this.layoutState = new LayoutState(this);
@@ -119,8 +136,19 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             }
 
             ComponentRenderer renderer = getStyle().getRenderer(this);
-            if (renderer != null) renderer.render(context, this);
+            if (renderer != null) {
+                renderer.render(context, this);
+                if (renderer instanceof ColorableRenderer colorable) {
+                    lastBackgroundColor = colorable.getColor();
+                }
+            }
+
+            drawBorder(context);
             drawChildren(context);
+
+            ComponentRenderer overlayRenderer = getStyle().getOverlayRenderer(this);
+            if (overlayRenderer != null) overlayRenderer.render(context, this);
+            drawOverlayBorder(context);
 
             for (int i = this.renderState.getEffects().size() - 1; i >= 0; i--) {
                 this.renderState.getEffects().get(i).afterDraw(context, this);
@@ -649,7 +677,106 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     protected void onStyleStateChanged() {
-        // Subclasses can override this to react to state changes.
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        Long duration = stylesheet.get(this, CommonStyleProperties.TRANSITION_DURATION, 0L);
+        if (duration == null || duration <= 0) return;
+
+        Easing.EasingFunction easing = stylesheet.get(this, CommonStyleProperties.TRANSITION_EASING, Easing.EASE_OUT_SINE);
+        ComponentRenderer renderer = getStyle().getRenderer(this);
+        if (renderer instanceof ColorableRenderer colorable) {
+            Color newColor = colorable.getColor();
+            if (newColor != null && lastBackgroundColor != null && !newColor.equals(lastBackgroundColor)) {
+                State<Color> state = new State<>(lastBackgroundColor);
+                state.addListener(colorable::setColor);
+                new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                        .animateProperty(state, newColor, Interpolators.COLOR, colorable::setColor, "background-color");
+            }
+        }
+
+        Float toBorderWidth = stylesheet.get(this, LayoutStyleProperties.BORDER_WIDTH, 0.0f);
+        if (lastBorderWidth == null) lastBorderWidth = toBorderWidth;
+        if (toBorderWidth != null && lastBorderWidth != null && Math.abs(toBorderWidth - lastBorderWidth) > 0.001f) {
+            State<Float> s = new State<>(lastBorderWidth);
+            s.addListener(v -> animatedBorderWidth = v);
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toBorderWidth, Interpolators.FLOAT, v -> animatedBorderWidth = v, "border-width")
+                    .then(() -> {
+                        animatedBorderWidth = null;
+                        lastBorderWidth = toBorderWidth;
+                    });
+        }
+
+        Color toBorderColor = stylesheet.get(this, LayoutStyleProperties.BORDER_COLOR, null);
+        if (lastBorderColor == null) lastBorderColor = toBorderColor;
+        if (toBorderColor != null && lastBorderColor != null && !toBorderColor.equals(lastBorderColor)) {
+            State<Color> s = new State<>(lastBorderColor);
+            s.addListener(c -> animatedBorderColor = c);
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toBorderColor, Interpolators.COLOR, c -> animatedBorderColor = c, "border-color")
+                    .then(() -> {
+                        animatedBorderColor = null;
+                        lastBorderColor = toBorderColor;
+                    });
+        }
+
+        EdgeInsets toPadding = stylesheet.get(this, LayoutStyleProperties.PADDING, null);
+        if (lastPadding == null) lastPadding = toPadding;
+        if (toPadding != null && lastPadding != null && !lastPadding.equals(toPadding)) {
+            State<EdgeInsets> s = new State<>(lastPadding);
+            s.addListener(p -> {
+                animatedPadding = p;
+                invalidateLayout();
+            });
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toPadding, Interpolators.EDGE_INSETS, p -> {
+                        animatedPadding = p;
+                        invalidateLayout();
+                    }, "padding")
+                    .then(() -> {
+                        animatedPadding = null;
+                        lastPadding = toPadding;
+                        invalidateLayout();
+                    });
+        }
+
+        Float toOverlayBorderWidth = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f);
+        if (lastOverlayBorderWidth == null) lastOverlayBorderWidth = toOverlayBorderWidth;
+        if (toOverlayBorderWidth != null && lastOverlayBorderWidth != null && Math.abs(toOverlayBorderWidth - lastOverlayBorderWidth) > 0.001f) {
+            State<Float> s = new State<>(lastOverlayBorderWidth);
+            s.addListener(v -> animatedOverlayBorderWidth = v);
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toOverlayBorderWidth, Interpolators.FLOAT, v -> animatedOverlayBorderWidth = v, "overlay-border-width")
+                    .then(() -> {
+                        animatedOverlayBorderWidth = null;
+                        lastOverlayBorderWidth = toOverlayBorderWidth;
+                    });
+        }
+
+        Color toOverlayBorderColor = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null);
+        if (lastOverlayBorderColor == null) lastOverlayBorderColor = toOverlayBorderColor;
+        if (toOverlayBorderColor != null && lastOverlayBorderColor != null && !toOverlayBorderColor.equals(lastOverlayBorderColor)) {
+            State<Color> s = new State<>(lastOverlayBorderColor);
+            s.addListener(c -> animatedOverlayBorderColor = c);
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toOverlayBorderColor, Interpolators.COLOR, c -> animatedOverlayBorderColor = c, "overlay-border-color")
+                    .then(() -> {
+                        animatedOverlayBorderColor = null;
+                        lastOverlayBorderColor = toOverlayBorderColor;
+                    });
+        }
+
+        Float toOverlayBorderRadius = stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f);
+        if (lastOverlayBorderRadius == null) lastOverlayBorderRadius = toOverlayBorderRadius;
+        if (toOverlayBorderRadius != null && lastOverlayBorderRadius != null && Math.abs(toOverlayBorderRadius - lastOverlayBorderRadius) > 0.001f) {
+            State<Float> s = new State<>(lastOverlayBorderRadius);
+            s.addListener(v -> animatedOverlayBorderRadius = v);
+            new AnimationBuilder<>(self()).duration(duration).easing(easing)
+                    .animateProperty(s, toOverlayBorderRadius, Interpolators.FLOAT, v -> animatedOverlayBorderRadius = v, "overlay-border-radius")
+                    .then(() -> {
+                        animatedOverlayBorderRadius = null;
+                        lastOverlayBorderRadius = toOverlayBorderRadius;
+                    });
+        }
     }
 
     private Matrix4f getInverseTransformationMatrix() {
@@ -805,6 +932,30 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return this.layoutState.getFinalHeight();
     }
 
+    @SuppressWarnings("unchecked")
+    public <V> V getVar(String name, V defaultValue) {
+        Object v = this.styleVariables.get(name);
+        if (v != null) return (V) v;
+        return defaultValue;
+    }
+
+    public <V> T setVar(String name, V value) {
+        this.styleVariables.put(name, value);
+        invalidateSubtreeStyleCache();
+        return self();
+    }
+
+    public T removeVar(String name) {
+        if (this.styleVariables.remove(name) != null) {
+            invalidateSubtreeStyleCache();
+        }
+        return self();
+    }
+
+    public Map<String, Object> getStyleVariables() {
+        return this.styleVariables;
+    }
+
     public boolean isLayoutDirty() {
         return this.layoutState.isLayoutDirty();
     }
@@ -815,6 +966,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             this.layoutState.setMeasuredHeight(0);
             return;
         }
+
+        applyLayoutStylesFromStylesheet();
 
         WidthConstraint wc = this.layoutState.getConstraints().getWidthConstraint();
         HeightConstraint hc = this.layoutState.getConstraints().getHeightConstraint();
@@ -851,6 +1004,109 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 child.measure(this.layoutState.getMeasuredWidth() - horizontalPadding, this.layoutState.getMeasuredHeight() - verticalPadding);
             }
         }
+    }
+
+    private void applyLayoutStylesFromStylesheet() {
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        EdgeInsets stylePadding = stylesheet.get(this, LayoutStyleProperties.PADDING, null);
+        EdgeInsets newPadding = animatedPadding != null ? animatedPadding : stylePadding;
+        if (newPadding != null) {
+            EdgeInsets current = this.layoutState.getPadding();
+            if (!current.equals(newPadding)) {
+                this.layoutState.setPadding(newPadding);
+            }
+            lastPadding = newPadding;
+        }
+
+        EdgeInsets newMargin = stylesheet.get(this, LayoutStyleProperties.MARGIN, null);
+        if (newMargin != null) {
+            EdgeInsets marginApplied = newMargin;
+
+            float top = marginApplied.top();
+            float right = marginApplied.right();
+            float bottom = marginApplied.bottom();
+            float left = marginApplied.left();
+
+            boolean horizontalAuto = Float.isNaN(left) && Float.isNaN(right);
+            boolean verticalAuto = Float.isNaN(top) && Float.isNaN(bottom);
+
+            if (horizontalAuto) {
+                this.layoutState.getConstraints().setX(Constraints.center());
+                left = 0;
+                right = 0;
+            }
+            if (verticalAuto) {
+                this.layoutState.getConstraints().setY(Constraints.center());
+                top = 0;
+                bottom = 0;
+            }
+
+            EdgeInsets finalMargin = new EdgeInsets(top, right, bottom, left);
+            EdgeInsets current = this.layoutState.getMargin();
+            if (!current.equals(finalMargin)) {
+                this.layoutState.setMargin(finalMargin);
+            }
+        }
+
+        Float widthProp = stylesheet.get(this, LayoutStyleProperties.WIDTH, null);
+        if (widthProp != null) {
+            this.layoutState.getConstraints().setWidth(Constraints.pixels(widthProp));
+        }
+        Float heightProp = stylesheet.get(this, LayoutStyleProperties.HEIGHT, null);
+        if (heightProp != null) {
+            this.layoutState.getConstraints().setHeight(Constraints.pixels(heightProp));
+        }
+        Float minWidthProp = stylesheet.get(this, LayoutStyleProperties.MIN_WIDTH, null);
+        if (minWidthProp != null) {
+            this.layoutState.getConstraints().setMinWidth(minWidthProp);
+        }
+        Float maxWidthProp = stylesheet.get(this, LayoutStyleProperties.MAX_WIDTH, null);
+        if (maxWidthProp != null) {
+            this.layoutState.getConstraints().setMaxWidth(maxWidthProp);
+        }
+        Float minHeightProp = stylesheet.get(this, LayoutStyleProperties.MIN_HEIGHT, null);
+        if (minHeightProp != null) {
+            this.layoutState.getConstraints().setMinHeight(minHeightProp);
+        }
+        Float maxHeightProp = stylesheet.get(this, LayoutStyleProperties.MAX_HEIGHT, null);
+        if (maxHeightProp != null) {
+            this.layoutState.getConstraints().setMaxHeight(maxHeightProp);
+        }
+    }
+
+    private void drawBorder(DrawContext context) {
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        Float borderWidth = animatedBorderWidth != null ? animatedBorderWidth : stylesheet.get(this, LayoutStyleProperties.BORDER_WIDTH, 0.0f);
+        if (borderWidth == null || borderWidth <= 0f) return;
+        Color borderColor = animatedBorderColor != null ? animatedBorderColor : stylesheet.get(this, LayoutStyleProperties.BORDER_COLOR, null);
+        if (borderColor == null) return;
+
+        Float radius = stylesheet.get(this, LayoutStyleProperties.BORDER_RADIUS, 0.0f);
+        if (radius != null && radius > 0f) {
+            Render2DUtils.drawRoundedOutline(context, getLeft(), getTop(), getWidth(), getHeight(), radius, borderWidth, borderColor);
+        } else {
+            Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), borderWidth, borderColor, true);
+        }
+        lastBorderColor = borderColor;
+        lastBorderWidth = borderWidth;
+    }
+
+    private void drawOverlayBorder(DrawContext context) {
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+        Float borderWidth = animatedOverlayBorderWidth != null ? animatedOverlayBorderWidth : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f);
+        if (borderWidth == null || borderWidth <= 0f) return;
+        Color borderColor = animatedOverlayBorderColor != null ? animatedOverlayBorderColor : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null);
+        if (borderColor == null) return;
+
+        Float radius = animatedOverlayBorderRadius != null ? animatedOverlayBorderRadius : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f);
+        if (radius != null && radius > 0f) {
+            Render2DUtils.drawRoundedOutline(context, getLeft(), getTop(), getWidth(), getHeight(), radius, borderWidth, borderColor);
+        } else {
+            Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), borderWidth, borderColor, true);
+        }
+        lastOverlayBorderColor = borderColor;
+        lastOverlayBorderWidth = borderWidth;
+        lastOverlayBorderRadius = radius;
     }
 
     public void arrange(float x, float y) {

@@ -44,6 +44,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @Nullable
     private String placeholder;
     @Nullable
+    @NamedPart
     private Panel dropdownPanel;
     private boolean expanded = false;
     @Nullable
@@ -71,7 +72,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 .setHeight(Constraints.relative(1.0f))
                 .setPadding(2, 5)
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER))
-                .addStyleClass("combo-box-display")
                 .addEffect(Effects.scissor());
 
         SelectedLabel label = new SelectedLabel(this);

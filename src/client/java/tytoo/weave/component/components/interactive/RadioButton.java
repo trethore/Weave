@@ -2,6 +2,7 @@ package tytoo.weave.component.components.interactive;
 
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.animation.Easing;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
@@ -14,8 +15,11 @@ import tytoo.weave.theme.ThemeManager;
 public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
 
     private final V value;
+    @NamedPart
     private final Panel outline;
+    @NamedPart
     private final Panel background;
+    @NamedPart
     private final Panel dot;
     private final TextComponent<?> label;
     @Nullable
@@ -37,7 +41,6 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         this.outline = Panel.create()
                 .setWidth(Constraints.pixels(outlineSize))
                 .setHeight(Constraints.pixels(outlineSize))
-                .addStyleClass("radio-button-outline")
                 .setHittable(false)
                 .addStyleState(StyleState.NORMAL);
 
@@ -47,7 +50,6 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
                 .setHeight(Constraints.pixels(backgroundSize))
                 .setX(Constraints.center())
                 .setY(Constraints.center())
-                .addStyleClass("radio-button-background")
                 .setHittable(false)
                 .addStyleState(StyleState.NORMAL);
 
@@ -57,7 +59,6 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
                 .setHeight(Constraints.pixels(dotSize))
                 .setX(Constraints.center())
                 .setY(Constraints.center())
-                .addStyleClass("radio-button-dot")
                 .setOpacity(0f)
                 .setScale(0f)
                 .setHittable(false);
