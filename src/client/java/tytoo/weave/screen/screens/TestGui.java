@@ -1,18 +1,13 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
-import tytoo.weave.component.components.display.ProgressBar;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.ComboBox;
+import tytoo.weave.component.components.interactive.TextField;
+import tytoo.weave.component.components.interactive.BaseTextInput.ValidationState;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.State;
-import tytoo.weave.style.StyleRule;
-import tytoo.weave.style.selector.StyleSelector;
-
-import java.util.Map;
 
 
 public class TestGui extends WeaveScreen {
@@ -39,28 +34,18 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 10));
 
-        State<Float> selectedPercent = new State<>(0f);
-        ComboBox<Float> percentCombo = ComboBox.create(selectedPercent)
-                .setDropdownMaxHeight(60f)
-                .addOption("0%", 0f)
-                .addOption("25%", 25f)
-                .addOption("50%", 50f)
-                .addOption("75%", 75f)
-                .addOption("100%", 100f);
+        SimpleTextComponent validationLabel = SimpleTextComponent.of("");
 
-        ProgressBar barRtl = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barRtl.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.RIGHT_TO_LEFT))));
+        TextField textField = TextField.create()
+                .setPlaceholder("Enter text (max 10 chars)")
+                .setValidator(text -> text.length() <= 10)
+                .onTextChanged(newText -> {
+                    validationLabel.setText(textField.getValidationState() == ValidationState.VALID ? "Valid" : "Invalid");
+                });
 
-        ProgressBar barLtr = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barLtr.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT))));
+        validationLabel.setText(textField.getValidationState() == ValidationState.VALID ? "Valid" : "Invalid");
 
-        ProgressBar barCenter = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barCenter.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.CENTER_OUT))));
-
-        testPanel.addChildren(percentCombo, barRtl, barLtr, barCenter);
+        testPanel.addChildren(textField, validationLabel);
 
         window.addChildren(titlePanel, testPanel);
     }
