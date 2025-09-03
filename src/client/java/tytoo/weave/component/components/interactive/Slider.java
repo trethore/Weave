@@ -1,6 +1,6 @@
 package tytoo.weave.component.components.interactive;
 
-import tytoo.weave.animation.Easing;
+import tytoo.weave.animation.Easings;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.Panel;
@@ -144,7 +144,7 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
     }
 
     private void animateVisualProgress(float targetProgress) {
-        this.thumb.animate().duration(100).easing(Easing.EASE_OUT_SINE)
+        this.thumb.animate().duration(100).easing(Easings.EASE_OUT_SINE)
                 .animateProperty(this.visualProgressState, targetProgress, Interpolators.FLOAT, null, "slider_progress");
     }
 

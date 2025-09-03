@@ -1,7 +1,7 @@
 package tytoo.weave.component.components.interactive;
 
 import org.jetbrains.annotations.Nullable;
-import tytoo.weave.animation.Easing;
+import tytoo.weave.animation.Easings;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
@@ -107,8 +107,8 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         float targetScale = selected ? 1.0f : 0.0f;
 
         long duration = ThemeManager.getStylesheet().get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
-        this.dot.animate().duration(duration).easing(Easing.EASE_OUT_QUAD).opacity(targetOpacity);
-        this.dot.animate().duration(duration).easing(Easing.EASE_OUT_BACK).scale(targetScale);
+        this.dot.animate().duration(duration).easing(Easings.EASE_OUT_QUAD).opacity(targetOpacity);
+        this.dot.animate().duration(duration).easing(Easings.EASE_OUT_BACK).scale(targetScale);
     }
 
     @Override

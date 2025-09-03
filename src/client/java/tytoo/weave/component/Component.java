@@ -9,7 +9,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import tytoo.weave.animation.AnimationBuilder;
 import tytoo.weave.animation.Animator;
-import tytoo.weave.animation.Easing;
+import tytoo.weave.animation.EasingFunction;
+import tytoo.weave.animation.Easings;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.XConstraint;
@@ -685,7 +686,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         Long duration = stylesheet.get(this, CommonStyleProperties.TRANSITION_DURATION, 0L);
         if (duration == null || duration <= 0) return;
-        Easing.EasingFunction easing = stylesheet.get(this, CommonStyleProperties.TRANSITION_EASING, Easing.EASE_OUT_SINE);
+        EasingFunction easing = stylesheet.get(this, CommonStyleProperties.TRANSITION_EASING, Easings.EASE_OUT_SINE);
         tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
     }
 

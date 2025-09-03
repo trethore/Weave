@@ -2,7 +2,7 @@ package tytoo.weave.component.components.display;
 
 import net.minecraft.client.gui.DrawContext;
 import org.jetbrains.annotations.NotNull;
-import tytoo.weave.animation.Easing;
+import tytoo.weave.animation.Easings;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -63,7 +63,7 @@ public class ProgressBar extends Component<ProgressBar> {
     private void animateToProgress(float targetProgress) {
         long duration = ThemeManager.getStylesheet().get(this, StyleProps.ANIMATION_DURATION, 200L);
         if (duration < 0L) duration = 0L;
-        this.animate().duration(duration).easing(Easing.EASE_OUT_SINE)
+        this.animate().duration(duration).easing(Easings.EASE_OUT_SINE)
                 .animateProperty(this.visualProgressState, targetProgress, Interpolators.FLOAT, null, "progress_value");
     }
 

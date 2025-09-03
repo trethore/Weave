@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 public class AnimationBuilder<C extends Component<C>> {
     private final C component;
     private long duration = 250;
-    private Easing.EasingFunction easing = Easing.EASE_OUT_SINE;
+    private EasingFunction easing = Easings.EASE_OUT_SINE;
 
     public AnimationBuilder(C component) {
         this.component = component;
@@ -31,7 +31,7 @@ public class AnimationBuilder<C extends Component<C>> {
         return this;
     }
 
-    public AnimationBuilder<C> easing(Easing.EasingFunction easing) {
+    public AnimationBuilder<C> easing(EasingFunction easing) {
         this.easing = easing;
         return this;
     }
@@ -102,7 +102,7 @@ public class AnimationBuilder<C extends Component<C>> {
         if (onFinish == null) return;
         State<Byte> dummyState = new State<>((byte) 0);
         Consumer<Animation<Byte>> onFinishConsumer = animation -> onFinish.run();
-        Animation<Byte> timer = new Animation<>(dummyState, (byte) 1, duration, Easing.LINEAR, (start, end, progress) -> start, onFinishConsumer);
+        Animation<Byte> timer = new Animation<>(dummyState, (byte) 1, duration, Easings.LINEAR, (start, end, progress) -> start, onFinishConsumer);
         Animator.getInstance().add(new AnimationKey(component, "then_timer_" + System.nanoTime()), timer);
     }
 

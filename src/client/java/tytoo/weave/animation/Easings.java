@@ -1,7 +1,6 @@
 package tytoo.weave.animation;
 
-@SuppressWarnings("unused")
-public final class Easing {
+public final class Easings {
     public static final EasingFunction LINEAR = t -> t;
     public static final EasingFunction EASE_IN_SINE = t -> 1 - (float) Math.cos((t * Math.PI) / 2);
     public static final EasingFunction EASE_OUT_SINE = t -> (float) Math.sin((t * Math.PI) / 2);
@@ -14,12 +13,6 @@ public final class Easing {
         final float c3 = c1 + 1;
         return 1 + c3 * (float) Math.pow(t - 1, 3) + c1 * (float) Math.pow(t - 1, 2);
     };
-
-    private Easing() {
-    }
-
-    @FunctionalInterface
-    public interface EasingFunction {
-        float ease(float t);
+    private Easings() {
     }
 }

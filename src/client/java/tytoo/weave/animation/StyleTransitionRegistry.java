@@ -148,7 +148,7 @@ public final class StyleTransitionRegistry {
         REGISTRATIONS.add(new Registration<>(componentClass, key, toValueResolver, interpolator, applyUpdate, onFinish));
     }
 
-    public static void applyTransitions(Component<?> component, long duration, Easing.EasingFunction easing) {
+    public static void applyTransitions(Component<?> component, long duration, EasingFunction easing) {
         if (REGISTRATIONS.isEmpty()) return;
 
         Stylesheet ss = ThemeManager.getStylesheet();
@@ -163,7 +163,7 @@ public final class StyleTransitionRegistry {
                                                              Component<?> component,
                                                              Stylesheet ss,
                                                              long duration,
-                                                             Easing.EasingFunction easing) {
+                                                             EasingFunction easing) {
         C comp = (C) component;
         T toValue = reg.toValueResolver.apply(ss, comp);
         if (toValue == null) return;

@@ -8,7 +8,7 @@ public class Animation<T> {
     private final State<T> target;
     private final T endValue;
     private final long duration;
-    private final Easing.EasingFunction easing;
+    private final EasingFunction easing;
     private final PropertyInterpolator<T> interpolator;
     private final Consumer<Animation<T>> onFinish;
 
@@ -16,7 +16,7 @@ public class Animation<T> {
     private long startTime = -1;
     private boolean finished = false;
 
-    public Animation(State<T> target, T endValue, long duration, Easing.EasingFunction easing, PropertyInterpolator<T> interpolator, Consumer<Animation<T>> onFinish) {
+    public Animation(State<T> target, T endValue, long duration, EasingFunction easing, PropertyInterpolator<T> interpolator, Consumer<Animation<T>> onFinish) {
         this.target = target;
         this.endValue = endValue;
         this.duration = duration;
