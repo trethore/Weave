@@ -1,5 +1,6 @@
 package tytoo.weave.animation;
 
+@SuppressWarnings("unused")
 public final class Easings {
     public static final EasingFunction LINEAR = t -> t;
     public static final EasingFunction EASE_IN_SINE = t -> 1 - (float) Math.cos((t * Math.PI) / 2);
