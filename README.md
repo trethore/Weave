@@ -115,7 +115,7 @@ your-repo/
 
 ## Contributing
 
-Contributions are welcome! 🎉
+Contributions are welcome!
 
 - Report bugs or request features in the [issue tracker](https://github.com/trethore/Weave/issues).
 - Submit improvements and fixes as [pull requests](https://github.com/trethore/Weave/pulls).

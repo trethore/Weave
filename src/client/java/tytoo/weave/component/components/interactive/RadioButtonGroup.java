@@ -1,7 +1,7 @@
 package tytoo.weave.component.components.interactive;
 
 import org.jetbrains.annotations.Nullable;
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -62,7 +62,7 @@ public class RadioButtonGroup<V> extends BasePanel<RadioButtonGroup<V>> {
     @Override
     public void addChild(Component<?> child) {
         if (!(child instanceof RadioButton)) {
-            WeaveClient.LOGGER.error("RadioButtonGroup can only contain RadioButton components. Found {}.", child.getClass().getSimpleName());
+            WeaveCore.LOGGER.error("RadioButtonGroup can only contain RadioButton components. Found {}.", child.getClass().getSimpleName());
             return;
         }
 

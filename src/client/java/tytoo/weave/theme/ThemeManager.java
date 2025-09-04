@@ -1,6 +1,6 @@
 package tytoo.weave.theme;
 
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 import tytoo.weave.ui.UIManager;
 
 import java.util.Collections;
@@ -18,7 +18,7 @@ public class ThemeManager {
 
     public static void setTheme(Theme theme) {
         if (theme == null) {
-            WeaveClient.LOGGER.error("Attempted to set a null theme.");
+            WeaveCore.LOGGER.error("Attempted to set a null theme.");
             throw new IllegalArgumentException("Theme cannot be null.");
         }
         ThemeManager.currentTheme = theme;

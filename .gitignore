@@ -39,8 +39,13 @@ replay_*.log
 *.hprof
 *.jfr
 .crush/
+
+# Agents
+
 CRUSH.md
 GEMINI.md
 AGENTS.md
 CLAUDE.md
 
+# my notes
+notes.md

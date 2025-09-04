@@ -1,6 +1,6 @@
 package tytoo.weave.layout;
 
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
@@ -250,7 +250,7 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
     public record Data(float grow) {
         public Data {
             if (grow < 0) {
-                WeaveClient.LOGGER.error("LinearLayout grow factor cannot be negative, but was {}.", grow);
+                WeaveCore.LOGGER.error("LinearLayout grow factor cannot be negative, but was {}.", grow);
                 throw new IllegalArgumentException("Grow factor cannot be negative.");
             }
         }

@@ -1,9 +1,13 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
-version = project.mod_version
+version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 base {
@@ -41,11 +45,11 @@ dependencies {
 }
 
 processResources {
-	inputs.property "version", project.version
+    inputs.property "version", project.version
 
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
-	}
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -63,27 +67,98 @@ java {
 }
 
 jar {
-	inputs.property "archivesName", project.base.archivesName
+    inputs.property "archivesName", project.base.archivesName
 
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
+    from("LICENSE") {
+        rename { "${it}_${inputs.properties.archivesName}"}
+    }
 }
 
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
-		}
-	}
+def releaseResourcesDir = layout.buildDirectory.dir("releaseResources")
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+tasks.register("generateReleaseFabricMod") {
+    inputs.file("${projectDir}/src/client/resources/fabric.mod.json")
+    outputs.file(releaseResourcesDir.map { it.file("fabric.mod.json").asFile })
+    doLast {
+        def src = file("${projectDir}/src/client/resources/fabric.mod.json")
+        def destDir = releaseResourcesDir.get().asFile
+        destDir.mkdirs()
+        def json = new JsonSlurper().parse(src)
+        json.version = project.version
+        json.remove('entrypoints')
+        def text = JsonOutput.prettyPrint(JsonOutput.toJson(json))
+        new File(destDir, 'fabric.mod.json').text = text
+    }
+}
+
+tasks.register("releaseResources", Copy) {
+    from(sourceSets.client.resources.srcDirs) {
+        exclude("fabric.mod.json")
+    }
+    into(releaseResourcesDir)
+    dependsOn("generateReleaseFabricMod")
+}
+
+tasks.register("releaseJar", Jar) {
+    from(sourceSets.client.output) {
+        exclude("tytoo/weave/WeaveClient.class")
+    }
+    from(releaseResourcesDir)
+    archiveClassifier.set("release")
+    dependsOn("classes", "releaseResources")
+}
+
+tasks.register("remapReleaseJar", RemapJarTask) {
+    inputFile.set(tasks.named("releaseJar", Jar).flatMap { it.archiveFile })
+    archiveClassifier.set("")
+    addNestedDependencies.set(false)
+    dependsOn("releaseJar")
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            artifact(tasks.named("remapReleaseJar"))
+            artifact(tasks.named("remapSourcesJar"))
+            
+            pom {
+                name = project.archives_base_name
+                description = "Weave UI: composable UI library for Fabric mods"
+                url = "https://github.com/tytoo/Weave"
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://opensource.org/licenses/MIT"
+                    }
+                }
+                scm {
+                    url = "https://github.com/tytoo/Weave"
+                    connection = "scm:git:https://github.com/tytoo/Weave.git"
+                    developerConnection = "scm:git:ssh://git@github.com/tytoo/Weave.git"
+                }
+            }
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+        // Notice: This block does NOT have the same function as the block in the top level.
+        // The repositories here will be used for publishing your artifact, not for
+        // retrieving dependencies.
+
+        // Publish to GitHub Packages when credentials are provided.
+        // Set env vars: GITHUB_ACTOR and GITHUB_TOKEN (with `write:packages`).
+        if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/tytoo/Weave")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
+        }
+    }
 }

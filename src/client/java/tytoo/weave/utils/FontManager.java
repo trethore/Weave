@@ -8,7 +8,7 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.freetype.FT_Face;
 import org.lwjgl.util.freetype.FreeType;
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 
 import java.io.File;
 import java.io.InputStream;
@@ -39,7 +39,7 @@ public final class FontManager {
                 byte[] bytes = inputStream.readAllBytes();
                 return loadFromBytes(bytes, size, oversample, fontId, cacheKey);
             } catch (Exception e) {
-                WeaveClient.LOGGER.error("Failed to load font from identifier: {}", fontId, e);
+                WeaveCore.LOGGER.error("Failed to load font from identifier: {}", fontId, e);
                 return Optional.empty();
             }
         });
@@ -47,7 +47,7 @@ public final class FontManager {
 
     public static Optional<TextRenderer> loadFromFile(File fontFile, float size, float oversample) {
         if (!fontFile.exists() || !fontFile.canRead()) {
-            WeaveClient.LOGGER.error("Font file does not exist or cannot be read: {}", fontFile.getAbsolutePath());
+            WeaveCore.LOGGER.error("Font file does not exist or cannot be read: {}", fontFile.getAbsolutePath());
             return Optional.empty();
         }
 
@@ -59,7 +59,7 @@ public final class FontManager {
             Identifier dynamicId = Identifier.of("weave", "dynamic/font/" + fontFile.getName().toLowerCase().replaceAll("[^a-z0-9.\\-_]", "_"));
             return loadFromBytes(bytes, size, oversample, dynamicId, cacheKey);
         } catch (Exception e) {
-            WeaveClient.LOGGER.error("Failed to load font from file: {}", fontFile.getAbsolutePath(), e);
+            WeaveCore.LOGGER.error("Failed to load font from file: {}", fontFile.getAbsolutePath(), e);
             return Optional.empty();
         }
     }
@@ -84,7 +84,7 @@ public final class FontManager {
             face = null;
             return Optional.of(ras.renderer());
         } catch (Exception e) {
-            WeaveClient.LOGGER.error("Failed to load font from bytes for: {}", fontIdForStorage, e);
+            WeaveCore.LOGGER.error("Failed to load font from bytes for: {}", fontIdForStorage, e);
             if (face != null) {
                 FreeType.FT_Done_Face(face);
             }

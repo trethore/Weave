@@ -4,7 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -46,7 +46,7 @@ public class ImageManager {
 
             NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
             texture.setFilter(false, false);
-            PLACEHOLDER_ID = Identifier.of(WeaveClient.MOD_ID, "missing.png");
+            PLACEHOLDER_ID = Identifier.of(WeaveCore.MOD_ID, "missing.png");
             client.getTextureManager().registerTexture(PLACEHOLDER_ID, texture);
         }
         return PLACEHOLDER_ID;
@@ -64,12 +64,12 @@ public class ImageManager {
             NativeImage nativeImage = loadImage(inputStream);
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
 
-            Identifier id = Identifier.of(WeaveClient.MOD_ID, "dynamic/" + UUID.randomUUID());
+            Identifier id = Identifier.of(WeaveCore.MOD_ID, "dynamic/" + UUID.randomUUID());
             client.getTextureManager().registerTexture(id, texture);
             fileCache.put(file, id);
             return Optional.of(id);
         } catch (Exception e) {
-            WeaveClient.LOGGER.error("Failed to load image from file: {}", file.getAbsolutePath(), e);
+            WeaveCore.LOGGER.error("Failed to load image from file: {}", file.getAbsolutePath(), e);
             return Optional.empty();
         }
     }
@@ -87,7 +87,7 @@ public class ImageManager {
         try {
             uri = url.toURI();
         } catch (URISyntaxException e) {
-            WeaveClient.LOGGER.error("Invalid URL syntax: {}", url, e);
+            WeaveCore.LOGGER.error("Invalid URL syntax: {}", url, e);
             return CompletableFuture.failedFuture(e);
         }
 
@@ -109,7 +109,7 @@ public class ImageManager {
                 throw new UncheckedIOException("Failed to download or read image from URL: " + url, e);
             }
         }, VIRTUAL_THREAD_EXECUTOR).thenApplyAsync(nativeImage -> {
-            Identifier id = urlToIdentifier.computeIfAbsent(uri, u -> Identifier.of(WeaveClient.MOD_ID, "url/" + UUID.randomUUID()));
+            Identifier id = urlToIdentifier.computeIfAbsent(uri, u -> Identifier.of(WeaveCore.MOD_ID, "url/" + UUID.randomUUID()));
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
             client.getTextureManager().registerTexture(id, texture);
             return id;
@@ -127,7 +127,7 @@ public class ImageManager {
         try {
             return NativeImage.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
-            WeaveClient.LOGGER.debug("Could not read image as PNG, falling back to ImageIO. Reason: {}", e.getMessage());
+            WeaveCore.LOGGER.debug("Could not read image as PNG, falling back to ImageIO. Reason: {}", e.getMessage());
             BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
             if (bufferedImage == null) {
                 throw new IOException("Failed to read image using ImageIO. Unsupported format?");

@@ -3,7 +3,7 @@ package tytoo.weave.component.components.display;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import tytoo.weave.WeaveClient;
+import tytoo.weave.WeaveCore;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -47,11 +47,11 @@ public class Image extends BasePanel<Image> {
         Image image = Image.from(ImageManager.getPlaceholder()).setColor(Color.WHITE);
         ImageManager.getIdentifierForUrl(url).whenCompleteAsync((id, throwable) -> {
             if (throwable != null) {
-                WeaveClient.LOGGER.error("Failed to load image from URL {}.", url, throwable);
+                WeaveCore.LOGGER.error("Failed to load image from URL {}.", url, throwable);
                 image.setImage(ImageManager.getPlaceholder()).setColor(Color.WHITE);
             } else {
                 image.setImage(id).setColor(Color.WHITE);
-                WeaveClient.LOGGER.info("Loaded image from URL {} with ID {}", url, id);
+                WeaveCore.LOGGER.info("Loaded image from URL {} with ID {}", url, id);
             }
         }, McUtils.getMc().orElseThrow());
         return image;
