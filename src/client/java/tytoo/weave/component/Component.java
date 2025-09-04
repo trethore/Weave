@@ -523,6 +523,21 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public T removeEffect(Effect effect) {
+        if (this.renderState.getEffects().remove(effect)) {
+            invalidateLayout();
+        }
+        return self();
+    }
+
+    public T clearEffects() {
+        if (!this.renderState.getEffects().isEmpty()) {
+            this.renderState.getEffects().clear();
+            invalidateLayout();
+        }
+        return self();
+    }
+
     public <E extends Event> void fireEvent(E event) {
         this.eventState.fireEvent(event);
     }
@@ -797,6 +812,23 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         if (this.styleClasses.remove(styleClass)) {
             invalidateStyleCache();
         }
+        return self();
+    }
+
+    public T addStyleClassAnimated(String styleClass, long duration, EasingFunction easing) {
+        addStyleClass(styleClass);
+        tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
+        return self();
+    }
+
+    public T removeStyleClassAnimated(String styleClass, long duration, EasingFunction easing) {
+        removeStyleClass(styleClass);
+        tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
+        return self();
+    }
+
+    public T transitionStyles(long duration, EasingFunction easing) {
+        tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
         return self();
     }
 

@@ -2,14 +2,15 @@ package tytoo.weave.effects.implementations;
 
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
+import tytoo.weave.effects.ColorableEffect;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public class OutlineEffect implements Effect {
-    private final float width;
-    private final boolean inside;
+public class OutlineEffect implements Effect, ColorableEffect {
+    private float width;
+    private boolean inside;
     private Color color;
 
     public OutlineEffect(Color color, float width, boolean inside) {
@@ -28,6 +29,22 @@ public class OutlineEffect implements Effect {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public boolean isInside() {
+        return inside;
+    }
+
+    public void setInside(boolean inside) {
+        this.inside = inside;
     }
 
     @Override

@@ -4,6 +4,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import tytoo.weave.effects.ColorableEffect;
+import tytoo.weave.effects.Effect;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.OutlineEffect;
 import tytoo.weave.event.keyboard.CharTypeEvent;
@@ -26,9 +28,11 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     private static final int MAX_HISTORY_SIZE = 100;
     protected final List<Consumer<String>> textChangeListeners = new ArrayList<>();
     protected final State<ValidationState> validationState = new State<>(ValidationState.NEUTRAL);
-    private final OutlineEffect outlineEffect;
     private final List<HistoryState> undoStack = new ArrayList<>();
     private final List<HistoryState> redoStack = new ArrayList<>();
+    private Effect outlineEffect;
+    @Nullable
+    private ColorableEffect outlineColorTarget;
     private String text = "";
     private int cursorPos = 0;
     private int selectionAnchor = 0;
@@ -49,8 +53,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.setPadding(4);
         this.addStyleClass("interactive-visual");
 
-        this.outlineEffect = (OutlineEffect) Effects.outline(Color.BLACK, 1.0f);
-        this.addEffect(this.outlineEffect);
+        this.setOutlineEffect(Effects.outline(Color.BLACK, 1.0f));
         this.addStyleState(StyleState.NORMAL);
 
         this.onCharTyped(this::onCharTyped);
@@ -438,7 +441,34 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     public void applyOutlineColor(Color color) {
-        if (this.outlineEffect != null) this.outlineEffect.setColor(color);
+        if (this.outlineColorTarget != null) {
+            this.outlineColorTarget.setColor(color);
+        } else if (this.outlineEffect instanceof OutlineEffect outline) {
+            outline.setColor(color);
+        }
+    }
+
+    public void applyOutlineWidth(float width) {
+        if (this.outlineEffect instanceof OutlineEffect outline) {
+            outline.setWidth(width);
+        }
+    }
+
+    public void applyOutlineInside(boolean inside) {
+        if (this.outlineEffect instanceof OutlineEffect outline) {
+            outline.setInside(inside);
+        }
+    }
+
+    public T setOutlineEffect(Effect effect) {
+        if (effect == null) return self();
+        if (this.outlineEffect != null) {
+            this.removeEffect(this.outlineEffect);
+        }
+        this.outlineEffect = effect;
+        this.addEffect(effect);
+        this.outlineColorTarget = effect instanceof ColorableEffect c ? c : null;
+        return self();
     }
 
     public enum ValidationState {
@@ -461,5 +491,8 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
         public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("text-input.default-width", Float.class);
         public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("text-input.default-height", Float.class);
+
+        public static final StyleProperty<Float> OUTLINE_WIDTH = new StyleProperty<>("outline.width", Float.class);
+        public static final StyleProperty<Boolean> OUTLINE_INSIDE = new StyleProperty<>("outline.inside", Boolean.class);
     }
 }

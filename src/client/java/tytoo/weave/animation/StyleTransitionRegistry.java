@@ -120,6 +120,16 @@ public final class StyleTransitionRegistry {
                 Interpolators.COLOR,
                 BaseTextInput::applyOutlineColor,
                 null);
+
+        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_WIDTH, 1.0f,
+                Interpolators.FLOAT,
+                BaseTextInput::applyOutlineWidth,
+                null);
+
+        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_INSIDE, Boolean.TRUE,
+                (start, end, progress) -> progress < 1.0f ? start : end,
+                BaseTextInput::applyOutlineInside,
+                null);
     }
 
     private StyleTransitionRegistry() {
@@ -133,6 +143,7 @@ public final class StyleTransitionRegistry {
             BiConsumer<C, T> applyUpdate,
             @Nullable BiConsumer<C, T> onFinish
     ) {
+        unregister(componentClass, property);
         REGISTRATIONS.add(new Registration<>(componentClass, property,
                 (ss, c) -> ss.get(c, property, defaultValue), interpolator, applyUpdate, onFinish));
     }
@@ -145,7 +156,26 @@ public final class StyleTransitionRegistry {
             BiConsumer<C, T> applyUpdate,
             @Nullable BiConsumer<C, T> onFinish
     ) {
+        unregister(componentClass, key);
         REGISTRATIONS.add(new Registration<>(componentClass, key, toValueResolver, interpolator, applyUpdate, onFinish));
+    }
+
+    public static boolean unregister(Class<? extends Component<?>> componentClass, Object key) {
+        boolean removed = false;
+        Iterator<Registration<?, ?>> it = REGISTRATIONS.iterator();
+        while (it.hasNext()) {
+            Registration<?, ?> reg = it.next();
+            if (reg.componentClass.equals(componentClass) && reg.key.equals(key)) {
+                it.remove();
+                removed = true;
+            }
+        }
+        return removed;
+    }
+
+    public static void clear() {
+        REGISTRATIONS.clear();
+        LAST_VALUES.clear();
     }
 
     public static void applyTransitions(Component<?> component, long duration, EasingFunction easing) {

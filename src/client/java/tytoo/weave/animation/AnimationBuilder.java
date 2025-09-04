@@ -9,6 +9,7 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
+import tytoo.weave.style.renderer.CompositeRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
@@ -88,14 +89,44 @@ public class AnimationBuilder<C extends Component<C>> {
         ComponentStyle style = component.getStyle();
         ComponentRenderer baseRenderer = style.getBaseRenderer();
         Color startColor = new Color(0, 0, 0, 0);
-        if (baseRenderer instanceof ColorableRenderer colorable && colorable.getColor() != null) {
-            startColor = colorable.getColor();
+        if (baseRenderer instanceof ColorableRenderer colorable) {
+            if (colorable.getColor() != null) {
+                startColor = colorable.getColor();
+            }
+            State<Color> colorState = new State<>(startColor);
+            return animateProperty(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
         }
 
-        SolidColorRenderer animatedRenderer = new SolidColorRenderer(startColor);
+        if (baseRenderer instanceof SolidColorRenderer sr) {
+            if (sr.getColor() != null) {
+                startColor = sr.getColor();
+            }
+            State<Color> colorState = new State<>(startColor);
+            return animateProperty(colorState, to, Interpolators.COLOR, sr::setColor, "color");
+        } else {
+            SolidColorRenderer animated = new SolidColorRenderer(startColor);
+            State<Color> colorState = new State<>(startColor);
+            CompositeRenderer composite = new CompositeRenderer().add(baseRenderer).add(animated);
+            style.setBaseRenderer(composite);
+            return animateProperty(colorState, to, Interpolators.COLOR, animated::setColor, "color");
+        }
+    }
+
+    public AnimationBuilder<C> colorIfColorable(Color to) {
+        ComponentStyle style = component.getStyle();
+        ComponentRenderer baseRenderer = style.getBaseRenderer();
+        if (baseRenderer instanceof ColorableRenderer colorable) {
+            Color startColor = colorable.getColor() != null ? colorable.getColor() : new Color(0, 0, 0, 0);
+            State<Color> colorState = new State<>(startColor);
+            return animateProperty(colorState, to, Interpolators.COLOR, colorable::setColor, "color");
+        }
+        return this;
+    }
+
+    public AnimationBuilder<C> animateRendererColor(ColorableRenderer target, Color to) {
+        Color startColor = target.getColor() != null ? target.getColor() : new Color(0, 0, 0, 0);
         State<Color> colorState = new State<>(startColor);
-        style.setBaseRenderer(animatedRenderer);
-        return animateProperty(colorState, to, Interpolators.COLOR, animatedRenderer::setColor, "color");
+        return animateProperty(colorState, to, Interpolators.COLOR, target::setColor, "color");
     }
 
     public void then(Runnable onFinish) {
