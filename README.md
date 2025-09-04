@@ -74,7 +74,7 @@ This makes UI code predictable and modular:
 
 ---
 
-## 🚀 Installation
+## Installation
 
 Weave is designed to be **vendored directly** into your mod repository.
 
