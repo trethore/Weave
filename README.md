@@ -124,7 +124,6 @@ Contributions are welcome! 🎉
   ```bash
   ./gradlew build        # build artifacts
   ./gradlew runClient    # run in dev environment
-  ./gradlew publishToMavenLocal  # publish to local Maven
   ```
 
 Please follow best practices (clean code, descriptive commits, small PRs).
