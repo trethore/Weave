@@ -81,6 +81,14 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     protected boolean handleKeyboardInput(KeyPressEvent event) {
+        if (handleUndoRedo()) return true;
+        if (handleClipboard()) return true;
+        if (handleSelection()) return true;
+        if (handleDeletion(event)) return true;
+        return handleNavigation(event);
+    }
+
+    private boolean handleUndoRedo() {
         if (InputHelper.isUndo()) {
             undo();
             return true;
@@ -90,15 +98,10 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
             redo();
             return true;
         }
+        return false;
+    }
 
-        if (InputHelper.isSelectAll()) {
-            setSelectionAnchor(0);
-            setCursorPos(getText().length(), true);
-            setLastActionTime(System.currentTimeMillis());
-            ensureCursorVisible();
-            return true;
-        }
-
+    private boolean handleClipboard() {
         if (InputHelper.isCopy()) {
             MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
             return true;
@@ -114,7 +117,21 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
             this.write("");
             return true;
         }
+        return false;
+    }
 
+    private boolean handleSelection() {
+        if (InputHelper.isSelectAll()) {
+            setSelectionAnchor(0);
+            setCursorPos(getText().length(), true);
+            setLastActionTime(System.currentTimeMillis());
+            ensureCursorVisible();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleDeletion(KeyPressEvent event) {
         if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE || event.getKeyCode() == GLFW.GLFW_KEY_DELETE) {
             if (getCursorPos() != getSelectionAnchor()) {
                 write("");
@@ -127,8 +144,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
             }
             return true;
         }
-
-        return handleNavigation(event);
+        return false;
     }
 
     protected void beforeWriteAction() {
@@ -359,7 +375,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     public T setValidator(@Nullable String regex) {
         if (regex == null) {
             this.validator = null;
-            validationState.set(ValidationState.NEUTRAL);
+            validate();
             return self();
         }
         Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);

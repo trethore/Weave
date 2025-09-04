@@ -9,6 +9,7 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class TextField extends BaseTextInput<TextField> {
@@ -16,7 +17,7 @@ public class TextField extends BaseTextInput<TextField> {
 
     protected TextField() {
         super();
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
         float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
 

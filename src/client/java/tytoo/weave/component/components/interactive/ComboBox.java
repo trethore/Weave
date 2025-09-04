@@ -44,7 +44,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @Nullable
     private String placeholder;
     @Nullable
-    @NamedPart
     private Panel dropdownPanel;
     private boolean expanded = false;
     @Nullable
@@ -58,7 +57,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.valueState = valueState;
         this.valueState.addListener(v -> updateSelectedLabel());
 
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
         float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
 
@@ -126,7 +125,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     }
 
     private Color resolveBorderColor() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         if (isFocused() || expanded) {
             return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
         } else if (hasStyleState(StyleState.HOVERED)) {
@@ -153,7 +152,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.expanded = true;
         addStyleState(StyleState.ACTIVE);
 
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float dropdownMaxHeight = this.dropdownMaxHeightOverride != null
                 ? this.dropdownMaxHeightOverride
                 : stylesheet.get(this, StyleProps.DROPDOWN_MAX_HEIGHT, 100f);

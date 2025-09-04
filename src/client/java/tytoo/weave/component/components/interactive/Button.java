@@ -5,12 +5,13 @@ import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class Button extends InteractiveComponent<Button> {
 
     protected Button() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float minWidth = stylesheet.get(this, StyleProps.MIN_WIDTH, 20f);
         float minHeight = stylesheet.get(this, StyleProps.MIN_HEIGHT, 20f);
         float padding = stylesheet.get(this, StyleProps.PADDING, 5f);

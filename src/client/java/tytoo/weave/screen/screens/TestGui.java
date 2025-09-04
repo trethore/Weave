@@ -1,19 +1,14 @@
 package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
-import tytoo.weave.component.components.display.ProgressBar;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.ComboBox;
+import tytoo.weave.component.components.interactive.BaseTextInput;
+import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
-import tytoo.weave.style.StyleRule;
-import tytoo.weave.style.selector.StyleSelector;
-
-import java.util.Map;
-
 
 public class TestGui extends WeaveScreen {
     public TestGui() {
@@ -39,28 +34,23 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 10));
 
-        State<Float> selectedPercent = new State<>(0f);
-        ComboBox<Float> percentCombo = ComboBox.create(selectedPercent)
-                .setDropdownMaxHeight(60f)
-                .addOption("0%", 0f)
-                .addOption("25%", 25f)
-                .addOption("50%", 50f)
-                .addOption("75%", 75f)
-                .addOption("100%", 100f);
+        TextField textField = TextField.create()
+                .setPlaceholder("Enter exactly 10 characters")
+                .setValidator(s -> s.length() == 10);
 
-        ProgressBar barRtl = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barRtl.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.RIGHT_TO_LEFT))));
+        State<Text> validationTextState = State.computed(() -> {
+            BaseTextInput.ValidationState state = textField.getValidationState();
+            return switch (state) {
+                case NEUTRAL -> Text.literal("Enter 10 chars.").styled(s -> s.withColor(0xAAAAAA));
+                case VALID -> Text.literal("Valid!").styled(s -> s.withColor(0x55FF55));
+                case INVALID -> Text.literal("Invalid! Must be 10 chars.").styled(s -> s.withColor(0xFF5555));
+            };
+        });
 
-        ProgressBar barLtr = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barLtr.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT))));
+        SimpleTextComponent validationLabel = SimpleTextComponent.of(Text.empty());
+        validationTextState.bind(validationLabel::setText);
 
-        ProgressBar barCenter = ProgressBar.create().setMax(100f).bindValue(selectedPercent);
-        barCenter.addLocalStyleRule(new StyleRule(new StyleSelector(ProgressBar.class, null, null, null),
-                Map.ofEntries(Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.CENTER_OUT))));
-
-        testPanel.addChildren(percentCombo, barRtl, barLtr, barCenter);
+        testPanel.addChildren(textField, validationLabel);
 
         window.addChildren(titlePanel, testPanel);
     }

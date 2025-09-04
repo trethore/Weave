@@ -6,6 +6,7 @@ import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
@@ -53,7 +54,7 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
     }
 
     protected void updateVisualState() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         long duration = stylesheet.get(this, StyleProps.ANIMATION_DURATION, 100L);
         updateVisualState(duration);
     }

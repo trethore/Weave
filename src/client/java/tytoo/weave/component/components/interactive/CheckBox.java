@@ -15,6 +15,7 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -36,7 +37,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     private boolean isUpdatingFromState = false;
 
     protected CheckBox() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float boxSize = stylesheet.get(this, StyleProps.BOX_SIZE, 12f);
         float gap = stylesheet.get(this, StyleProps.GAP, 4f);
 
@@ -82,7 +83,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
     @Override
     protected void updateVisualState() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         long duration = stylesheet.get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
         updateVisualState(duration);
     }
@@ -207,7 +208,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
             float w = getWidth();
             float h = getHeight();
 
-            var stylesheet = ThemeManager.getStylesheet();
+            Stylesheet stylesheet = ThemeManager.getStylesheet();
             Color checkColor = stylesheet.get(this.checkBox, StyleProps.CHECK_COLOR, Color.WHITE);
             float thickness = stylesheet.get(this.checkBox, StyleProps.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
 

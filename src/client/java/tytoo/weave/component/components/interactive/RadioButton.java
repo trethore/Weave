@@ -10,6 +10,7 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
@@ -28,7 +29,7 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
     protected RadioButton(V value, String labelText) {
         this.value = value;
 
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float gap = stylesheet.get(this, StyleProps.GAP, 5f);
         float outlineSize = stylesheet.get(this, StyleProps.OUTLINE_SIZE, 12f);
         float dotSize = stylesheet.get(this, StyleProps.DOT_SIZE, 6f);

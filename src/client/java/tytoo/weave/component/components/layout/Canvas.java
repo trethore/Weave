@@ -2,6 +2,8 @@ package tytoo.weave.component.components.layout;
 
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
+import tytoo.weave.effects.Effect;
+import tytoo.weave.style.renderer.ComponentRenderer;
 
 import java.util.function.BiConsumer;
 
@@ -24,11 +26,11 @@ public class Canvas extends Component<Canvas> {
     public void draw(DrawContext context) {
         if (!this.isVisible()) return;
 
-        for (var effect : getRenderState().getEffects()) {
+        for (Effect effect : getRenderState().getEffects()) {
             effect.beforeDraw(context, this);
         }
 
-        var renderer = getStyle().getRenderer(this);
+        ComponentRenderer renderer = getStyle().getRenderer(this);
         if (renderer != null) renderer.render(context, this);
 
         if (this.onDrawCallback != null) {

@@ -14,6 +14,7 @@ public final class Easings {
         final float c3 = c1 + 1;
         return 1 + c3 * (float) Math.pow(t - 1, 3) + c1 * (float) Math.pow(t - 1, 2);
     };
+
     private Easings() {
     }
 }

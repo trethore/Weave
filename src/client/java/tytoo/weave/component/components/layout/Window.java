@@ -2,11 +2,12 @@ package tytoo.weave.component.components.layout;
 
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class Window extends BasePanel<Window> {
     protected Window() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 400f);
         float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 300f);
 

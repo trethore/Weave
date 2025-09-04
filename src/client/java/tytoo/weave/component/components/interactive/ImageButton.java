@@ -2,6 +2,7 @@ package tytoo.weave.component.components.interactive;
 
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
@@ -9,14 +10,17 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 public class ImageButton extends InteractiveComponent<ImageButton> {
+    @NamedPart
     private BaseImage<?> image;
+    @NamedPart
     private TextComponent<?> label;
 
     protected ImageButton() {
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         float padding = stylesheet.get(this, StyleProps.IMAGE_BUTTON_PADDING, 5f);
         float gap = stylesheet.get(this, StyleProps.IMAGE_BUTTON_GAP, 4f);
         this.setPadding(padding);

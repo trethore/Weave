@@ -10,6 +10,7 @@ import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
 import java.util.function.Consumer;
@@ -46,7 +47,7 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         }
 
         this.thumb = Panel.create().addStyleState(StyleState.NORMAL);
-        var stylesheet = ThemeManager.getStylesheet();
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
         this.trackPadding = stylesheet.get(this, StyleProps.TRACK_PADDING, 4f);
 
         float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
