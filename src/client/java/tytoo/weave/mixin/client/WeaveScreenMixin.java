@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tytoo.weave.ui.UIManager;
 
 @Mixin(Screen.class)
-public abstract class ScreenMixin {
+public abstract class WeaveScreenMixin {
     @Unique
     private Screen self() {
         return (Screen) (Object) this;

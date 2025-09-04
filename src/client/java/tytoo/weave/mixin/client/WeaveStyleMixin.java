@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import tytoo.weave.mixin.interfaces.IStyle;
 
 @Mixin(Style.class)
-public class StyleMixin implements IStyle {
+public class WeaveStyleMixin implements IStyle {
     @Shadow
     @Final
     @Nullable Boolean bold;

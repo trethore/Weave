@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import tytoo.weave.ui.UIManager;
 
 @Mixin(ParentElement.class)
-public interface ParentElementMixin {
+public interface WeaveParentElementMixin {
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (this instanceof Screen screen) {
