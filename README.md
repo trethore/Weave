@@ -7,7 +7,8 @@ It helps you build clean, responsive, and themeable GUIs that are easy to compos
 
 ## Developer Docs
 
-You can find the developer documentation on [GitHub Pages](docs/README.md).
+You can find the developer documentation [HERE](docs/README.md).
+
 ---
 
 ## Declarative UI
