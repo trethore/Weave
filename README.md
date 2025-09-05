@@ -7,9 +7,7 @@ It helps you build clean, responsive, and themeable GUIs that are easy to compos
 
 ## Developer Docs
 
-- Start here: `docs/README.md`
-- Direct links: `docs/installation.md`, `docs/weave-screen.md`, `docs/components.md`, `docs/animations-effects.md`, `docs/styles-themes.md`, `docs/extensibility.md`, `docs/state-events-constraints.md`, `docs/recipes.md`
-
+You can find the developer documentation on [GitHub Pages](docs/README.md).
 ---
 
 ## Declarative UI
