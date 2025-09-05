@@ -1,4 +1,3 @@
-# .github/workflows/notify-on-package.yml
 name: Notify on Package Publish
 
 on:
