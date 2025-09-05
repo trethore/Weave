@@ -100,10 +100,12 @@ tasks.register("releaseResources", Copy) {
 }
 
 tasks.register("releaseJar", Jar) {
-    from(sourceSets.client.output) {
+    from(sourceSets.client.output.classesDirs) {
         exclude("tytoo/weave/WeaveClient.class")
     }
+
     from(releaseResourcesDir)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set("release")
     dependsOn("classes", "releaseResources")
 }

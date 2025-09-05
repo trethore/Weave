@@ -86,10 +86,9 @@ public final class Render2DUtils {
 
     public static void drawRoundedOutline(DrawContext context, float x, float y, float width, float height, float radius, float lineWidth, Color color) {
         int thickness = Math.max(1, Math.round(lineWidth));
-        for (int i = 0; i < thickness; i++) {
-            float inset = i;
-            float r = Math.max(0, radius - i);
-            drawRoundedRect(context, x + inset, y + inset, width - inset * 2, height - inset * 2, r, color);
+        for (int inset = 0; inset < thickness; inset++) {
+            float r = Math.max(0, radius - inset);
+            drawRoundedRect(context, x + (float) inset, y + (float) inset, width - (float) inset * 2, height - (float) inset * 2, r, color);
         }
     }
 
@@ -306,10 +305,32 @@ public final class Render2DUtils {
         BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         int[] quadOrder = {3, 2, 1, 0};
         for (int index : quadOrder) {
-            float posCycle = (projections[index] - min) / range;
-            double totalCycle = posCycle + cyclicOffset;
-            float cyclicProgress = (float) (totalCycle % 1.0);
-            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(wave.getColorAt(cyclicProgress).getRGB());
+            float pos = (projections[index] - min) / range;
+            if (pos >= 1.0f) pos = Math.nextDown(1.0f);
+            if (pos <= 0.0f) pos = 0.0f;
+            double total = pos + cyclicOffset;
+            float t = (float) (total - Math.floor(total));
+
+            int count = wave.colors().size();
+            int idx1;
+            int idx2;
+            float local;
+            if (count <= 1) {
+                idx1 = 0;
+                idx2 = 0;
+                local = 0f;
+            } else {
+                float scaled = t * (count - 1);
+                idx1 = (int) Math.floor(scaled);
+                if (idx1 >= count - 1) idx1 = count - 2;
+                idx2 = Math.min(idx1 + 1, count - 1);
+                local = scaled - idx1;
+            }
+            Color c1 = wave.colors().get(idx1);
+            Color c2 = wave.colors().get(idx2);
+            Color interpolated = Interpolators.COLOR.interpolate(c1, c2, local);
+
+            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(interpolated.getRGB());
         }
         endRender(buffer);
     }

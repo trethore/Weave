@@ -2,15 +2,16 @@ package tytoo.weave.component.components.interactive;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseScrollEvent;
+import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.InputHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -82,7 +83,7 @@ public class TextArea extends BaseTextInput<TextArea> {
 
     @Override
     protected boolean handleNavigation(KeyPressEvent event) {
-        boolean shift = Screen.hasShiftDown();
+        boolean shift = InputHelper.isShiftDown();
         switch (event.getKeyCode()) {
             case GLFW.GLFW_KEY_UP: {
                 java.awt.Point pos2d = getCursorPos2D(getCursorPos());
@@ -97,7 +98,7 @@ public class TextArea extends BaseTextInput<TextArea> {
                 return true;
             }
             case GLFW.GLFW_KEY_LEFT:
-                if (Screen.hasControlDown()) {
+                if (InputHelper.isControlDown()) {
                     setCursorPos(getWordSkipPosition(-1), shift);
                 } else {
                     setCursorPos(getCursorPos() - 1, shift);
@@ -105,7 +106,7 @@ public class TextArea extends BaseTextInput<TextArea> {
                 this.lastDesiredCol = -1;
                 return true;
             case GLFW.GLFW_KEY_RIGHT:
-                if (Screen.hasControlDown()) {
+                if (InputHelper.isControlDown()) {
                     setCursorPos(getWordSkipPosition(1), shift);
                 } else {
                     setCursorPos(getCursorPos() + 1, shift);
@@ -146,8 +147,29 @@ public class TextArea extends BaseTextInput<TextArea> {
         int colIndex = textRenderer.trimToWidth(line, (int) (event.getX() - getInnerLeft())).length();
 
         int newPos = getPosFrom2D(lineIndex, colIndex);
-        setCursorPos(newPos, Screen.hasShiftDown());
-        this.lastDesiredCol = getCursorPos2D(newPos).x;
+
+        if (event.getButton() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            setCursorPos(newPos, InputHelper.isShiftDown());
+            this.lastDesiredCol = getCursorPos2D(newPos).x;
+            return;
+        }
+
+        int count = registerClickAndGetCount();
+        if (count == 1) {
+            setCursorPos(newPos, InputHelper.isShiftDown());
+            this.lastDesiredCol = getCursorPos2D(newPos).x;
+        } else if (count == 2) {
+            java.awt.Point bounds = getWordBoundsAt(newPos);
+            setSelectionAnchor(bounds.x);
+            setCursorPos(bounds.y, true);
+            this.lastDesiredCol = getCursorPos2D(bounds.y).x;
+        } else if (count >= 3) {
+            int lineStart = getPosFrom2D(lineIndex, 0);
+            int lineEnd = getPosFrom2D(lineIndex, line.length());
+            setSelectionAnchor(lineStart);
+            setCursorPos(lineEnd, true);
+            this.lastDesiredCol = getCursorPos2D(lineEnd).x;
+        }
     }
 
     private void onMouseDragged(MouseDragEvent event) {
@@ -168,7 +190,8 @@ public class TextArea extends BaseTextInput<TextArea> {
     }
 
     private void onMouseScroll(MouseScrollEvent event) {
-        scrollY += (float) (event.getScrollY() * 10);
+        float amount = ThemeManager.getStylesheet().get(this, CommonStyleProperties.SCROLL_AMOUNT, 10f);
+        scrollY += (float) (event.getScrollY() * amount);
         clampScroll();
     }
 

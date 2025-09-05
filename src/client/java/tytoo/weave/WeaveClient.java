@@ -6,7 +6,7 @@ public class WeaveClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        WeaveCore.LOGGER.info("Hello developer! Weave is initializing...");
         WeaveCore.init();
-        WeaveCore.LOGGER.info("Weave initialized!");
     }
 }

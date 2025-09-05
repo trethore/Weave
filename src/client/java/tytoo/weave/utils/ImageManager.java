@@ -46,7 +46,7 @@ public class ImageManager {
 
             NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
             texture.setFilter(false, false);
-            PLACEHOLDER_ID = Identifier.of(WeaveCore.MOD_ID, "missing.png");
+            PLACEHOLDER_ID = Identifier.of(WeaveCore.ID, "missing.png");
             client.getTextureManager().registerTexture(PLACEHOLDER_ID, texture);
         }
         return PLACEHOLDER_ID;
@@ -64,7 +64,7 @@ public class ImageManager {
             NativeImage nativeImage = loadImage(inputStream);
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
 
-            Identifier id = Identifier.of(WeaveCore.MOD_ID, "dynamic/" + UUID.randomUUID());
+            Identifier id = Identifier.of(WeaveCore.ID, "dynamic/" + UUID.randomUUID());
             client.getTextureManager().registerTexture(id, texture);
             fileCache.put(file, id);
             return Optional.of(id);
@@ -109,7 +109,7 @@ public class ImageManager {
                 throw new UncheckedIOException("Failed to download or read image from URL: " + url, e);
             }
         }, VIRTUAL_THREAD_EXECUTOR).thenApplyAsync(nativeImage -> {
-            Identifier id = urlToIdentifier.computeIfAbsent(uri, u -> Identifier.of(WeaveCore.MOD_ID, "url/" + UUID.randomUUID()));
+            Identifier id = urlToIdentifier.computeIfAbsent(uri, u -> Identifier.of(WeaveCore.ID, "url/" + UUID.randomUUID()));
             NativeImageBackedTexture texture = new NativeImageBackedTexture(nativeImage);
             client.getTextureManager().registerTexture(id, texture);
             return id;

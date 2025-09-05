@@ -2,7 +2,6 @@ package tytoo.weave.component.components.interactive;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -11,6 +10,7 @@ import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.InputHelper;
 
 public class TextField extends BaseTextInput<TextField> {
     private int firstCharacterIndex = 0;
@@ -80,7 +80,24 @@ public class TextField extends BaseTextInput<TextField> {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         String visibleText = getText().substring(this.firstCharacterIndex);
         int i = (int) (event.getX() - this.getInnerLeft());
-        setCursorPos(this.firstCharacterIndex + textRenderer.trimToWidth(visibleText, i).length(), Screen.hasShiftDown());
+        int pos = this.firstCharacterIndex + textRenderer.trimToWidth(visibleText, i).length();
+
+        if (event.getButton() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            setCursorPos(pos, InputHelper.isShiftDown());
+            return;
+        }
+
+        int count = registerClickAndGetCount();
+        if (count == 1) {
+            setCursorPos(pos, InputHelper.isShiftDown());
+        } else if (count == 2) {
+            java.awt.Point bounds = getWordBoundsAt(pos);
+            setSelectionAnchor(bounds.x);
+            setCursorPos(bounds.y, true);
+        } else if (count >= 3) {
+            setSelectionAnchor(0);
+            setCursorPos(getText().length(), true);
+        }
     }
 
     private void onMouseDragged(MouseDragEvent event) {
@@ -109,10 +126,10 @@ public class TextField extends BaseTextInput<TextField> {
 
     @Override
     protected boolean handleNavigation(KeyPressEvent event) {
-        boolean shift = Screen.hasShiftDown();
+        boolean shift = InputHelper.isShiftDown();
         switch (event.getKeyCode()) {
             case GLFW.GLFW_KEY_LEFT -> {
-                if (Screen.hasControlDown()) {
+                if (InputHelper.isControlDown()) {
                     setCursorPos(super.getWordSkipPosition(-1), shift);
                 } else {
                     setCursorPos(getCursorPos() - 1, shift);
@@ -120,7 +137,7 @@ public class TextField extends BaseTextInput<TextField> {
                 return true;
             }
             case GLFW.GLFW_KEY_RIGHT -> {
-                if (Screen.hasControlDown()) {
+                if (InputHelper.isControlDown()) {
                     setCursorPos(super.getWordSkipPosition(1), shift);
                 } else {
                     setCursorPos(getCursorPos() + 1, shift);

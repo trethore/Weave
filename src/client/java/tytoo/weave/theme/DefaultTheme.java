@@ -45,6 +45,12 @@ public class DefaultTheme implements Theme {
                 Map.entry(Window.StyleProps.DEFAULT_HEIGHT, 300f)
         )));
 
+        // Global defaults
+        s = new StyleSelector(tytoo.weave.component.Component.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(CommonStyleProperties.SCROLL_AMOUNT, 10f)
+        )));
+
         s = new StyleSelector(Separator.class, null, null, null);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new StyledColorRenderer(Separator.StyleProps.COLOR, new Color(128, 128, 128))),
@@ -85,11 +91,6 @@ public class DefaultTheme implements Theme {
         s = new StyleSelector(TextComponent.class, null, null, Set.of(StyleState.DISABLED));
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(TextComponent.StyleProps.TEXT_COLOR, new Color(120, 120, 120))
-        )));
-
-        s = new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null);
-        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
-                Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
         )));
 
         // --- ProgressBar ---

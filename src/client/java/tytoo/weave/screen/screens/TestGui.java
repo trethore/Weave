@@ -2,13 +2,23 @@ package tytoo.weave.screen.screens;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
-import tytoo.weave.component.components.interactive.BaseTextInput;
+import tytoo.weave.component.components.display.TextComponent;
+import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.effects.Effects;
+import tytoo.weave.effects.implementations.GradientOutlineEffect;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.State;
+import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.selector.StyleSelector;
+
+import java.awt.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TestGui extends WeaveScreen {
     public TestGui() {
@@ -17,6 +27,8 @@ public class TestGui extends WeaveScreen {
         window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5));
         window.setPadding(10);
 
+        window.addEffect(Effects.gradientOutline(List.of(Color.GRAY, Color.WHITE), 1f, false, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT));
+
         Panel titlePanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.pixels(30));
@@ -24,6 +36,14 @@ public class TestGui extends WeaveScreen {
         SimpleTextComponent titleText = SimpleTextComponent.of("Weave Test UI")
                 .addStyleClass("test-gui-title")
                 .setScale(1.5f);
+
+        titleText.addLocalStyleRule(new StyleRule(
+                new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null),
+                Map.ofEntries(
+                        Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
+                )
+        ));
+
         titleText.setX(Constraints.center()).setY(Constraints.center());
 
         titlePanel.addChildren(titleText);
@@ -32,25 +52,16 @@ public class TestGui extends WeaveScreen {
                 .setLayoutData(LinearLayout.Data.grow(1))
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.relative(1.0f))
-                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, 10));
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.START, 10));
 
         TextField textField = TextField.create()
-                .setPlaceholder("Enter exactly 10 characters")
-                .setValidator(s -> s.length() == 10);
+                .setPlaceholder("TextField: double-click selects word; triple-click line");
 
-        State<Text> validationTextState = State.computed(() -> {
-            BaseTextInput.ValidationState state = textField.getValidationState();
-            return switch (state) {
-                case NEUTRAL -> Text.literal("Enter 10 chars.").styled(s -> s.withColor(0xAAAAAA));
-                case VALID -> Text.literal("Valid!").styled(s -> s.withColor(0x55FF55));
-                case INVALID -> Text.literal("Invalid! Must be 10 chars.").styled(s -> s.withColor(0xFF5555));
-            };
-        });
+        TextArea textArea = TextArea.create()
+                .setPlaceholder(Text.of("TextArea: double-click word; triple-click line"))
+                .setHeight(Constraints.pixels(120));
 
-        SimpleTextComponent validationLabel = SimpleTextComponent.of(Text.empty());
-        validationTextState.bind(validationLabel::setText);
-
-        testPanel.addChildren(textField, validationLabel);
+        testPanel.addChildren(textField, textArea);
 
         window.addChildren(titlePanel, testPanel);
     }

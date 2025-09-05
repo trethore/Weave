@@ -13,8 +13,8 @@ import tytoo.weave.utils.FontManager;
  * Core class for initializing Weave.
  */
 public final class WeaveCore {
-    public static final String MOD_ID = "weave-ui";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final String ID = "weave-ui";
+    public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
 
     private WeaveCore() {
@@ -28,6 +28,8 @@ public final class WeaveCore {
     public static void init() {
         registerDebugCommands();
         registerCloseEvent();
+
+        WeaveCore.LOGGER.info("Weave initialized!");
     }
 
     /**

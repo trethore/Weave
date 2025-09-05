@@ -14,6 +14,7 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.textfield.*;
+import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
@@ -37,6 +38,8 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     private int cursorPos = 0;
     private int selectionAnchor = 0;
     private long lastActionTime = 0;
+    private long lastClickTime = 0;
+    private int consecutiveClicks = 0;
     private int maxLength = -1;
     @Nullable
     private Predicate<String> charFilter = null;
@@ -59,7 +62,11 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.onCharTyped(this::onCharTyped);
         this.onKeyPress(this::onKeyPressed);
 
-        this.onFocusGained(e -> this.setLastActionTime(System.currentTimeMillis()));
+        this.onFocusGained(e -> {
+            this.setLastActionTime(System.currentTimeMillis());
+            this.consecutiveClicks = 0;
+        });
+        this.onFocusLost(e -> this.consecutiveClicks = 0);
 
         updateVisualState(0L);
     }
@@ -247,6 +254,41 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         }
         setLastActionTime(System.currentTimeMillis());
         ensureCursorVisible();
+    }
+
+    protected int registerClickAndGetCount() {
+        long now = System.currentTimeMillis();
+        long interval = ThemeManager.getStylesheet().get(this, StyleProps.MULTI_CLICK_INTERVAL, 300L);
+        if (now - lastClickTime <= interval) {
+            consecutiveClicks++;
+        } else {
+            consecutiveClicks = 1;
+        }
+        lastClickTime = now;
+        return consecutiveClicks;
+    }
+
+    protected Point getWordBoundsAt(int pos) {
+        String t = getText();
+        int len = t.length();
+        if (len == 0) return new Point(0, 0);
+        pos = Math.max(0, Math.min(len, pos));
+
+        boolean wsLeft = pos > 0 && Character.isWhitespace(t.charAt(pos - 1));
+        boolean wsRight = pos < len && Character.isWhitespace(t.charAt(pos));
+        boolean selectWhitespace = wsLeft || wsRight;
+
+        int start = pos;
+        int end = pos;
+
+        if (selectWhitespace) {
+            while (start > 0 && Character.isWhitespace(t.charAt(start - 1))) start--;
+            while (end < len && Character.isWhitespace(t.charAt(end))) end++;
+        } else {
+            while (start > 0 && !Character.isWhitespace(t.charAt(start - 1))) start--;
+            while (end < len && !Character.isWhitespace(t.charAt(end))) end++;
+        }
+        return new Point(start, end);
     }
 
     public String getSelectedText() {
@@ -480,6 +522,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     public static final class StyleProps {
         public static final StyleProperty<Long> CURSOR_BLINK_INTERVAL = new StyleProperty<>("cursor.blink-interval", Long.class);
+        public static final StyleProperty<Long> MULTI_CLICK_INTERVAL = new StyleProperty<>("click.multi-interval", Long.class);
         public static final StyleProperty<Color> SELECTION_COLOR = new StyleProperty<>("selectionColor", Color.class);
         public static final StyleProperty<Color> BORDER_COLOR_VALID = new StyleProperty<>("borderColor.valid", Color.class);
         public static final StyleProperty<Color> BORDER_COLOR_INVALID = new StyleProperty<>("borderColor.invalid", Color.class);

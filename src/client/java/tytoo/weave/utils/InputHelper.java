@@ -68,41 +68,41 @@ public final class InputHelper {
     }
 
     public static boolean isUndo() {
-        return isKeyPressed(GLFW.GLFW_KEY_Z) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_Z) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
     public static boolean isRedo() {
-        return isKeyPressed(GLFW.GLFW_KEY_Y) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_Y) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
     public static boolean isSelectAll() {
-        return isKeyPressed(GLFW.GLFW_KEY_A) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_A) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
     public static boolean isCopy() {
-        return isKeyPressed(GLFW.GLFW_KEY_C) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_C) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
     public static boolean isPaste() {
-        return isKeyPressed(GLFW.GLFW_KEY_V) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_V) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
     public static boolean isCut() {
-        return isKeyPressed(GLFW.GLFW_KEY_X) && isControl() && !isShift() && !isAlt();
+        return isKeyPressed(GLFW.GLFW_KEY_X) && isControlDown() && !isShiftDown() && !isAltDown();
     }
 
-    public static boolean isControl() {
+    public static boolean isControlDown() {
         if (MinecraftClient.IS_SYSTEM_MAC) {
             return isKeyPressed(GLFW.GLFW_KEY_LEFT_SUPER) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_SUPER);
         }
         return isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL);
     }
 
-    public static boolean isShift() {
+    public static boolean isShiftDown() {
         return isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 
-    public static boolean isAlt() {
+    public static boolean isAltDown() {
         return isKeyPressed(GLFW.GLFW_KEY_LEFT_ALT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT);
     }
 }

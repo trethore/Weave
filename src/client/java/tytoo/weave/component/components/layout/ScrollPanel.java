@@ -9,6 +9,7 @@ import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
+import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.McUtils;
@@ -57,7 +58,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
             if (contentHeight <= viewHeight) return;
 
-            float newScroll = scrollY.get() + (float) (event.getScrollY() * this.scrollSpeed);
+            float amount = ThemeManager.getStylesheet().get(this, CommonStyleProperties.SCROLL_AMOUNT, this.scrollSpeed);
+            float newScroll = scrollY.get() + (float) (event.getScrollY() * amount);
             float maxScroll = Math.min(0, -(contentHeight - viewHeight));
             scrollY.set(Math.max(maxScroll, Math.min(0, newScroll)));
             arrangeContent();
