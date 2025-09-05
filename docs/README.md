@@ -14,7 +14,7 @@ How to use this guide
 
 Quick links
 - [Installation & Setup](https://github.com/trethore/Weave/blob/main/docs/installation.md)
-- [Create a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md
+- [Create a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md)
 - [Components & Layout](https://github.com/trethore/Weave/blob/main/docs/components.md)
 - [Effects, Animations & Easings](https://github.com/trethore/Weave/blob/main/docs/animations-effects.md)
 - [Styles & Themes](https://github.com/trethore/Weave/blob/main/docs/styles-themes.md)
