@@ -16,4 +16,10 @@ public abstract class WeaveScreen extends Screen {
     public Window getWindow() {
         return window;
     }
+
+    public void open() {
+        if (this.client != null) {
+            this.client.setScreen(this);
+        }
+    }
 }

@@ -1,0 +1,20 @@
+# .github/workflows/notify-on-package.yml
+name: Notify on Package Publish
+
+on:
+  registry_package:
+    types: [published, updated]
+
+jobs:
+  discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        uses: tsickert/discord-webhook@v7
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: |
+            **Weave**: New Package !
+            Action: `${{ github.event.action }}`
+            Package: `${{ github.event.registry_package.package_name }}`
+            Version: `${{ github.event.registry_package.package_version.package_version }}`
