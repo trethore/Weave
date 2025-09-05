@@ -109,4 +109,6 @@ stylesheet.addRule(new StyleRule(
 ));
 ```
 
-Next Step: [Styles & Themes](https://github.com/trethore/Weave/blob/main/docs/styles-themes.md)
+---
+
+**Next Step:** [Styles & Themes](https://github.com/trethore/Weave/blob/main/docs/styles-themes.md)

@@ -56,7 +56,6 @@ stylesheet.addRule(new StyleRule(
 ));
 ```
 
-Next Step: [Extensibility](https://github.com/trethore/Weave/blob/main/docs/extensibility.md)
 
 Dev workflow
 - Use `/weave reloadtheme` in dev to reinstantiate the default theme.
@@ -84,3 +83,7 @@ stylesheet.addRule(new StyleRule(
     Map.of(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new java.awt.Color(200,200,200)))
 ));
 ```
+
+---
+
+**Next Step:** [Extensibility](https://github.com/trethore/Weave/blob/main/docs/extensibility.md)

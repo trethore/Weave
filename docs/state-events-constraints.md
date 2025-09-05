@@ -43,4 +43,6 @@ APIs
 Auto margins
 - Provide `Float.NaN` for both horizontal or vertical margins via styles to center with auto margins; the engine converts to `center()` constraints internally.
 
-Next Step: [Recipes](https://github.com/trethore/Weave/blob/main/docs/recipes.md)
+---
+
+**Next Step:** [Recipes](https://github.com/trethore/Weave/blob/main/docs/recipes.md)

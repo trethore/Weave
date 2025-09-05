@@ -91,4 +91,6 @@ public final class LoginScreen extends WeaveScreen {
 }
 ```
 
-Next Step: [Components & Layout](https://github.com/trethore/Weave/blob/main/docs/components.md)
+---
+
+**Next Step:** [Components & Layout](https://github.com/trethore/Weave/blob/main/docs/components.md)

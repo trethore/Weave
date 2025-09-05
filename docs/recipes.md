@@ -91,5 +91,6 @@ import tytoo.weave.theme.ThemeManager;
 
 ThemeManager.setGlobalVar("weave.color.primary", new java.awt.Color(255, 80, 80));
 ```
+---
 
-Next Step: [Overview](https://github.com/trethore/Weave/blob/main/docs/README.md)
+**Next Step:** [Overview](https://github.com/trethore/Weave/blob/main/docs/README.md)

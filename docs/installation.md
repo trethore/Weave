@@ -80,4 +80,6 @@ Troubleshooting
 - 401 Unauthorized from the Maven repo usually means your token is missing the `read:packages` scope or Gradle is not picking up `gpr.user`/`gpr.key`. Verify with `gradle.properties` in your user home.
 - If IDE sync fails after adding Weave, try `./gradlew --refresh-dependencies` and reimport the Gradle project.
 
-Next Step: [Creating a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md)
+---
+
+**Next Step:** [Creating a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md)

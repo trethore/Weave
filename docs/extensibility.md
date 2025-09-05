@@ -141,4 +141,6 @@ stylesheet.addRule(new StyleRule(
 ));
 ```
 
-Next Step: [State, Events & Constraints](https://github.com/trethore/Weave/blob/main/docs/state-events-constraints.md)
+---
+
+**Next Step:** [State, Events & Constraints](https://github.com/trethore/Weave/blob/main/docs/state-events-constraints.md)

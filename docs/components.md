@@ -138,4 +138,6 @@ ProgressBar pb = ProgressBar.create().setValue(0.7f);
 window.addChildren(img, pb);
 ```
 
-Next Step: [Effects, Animations & Easings](https://github.com/trethore/Weave/blob/main/docs/animations-effects.md)
+---
+
+**Next Step:** [Effects, Animations & Easings](https://github.com/trethore/Weave/blob/main/docs/animations-effects.md)
