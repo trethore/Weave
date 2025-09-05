@@ -76,40 +76,75 @@ This makes UI code predictable and modular:
 
 ## Installation
 
-Weave is designed to be **vendored directly** into your mod repository.
+Weave is published to GitHub Packages (Maven). Use Gradle with Fabric Loom and add it as a mod dependency via `modImplementation`.
+
+1) Add GitHub Packages repository
+
+In your root `build.gradle` (or `settings.gradle` for central repos), add:
 
 ```
-your-repo/
-  weave/        # Weave source and resources (this library)
-  my-mod/       # Your mod
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/trethore/Weave")
+        credentials {
+            username = findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+            password = findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
 ```
 
-1. **Add Weave sources and resources**
-   Copy `src/client/java/tytoo/weave/**` and `src/client/resources/**` into `weave/src/client/...`.
+Recommended: put credentials in `~/.gradle/gradle.properties`:
 
-2. **Wire mixins**
-   Add the Weave client mixin config to your mod’s `fabric.mod.json` to bridge input/render events.
+```
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_PERSONAL_ACCESS_TOKEN
+```
 
-3. **Initialize Weave**
-   In your client entrypoint:
+Your token needs `read:packages` scope.
 
-   ```java
-   import net.fabricmc.api.ClientModInitializer;
-   import tytoo.weave.WeaveCore;
+2) Add the dependency
 
-   public final class MyModClient implements ClientModInitializer {
-       @Override
-       public void onInitializeClient() {
-           WeaveCore.init();
-       }
-   }
-   ```
+In your mod’s `dependencies` block:
 
-4. **Run in dev**
-   ```bash
-   ./gradlew runClient
-   ```
-   In-game, run `/weave testgui` to open the demo screen.
+```
+dependencies {
+    // Fabric loader + Fabric API as usual
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    // Weave UI
+    modImplementation "tytoo.weave:weave-ui:1.0.0+1.21.4"
+}
+```
+
+Replace the version with the desired release (see GitHub Releases). The artifact coordinates are `tytoo.weave:weave-ui:<version>`.
+
+3) Initialize Weave in your client initializer
+
+Weave ships without a runtime entrypoint in the release artifact. Call `WeaveCore.init()` from your mod’s `ClientModInitializer` to register required events:
+
+```
+import net.fabricmc.api.ClientModInitializer;
+import tytoo.weave.WeaveCore;
+
+public final class MyModClient implements ClientModInitializer {
+    @Override
+    public void onInitializeClient() {
+        WeaveCore.init();
+    }
+}
+```
+
+4) Run in dev
+
+```
+./gradlew runClient
+```
+
+In-game:
+- `/weave testgui` → open the demo screen
+- `/weave reloadtheme` → reload the theme in dev
 
 ---
 

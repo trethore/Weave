@@ -101,7 +101,7 @@ tasks.register("releaseResources", Copy) {
 
 tasks.register("releaseJar", Jar) {
     from(sourceSets.client.output.classesDirs) {
-        exclude("tytoo/weave/WeaveClient.class")
+        exclude("trethore/weave/WeaveClient.class")
     }
 
     from(releaseResourcesDir)
@@ -127,7 +127,7 @@ publishing {
             pom {
                 name = project.archives_base_name
                 description = "Weave UI: composable UI library for Fabric mods"
-                url = "https://github.com/tytoo/Weave"
+                url = "https://github.com/trethore/Weave"
                 licenses {
                     license {
                         name = "MIT License"
@@ -135,9 +135,9 @@ publishing {
                     }
                 }
                 scm {
-                    url = "https://github.com/tytoo/Weave"
-                    connection = "scm:git:https://github.com/tytoo/Weave.git"
-                    developerConnection = "scm:git:ssh://git@github.com/tytoo/Weave.git"
+                    url = "https://github.com/trethore/Weave"
+                    connection = "scm:git:https://github.com/trethore/Weave.git"
+                    developerConnection = "scm:git:ssh://git@github.com/trethore/Weave.git"
                 }
             }
         }
@@ -155,7 +155,7 @@ publishing {
         if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/tytoo/Weave")
+                url = uri("https://maven.pkg.github.com/trethore/Weave")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
                     password = System.getenv("GITHUB_TOKEN")

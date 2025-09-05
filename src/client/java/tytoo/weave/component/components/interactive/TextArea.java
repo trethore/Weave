@@ -51,7 +51,7 @@ public class TextArea extends BaseTextInput<TextArea> {
         }
 
         int i = 0;
-        while (i <= t.length()) {
+        while (i < t.length()) {
             int newline = t.indexOf('\n', i);
             int paraEnd = newline >= 0 ? newline : t.length();
 
@@ -84,15 +84,13 @@ public class TextArea extends BaseTextInput<TextArea> {
                                 break;
                             }
                         }
-
                         if (lastBreak > 0) {
-                            int lineEnd = segStart + lastBreak; // exclude whitespace
+                            int lineEnd = segStart + lastBreak;
                             result.add(new VisualLine(t.substring(segStart, lineEnd), segStart, lineEnd));
-                            segStart = lineEnd + 1; // skip the breaking whitespace
+                            segStart = lineEnd + 1;
                         } else {
-                            int segEnd = absoluteCutEnd;
-                            result.add(new VisualLine(t.substring(segStart, segEnd), segStart, segEnd));
-                            segStart = segEnd;
+                            result.add(new VisualLine(t.substring(segStart, absoluteCutEnd), segStart, absoluteCutEnd));
+                            segStart = absoluteCutEnd;
                         }
                     }
                 }
@@ -100,10 +98,9 @@ public class TextArea extends BaseTextInput<TextArea> {
 
             if (newline < 0) break;
             i = paraEnd + 1;
-            if (i > t.length()) {
-                result.add(new VisualLine("", t.length(), t.length()));
-                break;
-            }
+        }
+        if (t.charAt(t.length() - 1) == '\n') {
+            result.add(new VisualLine("", t.length(), t.length()));
         }
         return result;
     }
