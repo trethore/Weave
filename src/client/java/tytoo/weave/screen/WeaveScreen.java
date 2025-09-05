@@ -4,6 +4,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.ui.UIManager;
+import tytoo.weave.utils.McUtils;
 
 public abstract class WeaveScreen extends Screen {
     protected final Window window = Window.create();
@@ -18,8 +19,6 @@ public abstract class WeaveScreen extends Screen {
     }
 
     public void open() {
-        if (this.client != null) {
-            this.client.setScreen(this);
-        }
+        McUtils.getMc().ifPresent(mc -> mc.setScreen(this));
     }
 }
