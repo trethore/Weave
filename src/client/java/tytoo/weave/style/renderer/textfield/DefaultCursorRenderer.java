@@ -9,7 +9,6 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
-import java.util.List;
 
 public class DefaultCursorRenderer implements CursorRenderer {
     @Override
@@ -59,8 +58,9 @@ public class DefaultCursorRenderer implements CursorRenderer {
         float lineY = yOffset + pos2d.y * lineHeight;
 
         if (lineY + lineHeight >= textArea.getInnerTop() && lineY <= textArea.getInnerTop() + textArea.getInnerHeight()) {
-            List<String> lines = textArea.getLines();
-            String lineToCursor = lines.get(pos2d.y).substring(0, pos2d.x);
+            String visualLine = textArea.getVisualLineText(pos2d.y);
+            int safeCol = Math.max(0, Math.min(pos2d.x, visualLine.length()));
+            String lineToCursor = visualLine.substring(0, safeCol);
             float cursorX = textArea.getInnerLeft() + textRenderer.getWidth(lineToCursor);
             Color cursorColor = ThemeManager.getStylesheet().get(textArea, BaseTextInput.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
             Render2DUtils.drawRect(context, cursorX, lineY, 1, lineHeight, cursorColor);

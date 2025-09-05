@@ -16,6 +16,7 @@ public class GradientOutlineEffect implements Effect {
     private boolean inside;
     private float angleDegrees;
     private ColorWave colorWave;
+
     public GradientOutlineEffect(List<Color> colors, float width) {
         this(colors, width, true, Direction.LEFT_TO_RIGHT);
     }

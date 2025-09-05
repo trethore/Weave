@@ -12,6 +12,8 @@ import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 
+import java.awt.*;
+
 public class TextField extends BaseTextInput<TextField> {
     private int firstCharacterIndex = 0;
 
@@ -91,7 +93,7 @@ public class TextField extends BaseTextInput<TextField> {
         if (count == 1) {
             setCursorPos(pos, InputHelper.isShiftDown());
         } else if (count == 2) {
-            java.awt.Point bounds = getWordBoundsAt(pos);
+            Point bounds = getWordBoundsAt(pos);
             setSelectionAnchor(bounds.x);
             setCursorPos(bounds.y, true);
         } else if (count >= 3) {

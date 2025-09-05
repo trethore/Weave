@@ -9,7 +9,6 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
-import java.util.List;
 
 public class DefaultSelectionRenderer implements SelectionRenderer {
     @Override
@@ -51,23 +50,21 @@ public class DefaultSelectionRenderer implements SelectionRenderer {
     }
 
     private void drawTextAreaSelection(DrawContext context, TextArea textArea, int selectionStart, int selectionEnd) {
-        List<String> lines = textArea.getLines();
         TextRenderer textRenderer = textArea.getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
         float yOffset = textArea.getInnerTop() + textArea.getScrollY() + 1;
         Color selectionColor = ThemeManager.getStylesheet().get(textArea, BaseTextInput.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
 
-        int absPos = 0;
-        for (int i = 0; i < lines.size(); i++) {
-            String lineText = lines.get(i);
+        int lineCount = textArea.getVisualLineCount();
+        for (int i = 0; i < lineCount; i++) {
+            String lineText = textArea.getVisualLineText(i);
             float lineY = yOffset + i * lineHeight;
             if (lineY + lineHeight < textArea.getInnerTop() || lineY > textArea.getInnerTop() + textArea.getInnerHeight()) {
-                absPos += lineText.length() + 1;
                 continue;
             }
 
-            int lineStartAbs = absPos;
-            int lineEndAbs = lineStartAbs + lineText.length();
+            int lineStartAbs = textArea.getVisualLineStartIndex(i);
+            int lineEndAbs = textArea.getVisualLineEndIndex(i);
 
             int selForLineStart = Math.max(selectionStart, lineStartAbs);
             int selForLineEnd = Math.min(selectionEnd, lineEndAbs);
@@ -90,8 +87,6 @@ public class DefaultSelectionRenderer implements SelectionRenderer {
                 float highlightWidth = 2;
                 Render2DUtils.drawRect(context, highlightX1, lineY, highlightWidth, lineHeight, selectionColor);
             }
-
-            absPos += lineText.length() + 1;
         }
     }
 }

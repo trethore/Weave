@@ -3,6 +3,7 @@ package tytoo.weave.component.components.display;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
@@ -53,7 +54,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         text.visit((style, string) -> {
             segments.add(new TextSegment(string, Styling.fromMinecraftStyle(style)));
             return Optional.empty();
-        }, net.minecraft.text.Style.EMPTY);
+        }, Style.EMPTY);
         invalidateCache();
         invalidateLayout();
     }

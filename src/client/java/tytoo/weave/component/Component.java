@@ -493,7 +493,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
-    public T addLocalStylesheet(java.util.function.Consumer<Stylesheet> builder) {
+    public T addLocalStylesheet(Consumer<Stylesheet> builder) {
         if (builder != null) {
             Stylesheet s = new Stylesheet();
             builder.accept(s);
@@ -1028,12 +1028,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
         EdgeInsets newMargin = stylesheet.get(this, LayoutStyleProperties.MARGIN, null);
         if (newMargin != null) {
-            EdgeInsets marginApplied = newMargin;
-
-            float top = marginApplied.top();
-            float right = marginApplied.right();
-            float bottom = marginApplied.bottom();
-            float left = marginApplied.left();
+            float top = newMargin.top();
+            float right = newMargin.right();
+            float bottom = newMargin.bottom();
+            float left = newMargin.left();
 
             boolean horizontalAuto = Float.isNaN(left) && Float.isNaN(right);
             boolean verticalAuto = Float.isNaN(top) && Float.isNaN(bottom);

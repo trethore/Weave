@@ -13,7 +13,8 @@ import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.InputHelper;
 
-import java.util.Arrays;
+import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TextArea extends BaseTextInput<TextArea> {
@@ -38,8 +39,95 @@ public class TextArea extends BaseTextInput<TextArea> {
         return new TextArea();
     }
 
-    public List<String> getLines() {
-        return Arrays.asList(getText().split("\n", -1));
+    private List<VisualLine> getVisualLines() {
+        TextRenderer textRenderer = getEffectiveTextRenderer();
+        String t = getText();
+        List<VisualLine> result = new ArrayList<>();
+
+        int maxWidth = (int) getInnerWidth();
+        if (t.isEmpty()) {
+            result.add(new VisualLine("", 0, 0));
+            return result;
+        }
+
+        int i = 0;
+        while (i <= t.length()) {
+            int newline = t.indexOf('\n', i);
+            int paraEnd = newline >= 0 ? newline : t.length();
+
+            if (i == paraEnd) {
+                result.add(new VisualLine("", i, i));
+            } else if (maxWidth <= 0) {
+                result.add(new VisualLine(t.substring(i, paraEnd), i, paraEnd));
+            } else {
+                int segStart = i;
+                while (segStart < paraEnd) {
+                    String remaining = t.substring(segStart, paraEnd);
+                    String cut = textRenderer.trimToWidth(remaining, maxWidth);
+                    int len = cut.length();
+                    if (len == 0) {
+                        len = Math.min(1, remaining.length());
+                    }
+
+                    int absoluteCutEnd = segStart + len;
+                    boolean fullyFits = absoluteCutEnd >= paraEnd;
+
+                    if (fullyFits) {
+                        result.add(new VisualLine(t.substring(segStart, paraEnd), segStart, paraEnd));
+                        segStart = paraEnd;
+                    } else {
+                        int lastBreak = -1;
+                        for (int j = len - 1; j >= 0; j--) {
+                            char ch = remaining.charAt(j);
+                            if (Character.isWhitespace(ch)) {
+                                lastBreak = j;
+                                break;
+                            }
+                        }
+
+                        if (lastBreak > 0) {
+                            int lineEnd = segStart + lastBreak; // exclude whitespace
+                            result.add(new VisualLine(t.substring(segStart, lineEnd), segStart, lineEnd));
+                            segStart = lineEnd + 1; // skip the breaking whitespace
+                        } else {
+                            int segEnd = absoluteCutEnd;
+                            result.add(new VisualLine(t.substring(segStart, segEnd), segStart, segEnd));
+                            segStart = segEnd;
+                        }
+                    }
+                }
+            }
+
+            if (newline < 0) break;
+            i = paraEnd + 1;
+            if (i > t.length()) {
+                result.add(new VisualLine("", t.length(), t.length()));
+                break;
+            }
+        }
+        return result;
+    }
+
+    public int getVisualLineCount() {
+        return getVisualLines().size();
+    }
+
+    public String getVisualLineText(int index) {
+        List<VisualLine> lines = getVisualLines();
+        index = Math.max(0, Math.min(lines.size() - 1, index));
+        return lines.get(index).text();
+    }
+
+    public int getVisualLineStartIndex(int index) {
+        List<VisualLine> lines = getVisualLines();
+        index = Math.max(0, Math.min(lines.size() - 1, index));
+        return lines.get(index).startIndex();
+    }
+
+    public int getVisualLineEndIndex(int index) {
+        List<VisualLine> lines = getVisualLines();
+        index = Math.max(0, Math.min(lines.size() - 1, index));
+        return lines.get(index).endIndex();
     }
 
     @Override
@@ -58,14 +146,14 @@ public class TextArea extends BaseTextInput<TextArea> {
         } else {
             getSelectionRenderer().render(context, this);
 
-            List<String> lines = getLines();
+            List<VisualLine> lines = getVisualLines();
             float yOffset = getInnerTop() + scrollY + 1;
             for (int i = 0; i < lines.size(); i++) {
                 float lineY = yOffset + i * lineHeight;
                 if (lineY + lineHeight < getInnerTop() || lineY > getInnerTop() + getInnerHeight()) continue;
 
                 float textY = lineY + 2;
-                context.drawText(textRenderer, lines.get(i), (int) getInnerLeft(), (int) textY, -1, true);
+                context.drawText(textRenderer, lines.get(i).text(), (int) getInnerLeft(), (int) textY, -1, true);
             }
 
             getCursorRenderer().render(context, this);
@@ -86,13 +174,13 @@ public class TextArea extends BaseTextInput<TextArea> {
         boolean shift = InputHelper.isShiftDown();
         switch (event.getKeyCode()) {
             case GLFW.GLFW_KEY_UP: {
-                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
+                Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y - 1, this.lastDesiredCol), shift);
                 return true;
             }
             case GLFW.GLFW_KEY_DOWN: {
-                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
+                Point pos2d = getCursorPos2D(getCursorPos());
                 if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
                 setCursorPos(getPosFrom2D(pos2d.y + 1, this.lastDesiredCol), shift);
                 return true;
@@ -114,14 +202,14 @@ public class TextArea extends BaseTextInput<TextArea> {
                 this.lastDesiredCol = -1;
                 return true;
             case GLFW.GLFW_KEY_HOME: {
-                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
+                Point pos2d = getCursorPos2D(getCursorPos());
                 setCursorPos(getPosFrom2D(pos2d.y, 0), shift);
                 this.lastDesiredCol = -1;
                 return true;
             }
             case GLFW.GLFW_KEY_END: {
-                java.awt.Point pos2d = getCursorPos2D(getCursorPos());
-                String line = getLines().get(pos2d.y);
+                Point pos2d = getCursorPos2D(getCursorPos());
+                String line = getVisualLineText(pos2d.y);
                 setCursorPos(getPosFrom2D(pos2d.y, line.length()), shift);
                 this.lastDesiredCol = -1;
                 return true;
@@ -139,11 +227,10 @@ public class TextArea extends BaseTextInput<TextArea> {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
 
-        List<String> lines = getLines();
         int lineIndex = (int) ((event.getY() - (getInnerTop() + scrollY + 1)) / lineHeight);
-        lineIndex = Math.max(0, Math.min(lines.size() - 1, lineIndex));
+        lineIndex = Math.max(0, Math.min(getVisualLineCount() - 1, lineIndex));
 
-        String line = lines.get(lineIndex);
+        String line = getVisualLineText(lineIndex);
         int colIndex = textRenderer.trimToWidth(line, (int) (event.getX() - getInnerLeft())).length();
 
         int newPos = getPosFrom2D(lineIndex, colIndex);
@@ -159,7 +246,7 @@ public class TextArea extends BaseTextInput<TextArea> {
             setCursorPos(newPos, InputHelper.isShiftDown());
             this.lastDesiredCol = getCursorPos2D(newPos).x;
         } else if (count == 2) {
-            java.awt.Point bounds = getWordBoundsAt(newPos);
+            Point bounds = getWordBoundsAt(newPos);
             setSelectionAnchor(bounds.x);
             setCursorPos(bounds.y, true);
             this.lastDesiredCol = getCursorPos2D(bounds.y).x;
@@ -176,11 +263,10 @@ public class TextArea extends BaseTextInput<TextArea> {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
 
-        List<String> lines = getLines();
         int lineIndex = (int) ((event.getY() - (getInnerTop() + scrollY + 1)) / lineHeight);
-        lineIndex = Math.max(0, Math.min(lines.size() - 1, lineIndex));
+        lineIndex = Math.max(0, Math.min(getVisualLineCount() - 1, lineIndex));
 
-        String line = lines.get(lineIndex);
+        String line = getVisualLineText(lineIndex);
         int colIndex = textRenderer.trimToWidth(line, (int) (event.getX() - getInnerLeft())).length();
 
         int newPos = getPosFrom2D(lineIndex, colIndex);
@@ -195,40 +281,38 @@ public class TextArea extends BaseTextInput<TextArea> {
         clampScroll();
     }
 
-    public java.awt.Point getCursorPos2D(int pos) {
-        int charCount = 0;
-        List<String> lines = getLines();
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i);
-            if (pos <= charCount + line.length()) {
-                return new java.awt.Point(pos - charCount, i);
-            }
-            charCount += line.length() + 1;
+    public Point getCursorPos2D(int pos) {
+        List<VisualLine> lines = getVisualLines();
+        if (pos <= 0) return new Point(0, 0);
+        if (pos >= getText().length()) {
+            VisualLine last = lines.getLast();
+            return new Point(last.endIndex() - last.startIndex(), lines.size() - 1);
         }
-        String lastLine = lines.getLast();
-        return new java.awt.Point(lastLine.length(), lines.size() - 1);
+        for (int i = 0; i < lines.size(); i++) {
+            VisualLine vl = lines.get(i);
+            if (pos <= vl.endIndex()) {
+                int col = Math.max(0, pos - vl.startIndex());
+                return new Point(col, i);
+            }
+        }
+        VisualLine last = lines.getLast();
+        return new Point(last.endIndex() - last.startIndex(), lines.size() - 1);
     }
 
     private int getPosFrom2D(int line, int col) {
-        List<String> lines = getLines();
-        if (line >= lines.size()) {
-            return getText().length();
-        }
+        List<VisualLine> lines = getVisualLines();
+        if (lines.isEmpty()) return 0;
         line = Math.max(0, Math.min(lines.size() - 1, line));
-        String targetLine = lines.get(line);
-        col = Math.max(0, Math.min(targetLine.length(), col));
-
-        int charCount = 0;
-        for (int i = 0; i < line; i++) {
-            charCount += lines.get(i).length() + 1;
-        }
-        return charCount + col;
+        VisualLine target = lines.get(line);
+        int len = target.endIndex() - target.startIndex();
+        col = Math.max(0, Math.min(len, col));
+        return target.startIndex() + col;
     }
 
     protected void clampScroll() {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
-        float contentHeight = getLines().size() * lineHeight;
+        float contentHeight = getVisualLines().size() * lineHeight;
         float viewHeight = getInnerHeight();
 
         if (contentHeight <= viewHeight) {
@@ -243,7 +327,7 @@ public class TextArea extends BaseTextInput<TextArea> {
     protected void ensureCursorVisible() {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
-        java.awt.Point pos2d = getCursorPos2D(getCursorPos());
+        Point pos2d = getCursorPos2D(getCursorPos());
         float cursorY = pos2d.y * lineHeight;
         if (cursorY + scrollY < 0) {
             scrollY = -cursorY;
@@ -275,5 +359,8 @@ public class TextArea extends BaseTextInput<TextArea> {
 
     public float getScrollY() {
         return scrollY;
+    }
+
+    private record VisualLine(String text, int startIndex, int endIndex) {
     }
 }

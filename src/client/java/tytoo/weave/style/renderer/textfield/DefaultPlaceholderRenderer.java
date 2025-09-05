@@ -2,6 +2,8 @@ package tytoo.weave.style.renderer.textfield;
 
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
 import tytoo.weave.component.components.interactive.BaseTextInput;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
@@ -23,9 +25,33 @@ public class DefaultPlaceholderRenderer implements PlaceholderRenderer {
 
         if (textInput instanceof TextField textField) {
             float textY = textField.getInnerTop() + (textField.getInnerHeight() - (textRenderer.fontHeight - 1)) / 2.0f + 1f;
-            context.drawText(textRenderer, textField.getPlaceholder(), (int) textField.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
+
+            int maxWidth = (int) textField.getInnerWidth();
+            if (maxWidth <= 0) return;
+
+            Text placeholder = textField.getPlaceholder();
+            String toDraw = placeholder.getString();
+            int textWidth = textRenderer.getWidth(toDraw);
+            if (textWidth > maxWidth) {
+                String ellipsis = "...";
+                int ellipsisWidth = textRenderer.getWidth(ellipsis);
+                int available = Math.max(0, maxWidth - ellipsisWidth);
+                String trimmed = textRenderer.trimToWidth(toDraw, available);
+                toDraw = trimmed + ellipsis;
+            }
+
+            context.drawText(textRenderer, Text.of(toDraw), (int) textField.getInnerLeft(), (int) textY, placeholderColor.getRGB(), true);
         } else if (textInput instanceof TextArea textArea) {
-            context.drawText(textRenderer, textArea.getPlaceholder(), (int) textArea.getInnerLeft(), (int) (textArea.getInnerTop() + 3), placeholderColor.getRGB(), true);
+            int maxWidth = (int) textArea.getInnerWidth();
+            if (maxWidth <= 0) return;
+
+            float x = textArea.getInnerLeft();
+            float y = textArea.getInnerTop() + 3;
+
+            for (OrderedText line : textRenderer.wrapLines(textArea.getPlaceholder(), maxWidth)) {
+                context.drawText(textRenderer, line, (int) x, (int) y, placeholderColor.getRGB(), true);
+                y += textRenderer.fontHeight + 1;
+            }
         }
     }
 }
