@@ -2,6 +2,9 @@
 
 Weave targets Fabric for Minecraft 1.21.4 with Yarn 1.21.4+build.8. Use Fabric Loom and add Weave from GitHub Packages (Maven).
 
+What you’ll do here
+- Point Gradle at the Weave package registry on GitHub Packages, add the dependency, and call `WeaveCore.init()` from your client initializer. If you’ve never used GitHub Packages for Maven, note that it requires a Personal Access Token with the `read:packages` scope and credentials configured for Gradle.
+
 1) Add the GitHub Packages repository
 
 Add to your `repositories` (either the root `build.gradle` of your mod or via `settings.gradle` if you centralize repos):
@@ -73,3 +76,8 @@ Note
 - First runs download Minecraft, mappings, and dependencies — allow extra time.
 - Ensure Java 21.
 
+Troubleshooting
+- 401 Unauthorized from the Maven repo usually means your token is missing the `read:packages` scope or Gradle is not picking up `gpr.user`/`gpr.key`. Verify with `gradle.properties` in your user home.
+- If IDE sync fails after adding Weave, try `./gradlew --refresh-dependencies` and reimport the Gradle project.
+
+Next Step: [Creating a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md)

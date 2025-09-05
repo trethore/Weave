@@ -15,7 +15,7 @@ public final class TestGuiCommand {
         return ClientCommandManager.literal("testgui").executes(ctx -> {
             MinecraftClient client = MinecraftClient.getInstance();
             if (client != null) {
-                client.send(() ->new TestGui().open());
+                client.send(() -> new TestGui().open());
                 ctx.getSource().sendFeedback(Text.literal("Opened Weave Test GUI."));
                 return 1;
             }

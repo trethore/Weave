@@ -1,5 +1,10 @@
 # Effects, Animations & Easings
 
+When to use what
+- Use effects for draw-time visual passes (e.g., shadows, outlines, scissoring) that wrap a component’s renderer.
+- Use property animations when you want time-based changes to component properties (opacity, scale, position, color) triggered by code.
+- Use style transitions to animate between style states (hover, focus, active) where the stylesheet drives the visual change.
+
 Effects
 - Add with `component.addEffect(Effects.shadow(...))`, `Effects.outline(...)`, `Effects.scissor()`, or `Effects.gradientOutline(...)`.
 - Effects can run code before/after a component draws; implement `Effect` to build your own.
@@ -60,6 +65,8 @@ stylesheet.addRule(new StyleRule(
 ));
 ```
 
+
+
 When style state/class changes (e.g., `HOVERED`, `ACTIVE`, or toggling a class), matching properties registered in `StyleTransitionRegistry` animate smoothly.
 
 Extending transitions
@@ -101,3 +108,5 @@ stylesheet.addRule(new StyleRule(
     Map.of(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
 ));
 ```
+
+Next Step: [Styles & Themes](https://github.com/trethore/Weave/blob/main/docs/styles-themes.md)

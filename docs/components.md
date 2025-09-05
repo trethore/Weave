@@ -2,6 +2,9 @@
 
 Weave UIs are composed from `Component` instances arranged in a tree under the root `window`. You add children, apply constraints, set layouts, and attach events.
 
+What this page covers
+- The component taxonomy (layout, display, interactive), how managed vs. overlay children behave, and how to think about constraints and layouts together. If you’re new to Weave, skim the examples to see the common patterns before diving deeper into styling.
+
 Common components
 - Layout: `Window`, `Panel`, `ScrollPanel`, `Container`, `Separator`
 - Display: `Text`, `WrappedText`, `Image`, `ProgressBar`
@@ -135,3 +138,4 @@ ProgressBar pb = ProgressBar.create().setValue(0.7f);
 window.addChildren(img, pb);
 ```
 
+Next Step: [Effects, Animations & Easings](https://github.com/trethore/Weave/blob/main/docs/animations-effects.md)

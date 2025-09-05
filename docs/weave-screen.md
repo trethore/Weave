@@ -2,6 +2,9 @@
 
 `WeaveScreen` is a convenience base that wires Weave’s UI tree into a Minecraft `Screen` via mixins. It manages a root `Window` component and delegates input/render events through `UIManager`.
 
+When to use it
+- Use `WeaveScreen` whenever you want a full-screen UI powered by Weave. It provides a managed lifecycle (init → input → layout → render) and a ready-to-use root `window` container so you can focus on composing components and styles rather than plumbing events and sizing by hand.
+
 Minimal screen
 
 ```
@@ -88,3 +91,4 @@ public final class LoginScreen extends WeaveScreen {
 }
 ```
 
+Next Step: [Components & Layout](https://github.com/trethore/Weave/blob/main/docs/components.md)

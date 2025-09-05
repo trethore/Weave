@@ -2,6 +2,9 @@
 
 Weave is designed to be pluggable and non-intrusive. Add new components, effects, style properties, renderers, and transitions without editing core.
 
+Mindset
+- Treat the core as a set of contracts. Expose typed style properties on your components, register transitions and builders where useful, and prefer stylesheet-driven visuals so themes can override defaults without forking your logic.
+
 New component
 
 Skeleton
@@ -137,3 +140,5 @@ stylesheet.addRule(new StyleRule(
     Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidBadgeRenderer(new java.awt.Color(40,160,220), 4f))
 ));
 ```
+
+Next Step: [State, Events & Constraints](https://github.com/trethore/Weave/blob/main/docs/state-events-constraints.md)

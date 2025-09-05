@@ -1,5 +1,8 @@
 # Styles & Themes
 
+Mental model
+- The active Theme provides a base Stylesheet. Specificity and cascade apply: global theme → ancestor local rules → component local rules. Variables let you centralize shared values; computed values derive visuals from component state.
+
 Stylesheets
 - Central source of visual properties and renderers: `ThemeManager.getStylesheet()`.
 - Attach rules with `stylesheet.addRule(new StyleRule(selector, properties))`.
@@ -52,6 +55,8 @@ stylesheet.addRule(new StyleRule(
     )
 ));
 ```
+
+Next Step: [Extensibility](https://github.com/trethore/Weave/blob/main/docs/extensibility.md)
 
 Dev workflow
 - Use `/weave reloadtheme` in dev to reinstantiate the default theme.
