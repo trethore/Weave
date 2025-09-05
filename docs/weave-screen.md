@@ -1,56 +1,73 @@
 # Creating a WeaveScreen
 
-`WeaveScreen` is a convenience base that wires Weave’s UI tree into a Minecraft `Screen` via mixins. It manages a root `Window` component and delegates input/render events through `UIManager`.
+**`WeaveScreen` is the bridge between your Weave UI and Minecraft.** \
+It's a specialized `net.minecraft.client.gui.screen.Screen` that handles the boilerplate of setting up a UI root, managing the render loop, and delegating user input to Weave's `UIManager`.
 
-When to use it
-- Use `WeaveScreen` whenever you want a full-screen UI powered by Weave. It provides a managed lifecycle (init → input → layout → render) and a ready-to-use root `window` container so you can focus on composing components and styles rather than plumbing events and sizing by hand.
+---
 
-Minimal screen
+## What this page covers
 
-```
+- The purpose of `WeaveScreen` and when to use it.
+- How to create a minimal screen with a root `window`.
+- A complete example demonstrating layout, components, and animations.
+- How to open your new screen in-game.
+
+---
+
+## The Role of `WeaveScreen`
+
+Use `WeaveScreen` as the base for any full-screen GUI you build. It provides a managed lifecycle so you can focus on what your UI looks like, not how it's drawn or updated.
+
+- **Initialization:** Automatically sets up the `UIManager`.
+- **Root Container:** Provides a pre-configured `window` component to which you add all other UI elements.
+- **Event Handling:** Mixins ensure that `render`, `mouseClicked`, `keyPressed`, etc., are correctly forwarded to your UI tree.
+- **Cleanup:** Handles resource disposal when the screen is closed.
+
+## A Minimal Example
+
+Every `WeaveScreen` starts with a root `window`. You compose your UI by adding children to it and defining their layout and constraints.
+
+```java
 import net.minecraft.text.Text;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.constraint.constraints.Constraints;
 
 public final class MyScreen extends WeaveScreen {
     public MyScreen() {
+        // The screen title, visible in Minecraft's UI hierarchy.
         super(Text.literal("My Screen"));
 
-        window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 8));
+        // The root `window` is centered by default.
+        // We can configure its layout and padding.
+        window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.CENTER, 8));
         window.setPadding(10);
 
-        Panel header = Panel.create()
-            .setWidth(Constraints.relative(1.0f))
-            .setHeight(Constraints.pixels(28));
+        // Create a simple text component and add it to the window.
+        SimpleTextComponent greeting = SimpleTextComponent.of("Hello, Weave!")
+            .setX(Constraints.center()) // Center horizontally within its allocated space.
+            .setY(Constraints.center()); // Center vertically.
 
-        header.addChildren(
-            SimpleTextComponent.of("Hello Weave").setX(Constraints.center()).setY(Constraints.center())
-        );
-
-        window.addChildren(header);
+        window.addChildren(greeting);
     }
 }
 ```
 
-Opening a Weave screen
+## Opening Your Screen
 
-- From code: `new MyScreen().open();`
-- From a client command (in dev): `/weave testgui` opens the built-in demo.
+To display your screen, instantiate it and call the `.open()` helper method. This is safe to call from any client-side context, like a keybinding handler or command.
 
-Root `Window`
-- Centered by default with width/height from the active theme.
-- Acts as the container for your layout tree; add children to `window`.
-
-Constraints and layout
-- Use `Constraints.pixels`, `Constraints.relative`, and `Constraints.center` to size/position children.
-- Set a layout on containers (`LinearLayout`, `GridLayout`) to auto-arrange managed children.
-
-Full example with input, button, and animation
-
+```java
+// From your mod's code (e.g., a command or key press event)
+new MyScreen().open();
 ```
+
+## Building a Complete UI Tree
+
+As your UI grows, you'll compose multiple components. The `window` acts as the single root of this tree. The following example builds a simple login form with a title, an input field, a button, and a fade-in animation.
+
+```java
 import net.minecraft.text.Text;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.component.components.layout.Panel;
@@ -65,9 +82,11 @@ public final class LoginScreen extends WeaveScreen {
     public LoginScreen() {
         super(Text.literal("Login"));
 
+        // 1. Configure the root window layout
         window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 10));
         window.setPadding(12);
 
+        // 2. Create components
         SimpleTextComponent title = SimpleTextComponent.of("Welcome")
             .setScale(1.4f)
             .setX(Constraints.center());
@@ -76,15 +95,23 @@ public final class LoginScreen extends WeaveScreen {
             .setPlaceholder("Username");
 
         Button submit = Button.of("Continue")
-            .onMouseClick(e -> submit.animate().duration(150).easing(Easings.EASE_OUT_BACK).scale(1.08f).then(() -> submit.animate().duration(120).scale(1.0f)));
+            .onMouseClick(e -> {
+                // Add a simple "bounce" animation on click
+                submit.animate()
+                    .duration(150).easing(Easings.EASE_OUT_BACK).scale(1.08f)
+                    .then(() -> submit.animate().duration(120).scale(1.0f));
+            });
 
+        // 3. Arrange components in a container
         Panel form = Panel.create()
-            .setWidth(Constraints.relative(1.0f))
+            .setWidth(Constraints.relative(1.0f)) // Take up 100% of parent width
             .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 8))
             .addChildren(username, submit);
 
+        // 4. Add all top-level elements to the window
         window.addChildren(title, form);
 
+        // 5. Add a fade-in animation when the screen opens
         window.setOpacity(0f);
         window.animate().duration(180).opacity(1f);
     }
@@ -93,4 +120,4 @@ public final class LoginScreen extends WeaveScreen {
 
 ---
 
-**Next Step:** [Components & Layout](https://github.com/trethore/Weave/blob/main/docs/components.md)
+**Next Step → [Components & Layout](components.md)**

@@ -1,146 +1,146 @@
-# Extensibility: Components, Effects, Properties, Themes
+# Extensibility
 
-Weave is designed to be pluggable and non-intrusive. Add new components, effects, style properties, renderers, and transitions without editing core.
+Weave is designed from the ground up to be extended. You can add your own components, effects, style properties, and themes without modifying the core library. This ensures your custom code remains compatible with future Weave updates.
 
-Mindset
-- Treat the core as a set of contracts. Expose typed style properties on your components, register transitions and builders where useful, and prefer stylesheet-driven visuals so themes can override defaults without forking your logic.
+---
 
-New component
+## What this page covers
 
-Skeleton
+- The core philosophy behind extending Weave.
+- A step-by-step guide to creating a brand new, styleable component.
+- How to implement custom effects and renderers.
+- How to register your own style properties for automatic transitions.
+- How to create a custom `AnimationBuilder` for a richer animation API.
+- Instructions for creating and applying a new `Theme`.
 
-```
+---
+
+## The Extensibility Mindset
+
+- **Prefer Public APIs:** Build on top of Weave's contracts (`Component`, `Effect`, `ComponentRenderer`, etc.) rather than forking or modifying internals.
+- **Expose Style Properties:** For custom components, define public static `StyleProperty` constants. This creates a clear API for theming and allows others to style your component.
+- **Stylesheet-Driven Visuals:** Define your component's default appearance in your theme's stylesheet. This allows users to easily override the look and feel without changing your component's logic.
+- **Register When Needed:** If you create new concepts that should interact with Weave's systems—like animatable style properties—be sure to register them with the appropriate registry (e.g., `StyleTransitionRegistry`).
+
+## Creating a Custom Component
+
+Here is the basic skeleton for a new `Badge` component.
+
+```java
 import tytoo.weave.component.Component;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.constraint.constraints.Constraints;
+import java.awt.Color;
 
 public final class Badge extends Component<Badge> {
+    // 1. Expose typed StyleProperty keys in a nested class for organization.
     public static final class StyleProps {
-        public static final StyleProperty<java.awt.Color> COLOR = new StyleProperty<>("badge.color", java.awt.Color.class);
-        public static final StyleProperty<Float> RADIUS = new StyleProperty<>("badge.radius", Float.class);
+        public static final StyleProperty<Color> BADGE_COLOR = new StyleProperty<>("badge.color", Color.class);
+        public static final StyleProperty<Float> CORNER_RADIUS = new StyleProperty<>("badge.radius", Float.class);
     }
 
     private Badge() {
-        Stylesheet ss = ThemeManager.getStylesheet();
-        float size = 10f; // or ss.get(this, someDefaultProp, 10f)
-        setWidth(Constraints.pixels(size));
-        setHeight(Constraints.pixels(size));
+        // 2. Set default layout constraints in the constructor.
+        // Here, we'll make it a fixed 10x10 square by default.
+        setWidth(Constraints.pixels(10f));
+        setHeight(Constraints.pixels(10f));
     }
 
-    public static Badge create() { return new Badge(); }
+    // 3. Provide a static factory method for creation.
+    public static Badge create() {
+        return new Badge();
+    }
 }
 ```
 
-Expose typed `StyleProperty` keys in an inner `StyleProps` class so themes can target your component.
+Now, in your theme's `Stylesheet`, you can define the default appearance for all `Badge` components.
 
-Style defaults in a theme
-
-```
+```java
 stylesheet.addRule(new StyleRule(
     new StyleSelector(Badge.class, null, null, null),
     Map.of(
-        Badge.StyleProps.COLOR, new java.awt.Color(40, 160, 220),
-        Badge.StyleProps.RADIUS, 4f
+        Badge.StyleProps.BADGE_COLOR, new Color(40, 160, 220),
+        Badge.StyleProps.CORNER_RADIUS, 4f,
+        // We can also assign a custom renderer.
+        ComponentStyle.StyleProps.BASE_RENDERER, new SolidBadgeRenderer()
     )
 ));
 ```
 
-New effect
+## Creating a Custom Renderer
 
-```
-import net.minecraft.client.gui.DrawContext;
-import tytoo.weave.effects.Effect;
-import tytoo.weave.component.Component;
+A `ComponentRenderer` is responsible for drawing a component. Implement the interface and use the `DrawContext` and component dimensions to render anything you want.
 
-public record GlowEffect(int strength) implements Effect {
-    @Override public void beforeDraw(DrawContext ctx, Component<?> c) { /* setup */ }
-    @Override public void afterDraw(DrawContext ctx, Component<?> c)  { /* teardown */ }
+```java
+public final class SolidBadgeRenderer implements ComponentRenderer {
+    @Override
+    public void render(DrawContext ctx, Component<?> c) {
+        if (!(c instanceof Badge badge)) return;
+
+        // Get style values from the stylesheet at render time.
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Color color = ss.get(badge, Badge.StyleProps.BADGE_COLOR, Color.RED);
+        float radius = ss.get(badge, Badge.StyleProps.CORNER_RADIUS, 0f);
+
+        // Use your rendering logic.
+        Render2DUtils.drawRoundedRect(
+            ctx,
+            badge.getLeft(), badge.getTop(),
+            badge.getWidth(), badge.getHeight(),
+            radius, color
+        );
+    }
 }
-
-// Usage: component.addEffect(new GlowEffect(8));
 ```
 
-New renderer
-- Implement `ComponentRenderer` (optionally `ColorableRenderer` / `CloneableRenderer`) and assign via stylesheet `ComponentStyle.StyleProps.*RENDERER`.
+## Registering Custom Transitions
 
-New style property transitions
+If your custom component has style properties that should animate smoothly between states, register them with the `StyleTransitionRegistry`.
 
-If your component/property should animate when style state changes, register it:
-
-```
+```java
 import tytoo.weave.animation.StyleTransitionRegistry;
 import tytoo.weave.animation.Interpolators;
 
+// In your mod's initializer:
 StyleTransitionRegistry.registerStyleProperty(
-    Badge.class,
-    Badge.StyleProps.RADIUS,
-    0.0f,
-    Interpolators.FLOAT,
-    (badge, r) -> badge.getStyle().setBaseRenderer(/* renderer that uses r */),
-    null
+    Badge.class,                        // The component type this applies to
+    Badge.StyleProps.CORNER_RADIUS,     // The StyleProperty to animate
+    0.0f,                               // The default value if none is found
+    Interpolators.FLOAT,                // How to interpolate between two float values
+    (badge, radius) -> {                // A function to apply the value during animation
+        // This is a simplified example. In a real scenario, you would
+        // update a renderer or internal state that uses this radius.
+    },
+    null                                // An optional function to run on finish
 );
 ```
 
-Custom animation builder
-- Provide richer `animate()` APIs for your component:
+## Creating a New Theme
 
-```
-import tytoo.weave.animation.Animator;
-import tytoo.weave.animation.AnimationBuilder;
+Implement the `Theme` interface to provide your own `Stylesheet` and default `TextRenderer`. Then, apply it using the `ThemeManager`.
 
-public final class BadgeAnimationBuilder extends AnimationBuilder<Badge> {
-    public BadgeAnimationBuilder(Badge badge) { super(badge); }
-    public BadgeAnimationBuilder pulse() { return (BadgeAnimationBuilder) scale(1.1f).then(() -> scale(1.0f)); }
-}
+```java
+public class MyCoolTheme implements Theme {
+    private final Stylesheet stylesheet;
 
-// Register once (e.g., in your init):
-Animator.registerBuilder(Badge.class, BadgeAnimationBuilder::new);
-```
-
-New theme
-- Implement `Theme` with your own `Stylesheet` and `TextRenderer`.
-- Apply with `ThemeManager.setTheme(new MyTheme())`. In dev, `/weave reloadtheme` reinstantiates the default theme; use your own swap logic for custom themes.
-
-Variables and runtime customization
-- Global: `ThemeManager.setGlobalVar("key", value)` → invalidates styles for all screens.
-- Component-local: `setVar("key", value)` → affects resolution within that subtree.
-
-Version & API targets
-- Keep your code aligned with Minecraft 1.21.4 and Yarn 1.21.4+build.8 (the versions configured by Weave).
-
-Example: custom SolidBadgeRenderer
-
-```
-import net.minecraft.client.gui.DrawContext;
-import tytoo.weave.component.Component;
-import tytoo.weave.style.renderer.ComponentRenderer;
-
-public final class SolidBadgeRenderer implements ComponentRenderer {
-    private final java.awt.Color color;
-    private final float radius;
-    public SolidBadgeRenderer(java.awt.Color color, float radius) {
-        this.color = color;
-        this.radius = radius;
+    public MyCoolTheme() {
+        this.stylesheet = new Stylesheet();
+        // ... call a method to populate it with StyleRules ...
     }
+
     @Override
-    public void render(DrawContext ctx, Component<?> c) {
-        // draw a rounded rect using c.getLeft()/getTop()/getWidth()/getHeight()
-        // with `color` and `radius` via your render utils
-    }
+    public Stylesheet getStylesheet() { return this.stylesheet; }
+
+    @Override
+    public TextRenderer getTextRenderer() { /* return a custom or default font */ }
 }
-```
 
-Attach in theme
-
-```
-stylesheet.addRule(new StyleRule(
-    new StyleSelector(Badge.class, null, null, null),
-    Map.of(ComponentStyle.StyleProps.BASE_RENDERER, new SolidBadgeRenderer(new java.awt.Color(40,160,220), 4f))
-));
+// Apply the theme in your mod's initializer
+ThemeManager.setTheme(new MyCoolTheme());
 ```
 
 ---
 
-**Next Step:** [State, Events & Constraints](https://github.com/trethore/Weave/blob/main/docs/state-events-constraints.md)
+**Next Step → [State, Events & Constraints](state-events-constraints.md)**

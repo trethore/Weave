@@ -1,143 +1,154 @@
 # Components & Layout
 
-Weave UIs are composed from `Component` instances arranged in a tree under the root `window`. You add children, apply constraints, set layouts, and attach events.
+Weave UIs are built by composing `Component` instances into a tree. You start with a root `window`, add children, set their layout constraints, and attach event handlers to make them interactive. This declarative approach lets you focus on structure and appearance, while Weave handles the rendering and layout calculations.
 
-What this page covers
-- The component taxonomy (layout, display, interactive), how managed vs. overlay children behave, and how to think about constraints and layouts together. If you’re new to Weave, skim the examples to see the common patterns before diving deeper into styling.
+---
 
-Common components
-- Layout: `Window`, `Panel`, `ScrollPanel`, `Container`, `Separator`
-- Display: `Text`, `WrappedText`, `Image`, `ProgressBar`
-- Interactive: `Button`, `CheckBox`, `RadioButton`, `RadioButtonGroup`, `ComboBox`, `Slider`, `TextField`, `TextArea`, `ImageButton`
+## What this page covers
 
-Adding components
+- The different categories of components available (Layout, Display, Interactive).
+- How to add children and build a component tree.
+- The distinction between layout-managed children and overlays.
+- An overview of the core layout systems: `LinearLayout` and `GridLayout`.
+- How to bind component properties (like a checkbox's state) to your mod's data.
 
+---
+
+## Core Concepts
+
+### The Component Tree
+
+Every UI starts with a root component (typically the `window` in a `WeaveScreen`). You build the hierarchy by adding children to containers.
+
+```java
+// A Panel is a generic container
+Panel container = Panel.create();
+
+// A Button and TextField are interactive components
+Button actionButton = Button.of("Click Me");
+TextField inputField = TextField.create();
+
+// Add the button and text field as children of the panel
+container.addChildren(actionButton, inputField);
+
+// Add the panel to the main window
+window.addChildren(container);
 ```
-import tytoo.weave.component.components.layout.Panel;
-import tytoo.weave.component.components.interactive.Button;
-import tytoo.weave.component.components.interactive.TextField;
+
+### Managed vs. Overlay Children
+
+- **Managed Children (Default):** These are positioned and sized by their parent's `Layout` manager (e.g., `LinearLayout`). This is the most common type.
+- **Overlay Children:** By calling `component.setManagedByLayout(false)`, you can make a component "float" above its siblings. It will ignore the parent's layout manager and rely solely on its own position constraints (`setX`, `setY`). Overlays are drawn last and receive input first, making them ideal for tooltips, popups, or dropdowns.
+
+### IDs, Classes, and States
+
+To apply styles from a stylesheet, you use selectors that target components.
+- **ID:** `setId("my-unique-id")` for targeting a single, specific component.
+- **Class:** `addStyleClass("card")` for applying a shared style to multiple components.
+- **State:** `HOVERED`, `FOCUSED`, `ACTIVE`, `DISABLED` are automatically applied by the `UIManager` during user interaction. You can use these pseudo-classes in your stylesheet to create responsive visuals (e.g., a button that changes color on hover).
+
+## Component Catalog
+
+### Layout Components
+
+These components are responsible for structuring your UI.
+
+- **`Window`:** The root component for a `WeaveScreen`.
+- **`Panel`:** A general-purpose container.
+- **`ScrollPanel`:** A panel with built-in vertical scrolling for content that overflows its bounds.
+- **`Container`:** A lightweight panel, useful for simple grouping.
+- **`Separator`:** A horizontal or vertical line to divide sections.
+- **`Canvas`:** A component that gives you a direct `DrawContext` callback for custom rendering.
+
+### Display Components
+
+These components display information but are not interactive.
+
+- **`SimpleTextComponent` / `WrappedTextComponent`:** For single-line or multi-line text.
+- **`Image`:** Displays a texture from a `net.minecraft.util.Identifier`.
+- **`ProgressBar`:** A bar that visually represents a value.
+
+### Interactive Components
+
+These components respond to user input.
+
+- **`Button` / `ImageButton`:** Clickable buttons with text or an image.
+- **`CheckBox`:** A standard checkable box.
+- **`RadioButton` / `RadioButtonGroup`:** For selecting one option from a set.
+- **`ComboBox`:** A dropdown menu for selections.
+- **`Slider`:** A draggable slider for selecting a numeric value.
+- **`TextField` / `TextArea`:** Single-line and multi-line text input fields.
+
+## Layout Systems
+
+Layouts automate the positioning of managed children within a container. You set one on a panel using `.setLayout()`.
+
+### LinearLayout
+
+`LinearLayout` arranges children in a single horizontal or vertical row. It's perfect for forms, lists, and toolbars.
+
+```java
 import tytoo.weave.layout.LinearLayout;
-import tytoo.weave.constraint.constraints.Constraints;
 
-window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 10));
-window.setPadding(10);
-
-Panel content = Panel.create()
-    .setWidth(Constraints.relative(1.0f))
-    .setHeight(Constraints.relative(1.0f))
-    .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.START, 8));
-
-Button action = Button.of("Click me")
-    .onMouseClick(e -> System.out.println("clicked!"));
-
-TextField input = TextField.create().setPlaceholder("Type here...");
-
-content.addChildren(input, action);
-window.addChildren(content);
+// Arrange children vertically, aligned to the top, with an 8px gap.
+// Cross-axis alignment stretches children to fill the container's width.
+panel.setLayout(LinearLayout.of(
+    LinearLayout.Orientation.VERTICAL,
+    LinearLayout.Alignment.START,
+    LinearLayout.CrossAxisAlignment.STRETCH,
+    8
+));
 ```
 
-Constraints
-- Size: `Constraints.pixels(n)`, `Constraints.relative(f)`, `Constraints.childBased(padding)`, `Constraints.sumOfChildrenWidth(gap)`, `Constraints.sumOfChildrenHeight(gap)`.
-- Position: `Constraints.center()`, or compute `X/Y` with available size and margins.
-- Min/Max: `setMinWidth/Height`, `setMaxWidth/Height`.
+### GridLayout
 
-Layouts
-- `LinearLayout` arranges children horizontally or vertically with alignment, cross-axis alignment (start/center/end/stretch), and gaps.
-- `GridLayout` flows children into a grid with column count and gaps; use `GridLayout.GridData.span(colSpan, rowSpan)` via `setLayoutData` per child.
+`GridLayout` arranges children in a grid with a fixed number of columns. It's ideal for inventories, galleries, or dashboards. You can make an item span multiple columns or rows using `setLayoutData`.
 
-Managed vs overlay children
-- Managed children are arranged by the container’s layout.
-- Set `setManagedByLayout(false)` to float a child as an overlay (drawn above and hit-tested first).
-
-IDs, classes, and states
-- `setId("my-id")` and `addStyleClass("my-class")` enable stylesheet rules.
-- States (e.g., `HOVERED`, `FOCUSED`, `ACTIVE`, `DISABLED`) are set automatically by `UIManager` during interaction.
-
-Event handling
-- Use fluent handlers: `onMouseClick`, `onMouseRelease`, `onMouseEnter`, `onMouseLeave`, `onMouseDrag`, `onMouseScroll`, `onKeyPress`, `onCharTyped`, `onFocusGained`, `onFocusLost`.
-- `onEvent(Event.ANY, listener)` to observe any event bubbled from a component subtree.
-
-Grid example
-
-```
+```java
 import tytoo.weave.layout.GridLayout;
 import tytoo.weave.component.components.display.ProgressBar;
 
 Panel grid = Panel.create()
-    .setLayout(GridLayout.of(2, 6))
-    .setWidth(Constraints.relative(1.0f))
-    .setHeight(Constraints.relative(1.0f));
+    .setLayout(GridLayout.of(2, 6)); // 2 columns, 6px gap
 
 Button b1 = Button.of("A");
 Button b2 = Button.of("B");
-ProgressBar bar = ProgressBar.create().setValue(0.42f);
+ProgressBar bar = ProgressBar.create().setValue(0.75f);
 
+// Make the progress bar span both columns
 bar.setLayoutData(GridLayout.GridData.span(2, 1));
+
 grid.addChildren(b1, b2, bar);
 window.addChildren(grid);
 ```
 
-Input components and binding
+## State Binding
 
-```
+For interactive components, it's best to bind their values to a `State` object. This creates a two-way connection: if the user changes the component, the `State` updates; if your code changes the `State`, the component's visuals update automatically.
+
+```java
 import tytoo.weave.state.State;
 import tytoo.weave.component.components.interactive.CheckBox;
-import tytoo.weave.component.components.interactive.RadioButton;
-import tytoo.weave.component.components.interactive.RadioButtonGroup;
-import tytoo.weave.component.components.interactive.ComboBox;
-
-State<Boolean> enabled = new State<>(true);
-CheckBox toggle = CheckBox.of("Enable feature").bindChecked(enabled);
-
-State<String> flavor = new State<>("vanilla");
-RadioButtonGroup<String> group = RadioButtonGroup.create(flavor)
-    .addChildren(RadioButton.of("vanilla", "Vanilla"),
-                 RadioButton.of("choco", "Chocolate"));
-
-State<String> selection = new State<>("one");
-ComboBox<String> combo = ComboBox.create(selection)
-    .setPlaceholder("Choose…")
-    .addOption("One", "one")
-    .addOption("Two", "two");
-
-window.addChildren(toggle, group, combo);
-```
-
-Sliders
-
-```
 import tytoo.weave.component.components.interactive.Slider;
 
-State<Integer> intValue = new State<>(50);
-Slider<Integer> slider = Slider.integerSlider(Slider.Orientation.HORIZONTAL, 0, 100, intValue.get())
-    .bindValue(intValue)
-    .onValueChanged(v -> System.out.println("value=" + v));
+// Create a state object to hold a boolean value.
+State<Boolean> featureEnabled = new State<>(true);
 
-window.addChildren(slider);
-```
+// Bind the CheckBox's checked status to the state.
+CheckBox toggle = CheckBox.of("Enable Feature").bindChecked(featureEnabled);
 
-Text fields and areas
+// Create another component whose visibility depends on the same state.
+Panel featurePanel = Panel.create().bindVisibility(featureEnabled);
 
-```
-import tytoo.weave.component.components.interactive.TextArea;
+// Example with a slider
+State<Integer> volume = new State<>(50);
+Slider<Integer> volumeSlider = Slider.integerSlider(Slider.Orientation.HORIZONTAL, 0, 100, volume.get())
+    .bindValue(volume)
+    .onValueChanged(v -> System.out.println("New volume: " + v));
 
-TextField tf = TextField.create().setPlaceholder("Username");
-TextArea ta = TextArea.create().setPlaceholder("Tell us more…");
-window.addChildren(tf, ta);
-```
-
-Images and progress
-
-```
-import tytoo.weave.component.components.display.Image;
-import tytoo.weave.component.components.display.ProgressBar;
-import net.minecraft.util.Identifier;
-
-Image img = Image.of(Identifier.of("minecraft", "textures/item/apple.png"));
-ProgressBar pb = ProgressBar.create().setValue(0.7f);
-window.addChildren(img, pb);
+window.addChildren(toggle, featurePanel, volumeSlider);
 ```
 
 ---
 
-**Next Step:** [Effects, Animations & Easings](https://github.com/trethore/Weave/blob/main/docs/animations-effects.md)
+**Next Step → [Effects, Animations & Easings](animations-effects.md)**

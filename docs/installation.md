@@ -1,15 +1,26 @@
 # Installation & Setup
 
-Weave targets Fabric for Minecraft 1.21.4 with Yarn 1.21.4+build.8. Use Fabric Loom and add Weave from GitHub Packages (Maven).
+You can install Weave like any other Fabric mod library: add the GitHub Packages Maven repo, declare the dependency, and initialize Weave in your client initializer.
 
-What you’ll do here
-- Point Gradle at the Weave package registry on GitHub Packages, add the dependency, and call `WeaveCore.init()` from your client initializer. If you’ve never used GitHub Packages for Maven, note that it requires a Personal Access Token with the `read:packages` scope and credentials configured for Gradle.
+---
 
-1) Add the GitHub Packages repository
+## What you’ll do
 
-Add to your `repositories` (either the root `build.gradle` of your mod or via `settings.gradle` if you centralize repos):
+1. Configure Gradle to resolve Weave from GitHub Packages.
+2. Add the dependency to your mod’s build.
+3. Call `WeaveCore.init()` from your client initializer.
+4. Run in dev and verify.
 
-```
+> Note  
+> Using GitHub Packages requires a Personal Access Token (PAT) with the `read:packages` scope. Gradle must be configured with these credentials.
+
+---
+
+## 1) Add the GitHub Packages repository
+
+In your `repositories` block (either in the root `build.gradle` of your mod or in `settings.gradle` if you centralize repos):
+
+```gradle
 repositories {
     maven {
         url = uri("https://maven.pkg.github.com/trethore/Weave")
@@ -19,7 +30,7 @@ repositories {
         }
     }
 }
-```
+````
 
 Recommended credential placement in `~/.gradle/gradle.properties`:
 
@@ -28,13 +39,15 @@ gpr.user=YOUR_GITHUB_USERNAME
 gpr.key=YOUR_PERSONAL_ACCESS_TOKEN
 ```
 
-Your token must have the `read:packages` scope.
+Your token must have the **read\:packages** scope.
 
-2) Add the dependency
+---
 
-In your mod’s Gradle `dependencies` (Fabric loader and Fabric API as usual):
+## 2) Add the dependency
 
-```
+In your mod’s Gradle `dependencies` (alongside Fabric loader and Fabric API):
+
+```gradle
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:${loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
@@ -44,13 +57,16 @@ dependencies {
 }
 ```
 
-Replace the version with the desired release tag.
+Replace the version string with the release tag you want.
 
-3) Initialize Weave in your client initializer
+---
 
-Release artifacts do not include an entrypoint. Call `WeaveCore.init()` from your `ClientModInitializer`:
+## 3) Initialize Weave
 
-```
+Weave artifacts do not include an entrypoint.
+You must call `WeaveCore.init()` from your `ClientModInitializer`:
+
+```java
 import net.fabricmc.api.ClientModInitializer;
 import tytoo.weave.WeaveCore;
 
@@ -62,24 +78,37 @@ public final class MyModClient implements ClientModInitializer {
 }
 ```
 
-4) Run in dev
+---
 
-```
+## 4) Run in development
+
+```bash
 ./gradlew runClient
 ```
 
-In-game dev commands
-- `/weave testgui` → open demo screen
-- `/weave reloadtheme` → reload the default theme
+In-game dev commands:
 
-Note
-- First runs download Minecraft, mappings, and dependencies — allow extra time.
-- Ensure Java 21.
-
-Troubleshooting
-- 401 Unauthorized from the Maven repo usually means your token is missing the `read:packages` scope or Gradle is not picking up `gpr.user`/`gpr.key`. Verify with `gradle.properties` in your user home.
-- If IDE sync fails after adding Weave, try `./gradlew --refresh-dependencies` and reimport the Gradle project.
+* `/weave testgui` → open the demo screen.
+* `/weave reloadtheme` → reload the default theme.
 
 ---
 
-**Next Step:** [Creating a WeaveScreen](https://github.com/trethore/Weave/blob/main/docs/weave-screen.md)
+## Troubleshooting
+
+* **401 Unauthorized** when resolving the Maven repo:
+
+    * Your token may be missing the `read:packages` scope.
+    * Gradle may not be picking up `gpr.user` and `gpr.key`. Verify with `gradle.properties`.
+
+* **IDE sync fails after adding Weave:**
+  Run:
+
+  ```bash
+  ./gradlew --refresh-dependencies
+  ```
+
+  then reimport your Gradle project.
+
+---
+
+**Next Step → [Creating a WeaveScreen](weave-screen.md)**
