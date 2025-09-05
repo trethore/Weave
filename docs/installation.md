@@ -57,7 +57,8 @@ dependencies {
 }
 ```
 
-Replace the version string with the release tag you want.
+Replace the version string with the release tag you want. \
+See [GitHub Packages](https://github.com/trethore/Weave/packages/) for the latest versions.
 
 ---
 
