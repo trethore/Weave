@@ -17,6 +17,7 @@ import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
+import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.McUtils;
 
@@ -38,6 +39,7 @@ public class UIManager {
         Optional<UIState> stateOpt = getState(screen);
         if (stateOpt.isEmpty()) return false;
         setFocusedComponent(stateOpt.get(), component);
+        TooltipManager.onFocusChanged(screen, component);
         return true;
     }
 
@@ -48,6 +50,7 @@ public class UIManager {
     public static void clearFocus(Screen screen) {
         Optional<UIState> stateOpt = getState(screen);
         stateOpt.ifPresent(state -> setFocusedComponent(state, null));
+        TooltipManager.onFocusChanged(screen, null);
     }
 
     public static void onRender(Screen screen, DrawContext context) {
@@ -71,6 +74,7 @@ public class UIManager {
 
             Animator.getInstance().update();
             root.draw(context);
+            TooltipManager.onRender(screen, context);
         });
     }
 
@@ -84,6 +88,7 @@ public class UIManager {
 
     public static void onMouseMoved(Screen screen, double mouseX, double mouseY) {
         updateHoveredComponent(screen, mouseX, mouseY);
+        TooltipManager.onMouseMoved(screen, mouseX, mouseY);
     }
 
     public static boolean onMouseClicked(Screen screen, double mouseX, double mouseY, int button) {
@@ -106,9 +111,11 @@ public class UIManager {
                 state.setActiveComponent(interactiveComponent);
             }
             setFocusedComponent(state, interactiveComponent);
+            TooltipManager.onFocusChanged(screen, interactiveComponent);
             return true;
         } else {
             setFocusedComponent(state, null);
+            TooltipManager.onFocusChanged(screen, null);
             return false;
         }
     }
@@ -176,6 +183,7 @@ public class UIManager {
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             handleEscape(stateOpt.get());
+            TooltipManager.onFocusChanged(screen, null);
             return false;
         }
 
@@ -207,6 +215,7 @@ public class UIManager {
             }
         }
 
+        if (TooltipManager.onKeyPressed(screen, keyCode, modifiers)) return true;
         return ShortcutRegistry.dispatch(screen, stateOpt.get(), keyCode, modifiers);
     }
 
@@ -234,6 +243,7 @@ public class UIManager {
                 if (newHovered != null) {
                     bubbleEvent(newHovered, new MouseEnterEvent(newHovered, (float) mouseX, (float) mouseY), Component::fireEvent);
                 }
+                TooltipManager.onHoverChanged(screen, newHovered);
             }
         });
     }
@@ -357,6 +367,7 @@ public class UIManager {
         }
 
         setFocusedComponent(state, order.get(nextIndex));
+        TooltipManager.onFocusChanged(screen, order.get(nextIndex));
         return true;
     }
 
@@ -482,6 +493,7 @@ public class UIManager {
             }
             CursorManager.setCursor(CursorType.ARROW);
         }
+        TooltipManager.onClose(screen);
     }
 
     public static void invalidateAllStyles() {

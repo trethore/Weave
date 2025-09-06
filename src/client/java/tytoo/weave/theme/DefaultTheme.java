@@ -15,6 +15,7 @@ import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.style.value.StyleVariable;
 import tytoo.weave.style.value.Var;
 import tytoo.weave.ui.CursorType;
+import tytoo.weave.ui.tooltip.TooltipView;
 import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
@@ -282,6 +283,21 @@ public class DefaultTheme implements Theme {
                 Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(60, 60, 60))),
                 Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80))),
                 Map.entry(ComponentStyle.StyleProps.SELECTED_RENDERER, new SolidColorRenderer(new Color(100, 100, 100)))
+        )));
+
+        // --- Tooltip ---
+        s = new StyleSelector(TooltipView.class, null, null, null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(25, 25, 25, 235))),
+                Map.entry(LayoutStyleProperties.PADDING, new EdgeInsets(6f, 8f)),
+                Map.entry(LayoutStyleProperties.BORDER_RADIUS, 0f),
+                Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1f),
+                Map.entry(LayoutStyleProperties.BORDER_COLOR, new Color(80, 80, 80, 220))
+        )));
+
+        s = new StyleSelector(TextComponent.class, null, null, null, TooltipView.class, false);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(TextComponent.StyleProps.TEXT_COLOR, Color.WHITE)
         )));
     }
 

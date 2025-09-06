@@ -44,6 +44,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private int lastLast = -1;
     private float lastScrollY = Float.NaN;
     private float lastViewportH = Float.NaN;
+
     public ListView() {
         this.scrollPanel = new ScrollPanel();
         this.scrollPanel.setVerticalScrollbar(true);

@@ -35,6 +35,9 @@ import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
+import tytoo.weave.ui.tooltip.TooltipManager;
+import tytoo.weave.ui.tooltip.TooltipManager.TooltipAttachment;
+import tytoo.weave.ui.tooltip.TooltipOptions;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -77,6 +80,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private Float animatedOverlayBorderWidth;
     private Float animatedOverlayBorderRadius;
     private EdgeInsets animatedPadding;
+    @Nullable
+    private TooltipAttachment tooltipAttachment;
 
     public Component() {
         this.layoutState = new LayoutState(this);
@@ -460,6 +465,25 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public List<StyleRule> getLocalStyleRules() {
         return Collections.unmodifiableList(this.localStyleRules);
+    }
+
+    @Nullable
+    public TooltipAttachment getTooltipAttachment() {
+        return tooltipAttachment;
+    }
+
+    public void setTooltipAttachment(@Nullable TooltipAttachment attachment) {
+        this.tooltipAttachment = attachment;
+    }
+
+    public T setTooltip(net.minecraft.text.Text text, TooltipOptions options) {
+        TooltipManager.attach(this, text, options);
+        return self();
+    }
+
+    public T setTooltip(Component<?> content, TooltipOptions options) {
+        TooltipManager.attach(this, content, options);
+        return self();
     }
 
     public T addLocalStyleRule(StyleRule rule) {

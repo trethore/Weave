@@ -16,6 +16,7 @@ import tytoo.weave.state.ObservableList;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.selector.StyleSelector;
+import tytoo.weave.ui.tooltip.TooltipOptions;
 
 import java.awt.*;
 import java.util.List;
@@ -57,6 +58,8 @@ public class TestGui extends WeaveScreen {
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.START, 10));
 
         TextField textField = TextField.create().setPlaceholder("Type here...");
+        textField.setTooltip(Text.literal("This is a text field.\nIt supports typing, selection, and clipboard."),
+                new TooltipOptions().setDelayMs(250).setMaxWidth(220f).setFollowMouse(true));
         TextArea textArea = TextArea.create().setPlaceholder("Multiline input...\nUse arrows, Home/End, PageUp/Down.\nPaste long text to test.");
         textArea.setHeight(Constraints.pixels(100));
 

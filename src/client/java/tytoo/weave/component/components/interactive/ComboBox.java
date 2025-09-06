@@ -381,7 +381,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             top += rowH;
             top += gap;
         }
-        // Align selected to the top by default, clamped.
+
         float desired = -top;
         if (desired > 0) desired = 0;
         if (desired < maxScroll) desired = maxScroll;
