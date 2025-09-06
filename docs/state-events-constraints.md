@@ -67,6 +67,8 @@ You can attach listeners using the convenient `on...()` methods on any component
 - **Keyboard:** `onKeyPress`, `onCharTyped` (requires the component to be focused)
 - **Focus:** `onFocusGained`, `onFocusLost`
 
+For end-to-end focus and keyboard traversal behavior (Tab, Enter/Space, Esc, sliders, radios), see [Focus & Keyboard Navigation](focus-keyboard-navigation.md).
+
 ```java
 Button myButton = Button.of("Submit");
 

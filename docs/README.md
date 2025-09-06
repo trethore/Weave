@@ -26,6 +26,12 @@ Weave currently only supports the version 1.21.4 of Minecraft (with Fabric API).
 - [Styles & Themes](styles-themes.md)
 - [Extensibility (add your own)](extensibility.md)
 - [State, Events & Constraints](state-events-constraints.md)
+- [Focus & Keyboard Navigation](focus-keyboard-navigation.md)
+- [Tooltips](tooltip.md)
+- [Popups & Modals](popups-modals.md)
+- [Virtualized ListView](virtualized-list.md)
+- [Global Shortcuts](global-shortcuts.md)
+- [ImageManager & Cleanup](image-manager.md)
 - [Recipes](recipes.md)
 
 ---

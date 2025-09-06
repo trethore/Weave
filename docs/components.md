@@ -78,6 +78,7 @@ These components respond to user input.
 - **`ComboBox`:** A dropdown menu for selections.
 - **`Slider`:** A draggable slider for selecting a numeric value.
 - **`TextField` / `TextArea`:** Single-line and multi-line text input fields.
+- **`ListView<T>`:** A virtualized list that efficiently renders very large datasets. See [Virtualized ListView](virtualized-list.md).
 
 ## Layout Systems
 
