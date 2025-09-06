@@ -3,8 +3,8 @@ package tytoo.weave.screen.screens;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
-import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.ListView;
+import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -12,6 +12,7 @@ import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.GradientOutlineEffect;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
+import tytoo.weave.state.ObservableList;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.selector.StyleSelector;
@@ -20,7 +21,6 @@ import java.awt.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import tytoo.weave.state.ObservableList;
 
 public class TestGui extends WeaveScreen {
     public TestGui() {

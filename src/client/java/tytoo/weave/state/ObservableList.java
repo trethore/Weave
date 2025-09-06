@@ -6,19 +6,6 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 
 public class ObservableList<T> implements List<T> {
-    public interface ChangeListener<T> {
-        void onChanged(Change<T> change);
-    }
-
-    public record Change<T>(Type type, int fromIndex, int toIndex, List<T> added, List<T> removed) {
-        public enum Type { ADD, REMOVE, SET, CLEAR, ADD_ALL, REMOVE_RANGE }
-
-        public Change {
-            added = added == null ? List.of() : List.copyOf(added);
-            removed = removed == null ? List.of() : List.copyOf(removed);
-        }
-    }
-
     private final List<T> delegate = new ArrayList<>();
     private final List<ChangeListener<T>> listeners = new ArrayList<>();
 
@@ -35,22 +22,34 @@ public class ObservableList<T> implements List<T> {
     }
 
     @Override
-    public int size() { return delegate.size(); }
+    public int size() {
+        return delegate.size();
+    }
 
     @Override
-    public boolean isEmpty() { return delegate.isEmpty(); }
+    public boolean isEmpty() {
+        return delegate.isEmpty();
+    }
 
     @Override
-    public boolean contains(Object o) { return delegate.contains(o); }
+    public boolean contains(Object o) {
+        return delegate.contains(o);
+    }
 
     @Override
-    public @NotNull Iterator<T> iterator() { return Collections.unmodifiableList(delegate).iterator(); }
+    public @NotNull Iterator<T> iterator() {
+        return Collections.unmodifiableList(delegate).iterator();
+    }
 
     @Override
-    public @NotNull Object[] toArray() { return delegate.toArray(); }
+    public @NotNull Object[] toArray() {
+        return delegate.toArray();
+    }
 
     @Override
-    public <U> @NotNull U[] toArray(@NotNull U[] a) { return delegate.toArray(a); }
+    public <U> @NotNull U[] toArray(@NotNull U[] a) {
+        return delegate.toArray(a);
+    }
 
     @Override
     public boolean add(T t) {
@@ -118,7 +117,8 @@ public class ObservableList<T> implements List<T> {
                 removed.add(t);
             }
         }
-        if (!removed.isEmpty()) notifyListeners(new Change<>(Change.Type.REMOVE_RANGE, 0, delegate.size(), List.of(), removed));
+        if (!removed.isEmpty())
+            notifyListeners(new Change<>(Change.Type.REMOVE_RANGE, 0, delegate.size(), List.of(), removed));
         return !removed.isEmpty();
     }
 
@@ -133,7 +133,8 @@ public class ObservableList<T> implements List<T> {
                 removed.add(t);
             }
         }
-        if (!removed.isEmpty()) notifyListeners(new Change<>(Change.Type.REMOVE_RANGE, 0, delegate.size(), List.of(), removed));
+        if (!removed.isEmpty())
+            notifyListeners(new Change<>(Change.Type.REMOVE_RANGE, 0, delegate.size(), List.of(), removed));
         return !removed.isEmpty();
     }
 
@@ -159,7 +160,9 @@ public class ObservableList<T> implements List<T> {
     }
 
     @Override
-    public T get(int index) { return delegate.get(index); }
+    public T get(int index) {
+        return delegate.get(index);
+    }
 
     @Override
     public T set(int index, T element) {
@@ -182,17 +185,40 @@ public class ObservableList<T> implements List<T> {
     }
 
     @Override
-    public int indexOf(Object o) { return delegate.indexOf(o); }
+    public int indexOf(Object o) {
+        return delegate.indexOf(o);
+    }
 
     @Override
-    public int lastIndexOf(Object o) { return delegate.lastIndexOf(o); }
+    public int lastIndexOf(Object o) {
+        return delegate.lastIndexOf(o);
+    }
 
     @Override
-    public @NotNull ListIterator<T> listIterator() { return Collections.unmodifiableList(delegate).listIterator(); }
+    public @NotNull ListIterator<T> listIterator() {
+        return Collections.unmodifiableList(delegate).listIterator();
+    }
 
     @Override
-    public @NotNull ListIterator<T> listIterator(int index) { return Collections.unmodifiableList(delegate).listIterator(index); }
+    public @NotNull ListIterator<T> listIterator(int index) {
+        return Collections.unmodifiableList(delegate).listIterator(index);
+    }
 
     @Override
-    public @NotNull List<T> subList(int fromIndex, int toIndex) { return Collections.unmodifiableList(delegate.subList(fromIndex, toIndex)); }
+    public @NotNull List<T> subList(int fromIndex, int toIndex) {
+        return Collections.unmodifiableList(delegate.subList(fromIndex, toIndex));
+    }
+
+    public interface ChangeListener<T> {
+        void onChanged(Change<T> change);
+    }
+
+    public record Change<T>(Type type, int fromIndex, int toIndex, List<T> added, List<T> removed) {
+        public Change {
+            added = added == null ? List.of() : List.copyOf(added);
+            removed = removed == null ? List.of() : List.copyOf(removed);
+        }
+
+        public enum Type {ADD, REMOVE, SET, CLEAR, ADD_ALL, REMOVE_RANGE}
+    }
 }

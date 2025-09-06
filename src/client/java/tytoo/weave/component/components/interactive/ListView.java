@@ -19,40 +19,31 @@ import java.util.*;
 import java.util.function.Function;
 
 public class ListView<T> extends BasePanel<ListView<T>> {
-    public enum HeightMode { FIXED, MEASURE_ONCE }
-    public enum SelectionMode { SINGLE, MULTIPLE }
-
     private final ScrollPanel scrollPanel;
     private final Panel contentPanel;
     private final Map<Integer, ItemHolder> active = new HashMap<>();
     private final Deque<ItemHolder> pool = new ArrayDeque<>();
-
+    private final List<Runnable> stateUnbind = new ArrayList<>();
+    private final Set<Integer> selectedIndices = new LinkedHashSet<>();
     @Nullable
     private ObservableList<T> observableItems = null;
     @Nullable
     private State<List<T>> itemsState = null;
-    private final ObservableList.ChangeListener<T> changeListener = c -> invalidateAll();
-    private final List<Runnable> stateUnbind = new ArrayList<>();
-
     private Function<T, Component<?>> itemFactory = item -> SimpleTextComponent.of(String.valueOf(item));
     private HeightMode heightMode = HeightMode.MEASURE_ONCE;
     private float fixedItemHeight = 20f;
     private float measuredItemHeight = -1f;
     private float gap = 2f;
-
+    private final ObservableList.ChangeListener<T> changeListener = c -> invalidateAll();
     private SelectionMode selectionMode = SelectionMode.SINGLE;
-    private final Set<Integer> selectedIndices = new LinkedHashSet<>();
     private int focusedIndex = -1;
     private int anchorIndex = -1;
     @Nullable
     private java.util.function.Consumer<Set<Integer>> selectionListener = null;
-
     private int lastFirst = -1;
     private int lastLast = -1;
     private float lastScrollY = Float.NaN;
     private float lastViewportH = Float.NaN;
-    
-
     public ListView() {
         this.scrollPanel = new ScrollPanel();
         this.scrollPanel.setVerticalScrollbar(true);
@@ -69,7 +60,9 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         this.onEvent(KeyPressEvent.TYPE, this::handleKey);
     }
 
-    public static <T> ListView<T> create() { return new ListView<>(); }
+    public static <T> ListView<T> create() {
+        return new ListView<>();
+    }
 
     public ListView<T> setItems(ObservableList<T> items) {
         clearItemsBinding();
@@ -253,7 +246,9 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             contentPanel.addChild(holder.container);
 
             final ItemHolder bound = holder;
-            holder.container.onMouseRelease(e -> { if (e.getButton() == 0) handleClick(bound.index); });
+            holder.container.onMouseRelease(e -> {
+                if (e.getButton() == 0) handleClick(bound.index);
+            });
         }
 
         holder.index = index;
@@ -295,7 +290,8 @@ public class ListView<T> extends BasePanel<ListView<T>> {
                 for (int i = a; i <= b; i++) selectedIndices.add(i);
                 focusedIndex = index;
             } else if (ctrl) {
-                if (selectedIndices.contains(index)) selectedIndices.remove(index); else selectedIndices.add(index);
+                if (selectedIndices.contains(index)) selectedIndices.remove(index);
+                else selectedIndices.add(index);
                 focusedIndex = index;
                 anchorIndex = index;
             } else {
@@ -317,7 +313,9 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             case GLFW.GLFW_KEY_END -> setFocusToEdge(false);
             case GLFW.GLFW_KEY_PAGE_UP -> pageMove(-1);
             case GLFW.GLFW_KEY_PAGE_DOWN -> pageMove(1);
-            default -> { return; }
+            default -> {
+                return;
+            }
         }
         event.cancel();
     }
@@ -393,6 +391,10 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private void notifySelectionChanged() {
         if (selectionListener != null) selectionListener.accept(Set.copyOf(selectedIndices));
     }
+
+    public enum HeightMode {FIXED, MEASURE_ONCE}
+
+    public enum SelectionMode {SINGLE, MULTIPLE}
 
     private static final class ItemHolder {
         int index;

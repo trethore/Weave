@@ -16,6 +16,7 @@ import tytoo.weave.event.mouse.*;
 import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.McUtils;
 
@@ -165,7 +166,9 @@ public class UIManager {
             return moveFocus(screen, backwards);
         }
 
-        if (focused == null) return false;
+        if (focused == null) {
+            return ShortcutRegistry.dispatch(screen, stateOpt.get(), keyCode, modifiers);
+        }
 
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
             return defaultActivate(focused);
@@ -204,7 +207,7 @@ public class UIManager {
             }
         }
 
-        return false;
+        return ShortcutRegistry.dispatch(screen, stateOpt.get(), keyCode, modifiers);
     }
 
     public static boolean onCharTyped(Screen screen, char chr, int modifiers) {

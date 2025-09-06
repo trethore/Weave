@@ -15,6 +15,7 @@ import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
@@ -69,6 +70,35 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.onFocusLost(e -> this.consecutiveClicks = 0);
 
         updateVisualState(0L);
+
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Z), ctx -> {
+            undo();
+            return true;
+        }));
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Y), ctx -> {
+            redo();
+            return true;
+        }));
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_A), ctx -> {
+            setSelectionAnchor(0);
+            setCursorPos(getText().length(), true);
+            setLastActionTime(System.currentTimeMillis());
+            ensureCursorVisible();
+            return true;
+        }));
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_C), ctx -> {
+            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
+            return true;
+        }));
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_V), ctx -> {
+            this.write(MinecraftClient.getInstance().keyboard.getClipboard());
+            return true;
+        }));
+        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_X), ctx -> {
+            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
+            this.write("");
+            return true;
+        }));
     }
 
     @Override
@@ -91,9 +121,6 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     protected boolean handleKeyboardInput(KeyPressEvent event) {
-        if (handleUndoRedo()) return true;
-        if (handleClipboard()) return true;
-        if (handleSelection()) return true;
         if (handleDeletion(event)) return true;
         if (event.getKeyCode() == GLFW.GLFW_KEY_TAB && !InputHelper.isShiftDown()) {
             return true;
