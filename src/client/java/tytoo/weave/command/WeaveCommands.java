@@ -12,8 +12,8 @@ public final class WeaveCommands {
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         LiteralArgumentBuilder<FabricClientCommandSource> root = ClientCommandManager.literal("weave")
                 .then(TestGuiCommand.build())
+                .then(DemoCommand.build())
                 .then(ReloadThemeCommand.build());
         dispatcher.register(root);
     }
 }
-

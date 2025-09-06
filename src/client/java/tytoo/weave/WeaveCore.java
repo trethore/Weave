@@ -27,18 +27,22 @@ public final class WeaveCore {
      */
 
     public static void init() {
-        registerDebugCommands();
+        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            registerDevCommands();
+        }
+
         registerCloseEvent();
 
         WeaveCore.LOGGER.info("Weave initialized!");
     }
 
     /**
-     * Registers debug commands if the environment is a development environment.
-     * /weave testgui
+     * Registers test commands.
+     * /weave testgui (not in published artifacts)
+     * /weave demo.
      * /weave reloadtheme
      */
-    private static void registerDebugCommands() {
+    private static void registerDevCommands() {
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> WeaveCommands.register(dispatcher));
         }

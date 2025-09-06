@@ -52,6 +52,13 @@ processResources {
     }
 }
 
+tasks.named("processClientResources") {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
 }
@@ -101,7 +108,9 @@ tasks.register("releaseResources", Copy) {
 
 tasks.register("releaseJar", Jar) {
     from(sourceSets.client.output.classesDirs) {
-        exclude("trethore/weave/WeaveClient.class")
+        exclude("tytoo/weave/WeaveClient.class")
+        exclude("tytoo/weave/screen/screens/TestGui.class")
+        exclude("tytoo/weave/command/TestGuiCommand.class")
     }
 
     from(releaseResourcesDir)
