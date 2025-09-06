@@ -44,6 +44,8 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private int lastLast = -1;
     private float lastScrollY = Float.NaN;
     private float lastViewportH = Float.NaN;
+    private long lastArrowKeyTimeNs = 0L;
+    private int arrowKeyStreak = 0;
 
     public ListView() {
         this.scrollPanel = new ScrollPanel();
@@ -308,8 +310,14 @@ public class ListView<T> extends BasePanel<ListView<T>> {
 
     private void handleKey(KeyPressEvent event) {
         switch (event.getKeyCode()) {
-            case GLFW.GLFW_KEY_UP -> moveFocus(-1);
-            case GLFW.GLFW_KEY_DOWN -> moveFocus(1);
+            case GLFW.GLFW_KEY_UP -> {
+                int steps = computeArrowSteps();
+                moveFocus(-steps);
+            }
+            case GLFW.GLFW_KEY_DOWN -> {
+                int steps = computeArrowSteps();
+                moveFocus(steps);
+            }
             case GLFW.GLFW_KEY_HOME -> setFocusToEdge(true);
             case GLFW.GLFW_KEY_END -> setFocusToEdge(false);
             case GLFW.GLFW_KEY_PAGE_UP -> pageMove(-1);
@@ -324,7 +332,10 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private void moveFocus(int delta) {
         int count = snapshotItems().size();
         if (count == 0) return;
-        if (focusedIndex < 0) focusedIndex = 0;
+        if (focusedIndex < 0) {
+            int visibleStart = getFirstVisibleIndex();
+            focusedIndex = visibleStart >= 0 ? visibleStart : 0;
+        }
         focusedIndex = Math.max(0, Math.min(count - 1, focusedIndex + delta));
         if (selectionMode == SelectionMode.SINGLE || !InputHelper.isControlDown()) {
             if (!InputHelper.isShiftDown()) {
@@ -378,6 +389,33 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             float newStart = itemBottom - this.getInnerHeight();
             scrollPanel.setScrollY(-newStart);
         }
+    }
+
+    private int getFirstVisibleIndex() {
+        List<T> items = snapshotItems();
+        if (items.isEmpty()) return -1;
+        float itemH = getItemHeightForLayout();
+        float stride = itemH + gap;
+        float viewportStart = -scrollPanel.getScrollY();
+        int first = (int) Math.floor(viewportStart / Math.max(1f, stride));
+        return Math.max(0, Math.min(items.size() - 1, first));
+    }
+
+    private int computeArrowSteps() {
+        long now = System.nanoTime();
+        long deltaNs = now - lastArrowKeyTimeNs;
+        // If the last arrow key was pressed recently, ramp up speed
+        if (deltaNs <= 300_000_000L) { // 300ms window
+            if (arrowKeyStreak < 30) arrowKeyStreak++;
+        } else {
+            arrowKeyStreak = 0;
+        }
+        lastArrowKeyTimeNs = now;
+
+        int tier = arrowKeyStreak / 3; // every 3 quick presses increases tier
+        if (tier <= 0) return 1;
+        int steps = 1 << Math.min(tier, 6); // cap at 2^6 = 64
+        return Math.max(1, steps);
     }
 
     private void refreshSelectionStates() {

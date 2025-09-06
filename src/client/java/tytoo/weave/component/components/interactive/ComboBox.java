@@ -184,6 +184,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             label.setHittable(false);
             optionButton.addChild(label);
 
+            optionButton.onFocusGained(ev -> {
+                int idx = getDropdownOptionButtons().indexOf(optionButton);
+                if (idx >= 0) updateDropdownHoverIndex(idx, false);
+            });
+
             scrollPanel.addChild(optionButton);
         }
 
@@ -210,6 +215,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             label.setHittable(false);
             optionButton.addChild(label);
 
+            optionButton.onFocusGained(ev -> {
+                int idx = getDropdownOptionButtons().indexOf(optionButton);
+                if (idx >= 0) updateDropdownHoverIndex(idx, false);
+            });
+
             scrollPanel.addChild(optionButton);
         }
 
@@ -225,7 +235,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         // Open popup anchored to this combobox
         Anchor anchor = new Anchor(this, Anchor.Side.BOTTOM, Anchor.Align.START, 0f, 0f, 0f);
         PopupOptions opts = new PopupOptions()
-                .setGap(0f)
+                .setGap(1f)
                 .setTrapFocus(true)
                 .setCloseOnFocusLoss(true)
                 .setCloseOnEsc(true);
@@ -332,12 +342,21 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             gap = ll.getGap();
         }
 
-        TextRenderer tr = getEffectiveTextRenderer();
+        // Use measured heights to match actual layout precisely
         float top = 0f;
         for (int i = 0; i < index; i++) {
             Button b = buttons.get(i);
-            float padding = ThemeManager.getStylesheet().get(b, Button.StyleProps.PADDING, 5f);
-            float rowH = (tr.fontHeight + 1) + padding * 2f;
+            float rowH = b.getMeasuredHeight();
+            if (rowH <= 0) {
+                // Fallback to final height if not measured yet
+                rowH = b.getFinalHeight();
+            }
+            if (rowH <= 0) {
+                // Last resort: approximate from style padding and font height
+                TextRenderer tr = getEffectiveTextRenderer();
+                float padding = ThemeManager.getStylesheet().get(b, Button.StyleProps.PADDING, 5f);
+                rowH = (tr.fontHeight + 1) + padding * 2f;
+            }
             top += rowH;
             top += gap;
         }
@@ -349,11 +368,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     }
 
     private void setInitialDropdownHoverAndFocus(int initialIndex) {
-        Optional<Screen> screenOpt = McUtils.getMc().map(mc -> mc.currentScreen);
-        if (screenOpt.isPresent() && this.dropdownContent != null) {
-            UIManager.requestFocus(screenOpt.get(), this.dropdownContent);
-        }
-
         List<Button> buttons = getDropdownOptionButtons();
         if (buttons.isEmpty()) {
             this.dropdownHoverIndex = -1;
@@ -361,6 +375,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         }
         int selectedIndex = Math.max(0, initialIndex);
         updateDropdownHoverIndex(selectedIndex, false);
+
+        // Keep initial focus on dropdown content; Tab can move to options
     }
 
     private void attachDropdownKeyNavigation() {
@@ -378,6 +394,12 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 return;
             }
             if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER || key == GLFW.GLFW_KEY_SPACE) {
+                Optional<UIState> st = McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState);
+                Component<?> focused = st.map(UIState::getFocusedComponent).orElse(null);
+                if (focused instanceof Button && getDropdownOptionButtons().contains(focused)) {
+                    // Let default activation handle Button press
+                    return;
+                }
                 activateHoveredOption();
                 e.cancel();
                 return;
@@ -398,7 +420,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         List<Button> buttons = getDropdownOptionButtons();
         if (buttons.isEmpty()) return;
         int count = buttons.size();
-        int current = Math.max(0, this.dropdownHoverIndex);
+        int current = this.dropdownHoverIndex >= 0 ? this.dropdownHoverIndex : Math.max(0, computeSelectedIndexForDropdown());
         int next = (current + delta) % count;
         if (next < 0) next += count;
         updateDropdownHoverIndex(next, true);
@@ -426,6 +448,29 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         if (ensureVisible && this.dropdownScrollPanel != null) {
             Button target = buttons.get(newIndex);
             ensureOptionVisible(this.dropdownScrollPanel, target);
+        }
+
+        // If focus is inside the dropdown, move it to the hovered option to keep Enter/Space consistent
+        if (this.dropdownContent != null) {
+            Optional<Screen> screenOpt = McUtils.getMc().map(mc -> mc.currentScreen);
+            Optional<UIState> stateOpt = screenOpt.flatMap(UIManager::getState);
+            if (stateOpt.isPresent()) {
+                Component<?> focused = stateOpt.get().getFocusedComponent();
+                boolean focusInsideDropdown = false;
+                for (Component<?> cur = focused; cur != null; cur = cur.getParent()) {
+                    if (cur == this.dropdownContent) {
+                        focusInsideDropdown = true;
+                        break;
+                    }
+                }
+                if (focusInsideDropdown) {
+                    List<Button> btns = getDropdownOptionButtons();
+                    if (newIndex >= 0 && newIndex < btns.size()) {
+                        Button target = btns.get(newIndex);
+                        screenOpt.ifPresent(screen -> UIManager.requestFocus(screen, target));
+                    }
+                }
+            }
         }
     }
 
@@ -463,6 +508,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
         if (this.includePlaceholderOption && idx == 0) {
             setValue(null);
+            updateSelectedLabel();
             closeDropdown(true);
             return;
         }
@@ -471,6 +517,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         int optionIndex = idx - offset;
         if (optionIndex >= 0 && optionIndex < this.options.size()) {
             setValue(this.options.get(optionIndex).value());
+            updateSelectedLabel();
             closeDropdown(true);
         }
     }
