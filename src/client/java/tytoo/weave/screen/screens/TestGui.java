@@ -54,13 +54,9 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.START, 10));
 
-        TextField textField = TextField.create()
-                .setPlaceholder("TextField: double-click selects word; triple-click line");
-
-        TextArea textArea = TextArea.create()
-                .setPlaceholder(Text.of("TextArea: double-click word; triple-click line"))
-                .setHeight(Constraints.pixels(120));
-
+        TextField textField = TextField.create().setPlaceholder("Type here...");
+        TextArea textArea = TextArea.create().setPlaceholder("Multiline input...\nUse arrows, Home/End, PageUp/Down (if implemented).\nPaste long text to test.");
+        textArea.setHeight(Constraints.pixels(100));
         testPanel.addChildren(textField, textArea);
 
         window.addChildren(titlePanel, testPanel);

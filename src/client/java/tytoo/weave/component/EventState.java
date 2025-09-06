@@ -13,6 +13,7 @@ public class EventState {
     private final Map<EventType<?>, List<Consumer<?>>> eventListeners = new HashMap<>();
     private boolean focusable = false;
     private boolean hittable = true;
+    private int tabIndex = 0;
 
     public Map<EventType<?>, List<Consumer<?>>> getEventListeners() {
         return eventListeners;
@@ -32,6 +33,14 @@ public class EventState {
 
     public void setHittable(boolean hittable) {
         this.hittable = hittable;
+    }
+
+    public int getTabIndex() {
+        return tabIndex;
+    }
+
+    public void setTabIndex(int tabIndex) {
+        this.tabIndex = tabIndex;
     }
 
     @SuppressWarnings("unchecked")

@@ -95,6 +95,9 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         if (handleClipboard()) return true;
         if (handleSelection()) return true;
         if (handleDeletion(event)) return true;
+        if (event.getKeyCode() == GLFW.GLFW_KEY_TAB && !InputHelper.isShiftDown()) {
+            return true;
+        }
         return handleNavigation(event);
     }
 

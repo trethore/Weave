@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import tytoo.weave.command.WeaveCommands;
 import tytoo.weave.ui.CursorManager;
 import tytoo.weave.utils.FontManager;
+import tytoo.weave.utils.ImageManager;
 
 /*
  * Core class for initializing Weave.
@@ -51,6 +52,7 @@ public final class WeaveCore {
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             FontManager.closeAll();
             CursorManager.destroy();
+            ImageManager.clearCaches();
         });
     }
 }

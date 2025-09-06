@@ -3,8 +3,10 @@ package tytoo.weave.ui;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Animator;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;
@@ -14,10 +16,10 @@ import tytoo.weave.event.mouse.*;
 import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.McUtils;
 
-import java.util.Optional;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class UIManager {
@@ -31,8 +33,20 @@ public class UIManager {
         return Optional.ofNullable(screenStates.get(screen));
     }
 
+    public static boolean requestFocus(Screen screen, Component<?> component) {
+        Optional<UIState> stateOpt = getState(screen);
+        if (stateOpt.isEmpty()) return false;
+        setFocusedComponent(stateOpt.get(), component);
+        return true;
+    }
+
     public static void setRoot(Screen screen, Component<?> root) {
         getOrCreateState(screen).setRoot(root);
+    }
+
+    public static void clearFocus(Screen screen) {
+        Optional<UIState> stateOpt = getState(screen);
+        stateOpt.ifPresent(state -> setFocusedComponent(state, null));
     }
 
     public static void onRender(Screen screen, DrawContext context) {
@@ -138,10 +152,59 @@ public class UIManager {
 
     public static boolean onKeyPressed(Screen screen, int keyCode, int scanCode, int modifiers) {
         Optional<UIState> stateOpt = getState(screen);
-        if (stateOpt.isEmpty() || stateOpt.get().getFocusedComponent() == null) return false;
-        KeyPressEvent event = new KeyPressEvent(keyCode, scanCode, modifiers);
-        bubbleEvent(stateOpt.get().getFocusedComponent(), event, Component::fireEvent);
-        return event.isCancelled();
+        if (stateOpt.isEmpty()) return false;
+        Component<?> focused = stateOpt.get().getFocusedComponent();
+        if (focused != null) {
+            KeyPressEvent event = new KeyPressEvent(keyCode, scanCode, modifiers);
+            bubbleEvent(focused, event, Component::fireEvent);
+            if (event.isCancelled()) return true;
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_TAB) {
+            boolean backwards = InputHelper.isShiftDown();
+            return moveFocus(screen, backwards);
+        }
+
+        if (focused == null) return false;
+
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
+            return defaultActivate(focused);
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            handleEscape(stateOpt.get());
+            return false;
+        }
+
+        if (focused instanceof RadioButton<?> rb) {
+            if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_UP) {
+                return navigateRadio(rb, -1);
+            }
+            if (keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_DOWN) {
+                return navigateRadio(rb, 1);
+            }
+        }
+
+        if (focused instanceof Slider<?> slider) {
+            switch (keyCode) {
+                case GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_DOWN -> {
+                    return adjustSlider(slider, -1);
+                }
+                case GLFW.GLFW_KEY_RIGHT, GLFW.GLFW_KEY_UP -> {
+                    return adjustSlider(slider, 1);
+                }
+                case GLFW.GLFW_KEY_HOME -> {
+                    return setSliderToEdge(slider, true);
+                }
+                case GLFW.GLFW_KEY_END -> {
+                    return setSliderToEdge(slider, false);
+                }
+                default -> {
+                }
+            }
+        }
+
+        return false;
     }
 
     public static boolean onCharTyped(Screen screen, char chr, int modifiers) {
@@ -207,6 +270,197 @@ public class UIManager {
         if (component != null) {
             bubbleEvent(component, new FocusGainedEvent(), Component::fireEvent);
         }
+    }
+
+    @Nullable
+    private static UIState findStateFor(Component<?> component) {
+        if (component == null) return null;
+        for (UIState state : screenStates.values()) {
+            Component<?> root = state.getRoot();
+            if (root == null) continue;
+            for (Component<?> cur = component; cur != null; cur = cur.getParent()) {
+                if (cur == root) {
+                    return state;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Component<?> getFocusScopeRoot(Component<?> start, Component<?> fallbackRoot) {
+        Component<?> current = start;
+        Component<?> lastNonManaged = null;
+        while (current != null) {
+            if (!current.isManagedByLayout()) {
+                lastNonManaged = current;
+            }
+            current = current.getParent();
+        }
+        return lastNonManaged != null ? lastNonManaged : fallbackRoot;
+    }
+
+    private static boolean isDisabledOrHidden(Component<?> c) {
+        if (!c.isVisible()) return true;
+        for (Component<?> cur = c; cur != null; cur = cur.getParent()) {
+            if (cur.getActiveStyleStates().contains(StyleState.DISABLED)) return true;
+        }
+        return false;
+    }
+
+    private static void collectFocusable(Component<?> root, List<Component<?>> out) {
+        if (root.isFocusable() && !isDisabledOrHidden(root)) {
+            out.add(root);
+        }
+        for (Component<?> child : root.getChildren()) {
+            if (!child.isVisible()) continue;
+            collectFocusable(child, out);
+        }
+    }
+
+    private static List<Component<?>> resolveFocusOrder(Component<?> scopeRoot) {
+        List<Component<?>> all = new ArrayList<>();
+        collectFocusable(scopeRoot, all);
+        boolean hasPositive = false;
+        for (Component<?> c : all) {
+            if (c.getTabIndex() > 0) {
+                hasPositive = true;
+                break;
+            }
+        }
+        if (hasPositive) {
+            all.sort(Comparator.comparingInt(Component::getTabIndex));
+        }
+        return all;
+    }
+
+    private static boolean moveFocus(Screen screen, boolean backwards) {
+        Optional<UIState> stateOpt = getState(screen);
+        if (stateOpt.isEmpty()) return false;
+        UIState state = stateOpt.get();
+        Component<?> root = state.getRoot();
+        if (root == null) return false;
+
+        Component<?> focused = state.getFocusedComponent();
+        Component<?> scopeRoot = focused != null ? getFocusScopeRoot(focused, root) : root;
+        List<Component<?>> order = resolveFocusOrder(scopeRoot);
+        if (order.isEmpty()) return false;
+
+        int nextIndex;
+        if (focused == null || !order.contains(focused)) {
+            nextIndex = backwards ? order.size() - 1 : 0;
+        } else {
+            int idx = order.indexOf(focused);
+            nextIndex = (idx + (backwards ? -1 : 1) + order.size()) % order.size();
+        }
+
+        setFocusedComponent(state, order.get(nextIndex));
+        return true;
+    }
+
+    private static boolean defaultActivate(Component<?> focused) {
+        if (!(focused instanceof Button || focused instanceof CheckBox || focused instanceof RadioButton || focused instanceof ComboBox)) {
+            return false;
+        }
+        float x = focused.getLeft() + focused.getWidth() / 2.0f;
+        float y = focused.getTop() + focused.getHeight() / 2.0f;
+        MouseClickEvent down = new MouseClickEvent(focused, x, y, 0);
+        MouseReleaseEvent up = new MouseReleaseEvent(focused, x, y, 0);
+        bubbleEvent(focused, down, Component::fireEvent);
+        bubbleEvent(focused, up, Component::fireEvent);
+        return true;
+    }
+
+    private static boolean navigateRadio(RadioButton<?> rb, int direction) {
+        Component<?> parent = rb.getParent();
+        if (!(parent instanceof RadioButtonGroup<?> group)) return false;
+        List<Component<?>> children = group.getChildren();
+        int currentIndex = -1;
+        List<RadioButton<?>> radios = new ArrayList<>();
+        for (Component<?> c : children) {
+            if (c instanceof RadioButton<?> r) {
+                radios.add(r);
+            }
+        }
+        for (int i = 0; i < radios.size(); i++) {
+            if (radios.get(i) == rb) {
+                currentIndex = i;
+                break;
+            }
+        }
+        if (currentIndex == -1) return false;
+        int next = (currentIndex + direction + radios.size()) % radios.size();
+        RadioButton<?> target = radios.get(next);
+        UIState state = findStateFor(rb);
+        if (state != null) {
+            setFocusedComponent(state, target);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean adjustSlider(Slider<?> slider, int direction) {
+        Number cur = slider.getValue();
+        Number min = slider.getMin();
+        Number max = slider.getMax();
+        Number stepNum = slider.getStep();
+        double step = (stepNum != null ? stepNum.doubleValue() : Math.max(1e-6, (max.doubleValue() - min.doubleValue()) / 20.0));
+        double next = cur.doubleValue() + direction * step;
+        next = Math.max(min.doubleValue(), Math.min(max.doubleValue(), next));
+
+        switch (cur) {
+            case Integer ignored -> {
+                @SuppressWarnings("unchecked") Slider<Integer> s = (Slider<Integer>) slider;
+                s.setValue((int) Math.round(next));
+                return true;
+            }
+            case Float ignored -> {
+                @SuppressWarnings("unchecked") Slider<Float> s = (Slider<Float>) slider;
+                s.setValue((float) next);
+                return true;
+            }
+            case Double ignored -> {
+                @SuppressWarnings("unchecked") Slider<Double> s = (Slider<Double>) slider;
+                s.setValue(next);
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private static boolean setSliderToEdge(Slider<?> slider, boolean toMin) {
+        Number min = slider.getMin();
+        Number max = slider.getMax();
+        Number target = toMin ? min : max;
+        Number cur = slider.getValue();
+        switch (cur) {
+            case Integer ignored -> {
+                @SuppressWarnings("unchecked") Slider<Integer> s = (Slider<Integer>) slider;
+                s.setValue(target.intValue());
+                return true;
+            }
+            case Float ignored -> {
+                @SuppressWarnings("unchecked") Slider<Float> s = (Slider<Float>) slider;
+                s.setValue(target.floatValue());
+                return true;
+            }
+            case Double ignored -> {
+                @SuppressWarnings("unchecked") Slider<Double> s = (Slider<Double>) slider;
+                s.setValue(target.doubleValue());
+                return true;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
+    private static void handleEscape(UIState state) {
+        Component<?> focused = state.getFocusedComponent();
+        Component<?> root = state.getRoot();
+        if (focused == null || root == null) return;
+        setFocusedComponent(state, null);
     }
 
     private static <E extends Event> void bubbleEvent(Component<?> start, E event, BiConsumer<Component<?>, E> dispatcher) {

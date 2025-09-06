@@ -585,6 +585,15 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public int getTabIndex() {
+        return this.eventState.getTabIndex();
+    }
+
+    public T setTabIndex(int tabIndex) {
+        this.eventState.setTabIndex(tabIndex);
+        return self();
+    }
+
     public boolean isVisible() {
         return this.renderState.isVisible();
     }

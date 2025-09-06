@@ -157,4 +157,26 @@ public class ImageManager {
 
         return nativeImage;
     }
+
+    public static void clearCaches() {
+        if (PLACEHOLDER_ID != null) {
+            client.getTextureManager().destroyTexture(PLACEHOLDER_ID);
+            PLACEHOLDER_ID = null;
+        }
+
+        for (Identifier id : fileCache.values()) {
+            client.getTextureManager().destroyTexture(id);
+        }
+        fileCache.clear();
+
+        for (Identifier id : urlToIdentifier.values()) {
+            client.getTextureManager().destroyTexture(id);
+        }
+        urlToIdentifier.clear();
+
+        for (CompletableFuture<Identifier> future : urlOperations.values()) {
+            future.cancel(true);
+        }
+        urlOperations.clear();
+    }
 }

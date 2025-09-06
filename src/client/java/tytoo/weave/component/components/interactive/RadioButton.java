@@ -82,8 +82,16 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
 
         this.onMouseEnter(e -> this.background.addStyleState(StyleState.HOVERED));
         this.onMouseLeave(e -> this.background.removeStyleState(StyleState.HOVERED));
-        this.onFocusGained(e -> this.background.addStyleState(StyleState.FOCUSED));
-        this.onFocusLost(e -> this.background.removeStyleState(StyleState.FOCUSED));
+        this.onFocusGained(e -> {
+            this.addStyleState(StyleState.HOVERED);
+            this.background.addStyleState(StyleState.FOCUSED);
+            this.background.addStyleState(StyleState.HOVERED);
+        });
+        this.onFocusLost(e -> {
+            this.removeStyleState(StyleState.HOVERED);
+            this.background.removeStyleState(StyleState.FOCUSED);
+            this.background.removeStyleState(StyleState.HOVERED);
+        });
     }
 
     public static <V> RadioButton<V> of(V value, String labelText) {
