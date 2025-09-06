@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -476,7 +477,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         this.tooltipAttachment = attachment;
     }
 
-    public T setTooltip(net.minecraft.text.Text text, TooltipOptions options) {
+    public T setTooltip(Text text, TooltipOptions options) {
         TooltipManager.attach(this, text, options);
         return self();
     }

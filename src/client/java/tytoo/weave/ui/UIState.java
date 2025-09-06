@@ -5,8 +5,11 @@ import tytoo.weave.component.Component;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.ui.popup.PopupEntry;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UIState {
-    private final java.util.List<PopupEntry> popups = new java.util.ArrayList<>();
+    private final List<PopupEntry> popups = new ArrayList<>();
     @Nullable
     private Component<?> root;
     @Nullable
@@ -74,7 +77,7 @@ public class UIState {
         this.activeComponent = activeComponent;
     }
 
-    public java.util.List<PopupEntry> getPopups() {
+    public List<PopupEntry> getPopups() {
         return popups;
     }
 }

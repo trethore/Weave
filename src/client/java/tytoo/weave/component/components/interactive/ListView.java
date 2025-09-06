@@ -16,6 +16,7 @@ import tytoo.weave.style.StyleState;
 import tytoo.weave.utils.InputHelper;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ListView<T> extends BasePanel<ListView<T>> {
@@ -39,7 +40,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private int focusedIndex = -1;
     private int anchorIndex = -1;
     @Nullable
-    private java.util.function.Consumer<Set<Integer>> selectionListener = null;
+    private Consumer<Set<Integer>> selectionListener = null;
     private int lastFirst = -1;
     private int lastLast = -1;
     private float lastScrollY = Float.NaN;
@@ -79,7 +80,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     public ListView<T> bindItems(State<List<T>> itemsState) {
         clearItemsBinding();
         this.itemsState = itemsState;
-        java.util.function.Consumer<List<T>> listener = v -> invalidateAll();
+        Consumer<List<T>> listener = v -> invalidateAll();
         itemsState.addListener(listener);
         stateUnbind.add(() -> itemsState.removeListener(listener));
         invalidateAll();
@@ -119,12 +120,11 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             if (keep >= 0) selectedIndices.add(keep);
             notifySelectionChanged();
         }
-        // keep current multi-selection as-is
         refreshSelectionStates();
         return this;
     }
 
-    public ListView<T> onSelectionChanged(java.util.function.Consumer<Set<Integer>> listener) {
+    public ListView<T> onSelectionChanged(Consumer<Set<Integer>> listener) {
         this.selectionListener = listener;
         return this;
     }
@@ -334,7 +334,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         if (count == 0) return;
         if (focusedIndex < 0) {
             int visibleStart = getFirstVisibleIndex();
-            focusedIndex = visibleStart >= 0 ? visibleStart : 0;
+            focusedIndex = Math.max(visibleStart, 0);
         }
         focusedIndex = Math.max(0, Math.min(count - 1, focusedIndex + delta));
         if (selectionMode == SelectionMode.SINGLE || !InputHelper.isControlDown()) {
@@ -404,17 +404,16 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private int computeArrowSteps() {
         long now = System.nanoTime();
         long deltaNs = now - lastArrowKeyTimeNs;
-        // If the last arrow key was pressed recently, ramp up speed
-        if (deltaNs <= 300_000_000L) { // 300ms window
+        if (deltaNs <= 300_000_000L) {
             if (arrowKeyStreak < 30) arrowKeyStreak++;
         } else {
             arrowKeyStreak = 0;
         }
         lastArrowKeyTimeNs = now;
 
-        int tier = arrowKeyStreak / 3; // every 3 quick presses increases tier
+        int tier = arrowKeyStreak / 3;
         if (tier <= 0) return 1;
-        int steps = 1 << Math.min(tier, 6); // cap at 2^6 = 64
+        int steps = 1 << Math.min(tier, 6);
         return Math.max(1, steps);
     }
 
