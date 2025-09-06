@@ -14,7 +14,6 @@ import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.selector.StyleSelector;
 
-import java.awt.*;
 import java.util.Map;
 import java.util.Set;
 

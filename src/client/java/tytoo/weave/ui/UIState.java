@@ -2,10 +2,15 @@ package tytoo.weave.ui;
 
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.ui.popup.PopupEntry;
 
 public class UIState {
+    private final java.util.List<PopupEntry> popups = new java.util.ArrayList<>();
     @Nullable
     private Component<?> root;
+    @Nullable
+    private Panel overlayRoot;
     @Nullable
     private Component<?> hoveredComponent;
     @Nullable
@@ -22,6 +27,15 @@ public class UIState {
 
     public void setRoot(@Nullable Component<?> root) {
         this.root = root;
+    }
+
+    @Nullable
+    public Panel getOverlayRoot() {
+        return overlayRoot;
+    }
+
+    public void setOverlayRoot(@Nullable Panel overlayRoot) {
+        this.overlayRoot = overlayRoot;
     }
 
     @Nullable
@@ -58,5 +72,9 @@ public class UIState {
 
     public void setActiveComponent(@Nullable Component<?> activeComponent) {
         this.activeComponent = activeComponent;
+    }
+
+    public java.util.List<PopupEntry> getPopups() {
+        return popups;
     }
 }

@@ -7,6 +7,8 @@ import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Animator;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.interactive.*;
+import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.focus.FocusGainedEvent;
 import tytoo.weave.event.focus.FocusLostEvent;
@@ -15,7 +17,12 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.popup.Anchor;
+import tytoo.weave.ui.popup.PopupEntry;
+import tytoo.weave.ui.popup.PopupOptions;
+import tytoo.weave.ui.popup.PopupStyleProperties;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.utils.InputHelper;
@@ -44,7 +51,9 @@ public class UIManager {
     }
 
     public static void setRoot(Screen screen, Component<?> root) {
-        getOrCreateState(screen).setRoot(root);
+        UIState state = getOrCreateState(screen);
+        state.setRoot(root);
+        ensureOverlayRoot(state);
     }
 
     public static void clearFocus(Screen screen) {
@@ -72,6 +81,7 @@ public class UIManager {
                 });
             }
 
+            updatePopupPositions(screen, state);
             Animator.getInstance().update();
             root.draw(context);
             TooltipManager.onRender(screen, context);
@@ -182,6 +192,9 @@ public class UIManager {
         }
 
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (tryCloseTopmostOnEsc(screen, stateOpt.get())) {
+                return true;
+            }
             handleEscape(stateOpt.get());
             TooltipManager.onFocusChanged(screen, null);
             return false;
@@ -502,6 +515,249 @@ public class UIManager {
             if (root != null) {
                 root.invalidateSubtreeStyleCache();
             }
+        }
+    }
+
+    public static PopupHandle openPopup(Component<?> content, Anchor anchor, PopupOptions options) {
+        return McUtils.getMc().map(mc -> mc.currentScreen).map(screen -> openPopup(screen, content, anchor, options)).orElse(null);
+    }
+
+    public static PopupHandle openPopup(Screen screen, Component<?> content, Anchor anchor, PopupOptions options) {
+        UIState state = getOrCreateState(screen);
+        ensureOverlayRoot(state);
+        Panel overlay = state.getOverlayRoot();
+        if (overlay == null) return null;
+
+        Component<?> priorFocus = state.getFocusedComponent();
+
+        Panel mount = Panel.create();
+        mount.setManagedByLayout(false);
+        // Size to content so anchoring/clamping uses actual popup bounds
+        mount.setWidth(Constraints.childBased());
+        mount.setHeight(Constraints.childBased());
+        mount.addChild(content);
+        if (options.isTrapFocus() || options.isCloseOnFocusLoss()) {
+            mount.setFocusable(true);
+        }
+
+        Panel backdrop = null;
+        if (options.isModal()) {
+            backdrop = Panel.create();
+            backdrop.setManagedByLayout(false);
+            backdrop.setWidth(Constraints.relative(1.0f));
+            backdrop.setHeight(Constraints.relative(1.0f));
+            backdrop.addStyleClass("popup-backdrop");
+
+            Stylesheet ss = ThemeManager.getStylesheet();
+            Float opacity = ss.get(backdrop, PopupStyleProperties.BACKDROP_OPACITY, 0.4f);
+            if (opacity != null) backdrop.setOpacity(Math.max(0.0f, Math.min(1.0f, opacity)));
+
+            boolean clickThrough = Boolean.TRUE.equals(options.getClickThroughBackdrop()) || Boolean.TRUE.equals(ss.get(backdrop, PopupStyleProperties.BACKDROP_CLICK_THROUGH, false));
+            backdrop.setHittable(!clickThrough);
+            if (options.isCloseOnBackdropClick() && !clickThrough) {
+                Panel finalBackdrop = backdrop;
+                backdrop.onMouseClick(e -> closeTopmostForBackdrop(state, screen, finalBackdrop));
+            }
+
+            overlay.addChild(backdrop);
+        }
+
+        overlay.addChild(mount);
+
+        PopupEntry entry = new PopupEntry(backdrop, mount, content, anchor, options, priorFocus);
+        state.getPopups().add(entry);
+
+        if (options.isTrapFocus()) {
+            requestFocus(screen, mount);
+        }
+
+        if (options.isCloseOnFocusLoss()) {
+            Panel finalMount = mount;
+            mount.onFocusLost(e -> {
+                Component<?> newFocused = state.getFocusedComponent();
+                if (newFocused != null) {
+                    for (Component<?> cur = newFocused; cur != null; cur = cur.getParent()) {
+                        if (cur == finalMount) {
+                            return;
+                        }
+                    }
+                }
+                closePopup(new PopupHandle(screen, entry));
+            });
+        }
+
+        return new PopupHandle(screen, entry);
+    }
+
+    private static void closeTopmostForBackdrop(UIState state, Screen screen, Panel backdrop) {
+        List<PopupEntry> entries = state.getPopups();
+        if (entries.isEmpty()) return;
+        PopupEntry last = entries.get(entries.size() - 1);
+        if (last.backdrop() == backdrop) {
+            closePopup(new PopupHandle(screen, last));
+        }
+    }
+
+    public static void closePopup(PopupHandle handle) {
+        if (handle == null) return;
+        UIState state = screenStates.get(handle.screen);
+        if (state == null) return;
+        Panel overlay = state.getOverlayRoot();
+        if (overlay == null) return;
+
+        PopupEntry entry = handle.entry;
+        if (!state.getPopups().contains(entry)) return;
+
+        Panel backdrop = entry.backdrop();
+        if (backdrop != null) overlay.removeChild(backdrop);
+        overlay.removeChild(entry.mount());
+        state.getPopups().remove(entry);
+
+        Component<?> prior = entry.priorFocus();
+        if (prior != null) {
+            requestFocus(handle.screen, prior);
+        }
+    }
+
+    private static void ensureOverlayRoot(UIState state) {
+        Component<?> root = state.getRoot();
+        if (root == null) return;
+        Panel overlay = state.getOverlayRoot();
+        if (overlay == null) {
+            overlay = Panel.create();
+            overlay.setManagedByLayout(false);
+            overlay.setHittable(false);
+            overlay.setX(Constraints.pixels(0f));
+            overlay.setY(Constraints.pixels(0f));
+            overlay.setWidth(Constraints.relative(1.0f));
+            overlay.setHeight(Constraints.relative(1.0f));
+            overlay.addStyleClass("overlay-root");
+            state.setOverlayRoot(overlay);
+            root.addChild(overlay);
+        } else {
+            List<Component<?>> children = root.getChildren();
+            if (children.isEmpty() || children.get(children.size() - 1) != overlay) {
+                root.removeChild(overlay);
+                root.addChild(overlay);
+            }
+        }
+    }
+
+    private static void updatePopupPositions(Screen screen, UIState state) {
+        if (state.getPopups().isEmpty()) return;
+        Component<?> root = state.getRoot();
+        if (root == null) return;
+
+        float overlayOriginX = root.getInnerLeft();
+        float overlayOriginY = root.getInnerTop();
+        float overlayW = root.getInnerWidth();
+        float overlayH = root.getInnerHeight();
+
+        for (PopupEntry entry : state.getPopups()) {
+            Panel mount = entry.mount();
+            Anchor anchor = entry.anchor();
+            PopupOptions opts = entry.options();
+
+            Component<?> owner = anchor.target();
+            if (owner == null || !owner.isVisible()) continue;
+
+            mount.measure(overlayW, overlayH);
+            float contentW = mount.getMeasuredWidth() + mount.getMargin().left() + mount.getMargin().right();
+            float contentH = mount.getMeasuredHeight() + mount.getMargin().top() + mount.getMargin().bottom();
+
+            float targetL = owner.getLeft() - overlayOriginX;
+            float targetT = owner.getTop() - overlayOriginY;
+            float targetW = owner.getWidth();
+            float targetH = owner.getHeight();
+
+            float gap = Math.max(0f, opts.getGap() + anchor.gap());
+
+            float x;
+            float y;
+
+            switch (anchor.side()) {
+                case BOTTOM -> {
+                    y = targetT + targetH + gap;
+                    x = switch (anchor.align()) {
+                        case START -> targetL;
+                        case CENTER -> targetL + (targetW - contentW) / 2.0f;
+                        case END -> targetL + (targetW - contentW);
+                    };
+                    if (opts.isAutoFlip() && y + contentH > overlayH) {
+                        y = targetT - contentH - gap;
+                    }
+                }
+                case TOP -> {
+                    y = targetT - contentH - gap;
+                    x = switch (anchor.align()) {
+                        case START -> targetL;
+                        case CENTER -> targetL + (targetW - contentW) / 2.0f;
+                        case END -> targetL + (targetW - contentW);
+                    };
+                    if (opts.isAutoFlip() && y < 0) {
+                        y = targetT + targetH + gap;
+                    }
+                }
+                case RIGHT -> {
+                    x = targetL + targetW + gap;
+                    y = switch (anchor.align()) {
+                        case START -> targetT;
+                        case CENTER -> targetT + (targetH - contentH) / 2.0f;
+                        case END -> targetT + (targetH - contentH);
+                    };
+                    if (opts.isAutoFlip() && x + contentW > overlayW) {
+                        x = targetL - contentW - gap;
+                    }
+                }
+                case LEFT -> {
+                    x = targetL - contentW - gap;
+                    y = switch (anchor.align()) {
+                        case START -> targetT;
+                        case CENTER -> targetT + (targetH - contentH) / 2.0f;
+                        case END -> targetT + (targetH - contentH);
+                    };
+                    if (opts.isAutoFlip() && x < 0) {
+                        x = targetL + targetW + gap;
+                    }
+                }
+                default -> {
+                    x = targetL;
+                    y = targetT + targetH + gap;
+                }
+            }
+
+            x += anchor.offsetX();
+            y += anchor.offsetY();
+
+            if (x + contentW > overlayW) x = overlayW - contentW - 2f;
+            if (y + contentH > overlayH) y = overlayH - contentH - 2f;
+            if (x < 0) x = 2f;
+            if (y < 0) y = 2f;
+
+            float finalX = Math.round(overlayOriginX + x);
+            float finalY = Math.round(overlayOriginY + y);
+            mount.arrange(finalX, finalY);
+        }
+    }
+
+    private static boolean tryCloseTopmostOnEsc(Screen screen, UIState state) {
+        List<PopupEntry> entries = state.getPopups();
+        if (entries.isEmpty()) return false;
+        PopupEntry last = entries.get(entries.size() - 1);
+        if (last.options().isCloseOnEsc()) {
+            closePopup(new PopupHandle(screen, last));
+            return true;
+        }
+        return false;
+    }
+
+    public static final class PopupHandle {
+        private final Screen screen;
+        private final PopupEntry entry;
+
+        private PopupHandle(Screen screen, PopupEntry entry) {
+            this.screen = screen;
+            this.entry = entry;
         }
     }
 }

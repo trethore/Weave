@@ -121,7 +121,7 @@ tasks.register("releaseJar", Jar) {
 
 tasks.register("remapReleaseJar", RemapJarTask) {
     inputFile.set(tasks.named("releaseJar", Jar).flatMap { it.archiveFile })
-    archiveClassifier.set("")
+    archiveClassifier.set("release")
     addNestedDependencies.set(false)
     dependsOn("releaseJar")
 }
@@ -130,7 +130,9 @@ publishing {
     publications {
         create("mavenJava", MavenPublication) {
             artifactId = project.archives_base_name
-            artifact(tasks.named("remapReleaseJar"))
+            artifact(tasks.named("remapReleaseJar")) {
+                classifier = null
+            }
             artifact(tasks.named("remapSourcesJar"))
             
             pom {

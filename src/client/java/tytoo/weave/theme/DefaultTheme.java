@@ -15,6 +15,7 @@ import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.style.value.StyleVariable;
 import tytoo.weave.style.value.Var;
 import tytoo.weave.ui.CursorType;
+import tytoo.weave.ui.popup.PopupStyleProperties;
 import tytoo.weave.ui.tooltip.TooltipView;
 import tytoo.weave.utils.McUtils;
 
@@ -298,6 +299,15 @@ public class DefaultTheme implements Theme {
         s = new StyleSelector(TextComponent.class, null, null, null, TooltipView.class, false);
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(TextComponent.StyleProps.TEXT_COLOR, Color.WHITE)
+        )));
+
+        // --- Popup backdrop ---
+        s = new StyleSelector(Panel.class, null, Set.of("popup-backdrop"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new StyledColorRenderer(PopupStyleProperties.BACKDROP_COLOR, new Color(0, 0, 0))),
+                Map.entry(PopupStyleProperties.BACKDROP_COLOR, new Color(0, 0, 0)),
+                Map.entry(PopupStyleProperties.BACKDROP_OPACITY, 0.4f),
+                Map.entry(PopupStyleProperties.BACKDROP_CLICK_THROUGH, false)
         )));
     }
 

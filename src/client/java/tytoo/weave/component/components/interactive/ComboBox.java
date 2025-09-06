@@ -14,7 +14,6 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.OutlineEffect;
 import tytoo.weave.event.keyboard.KeyPressEvent;
-import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
@@ -23,6 +22,8 @@ import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.ui.UIState;
+import tytoo.weave.ui.popup.Anchor;
+import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -47,7 +48,9 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     @Nullable
     private String placeholder;
     @Nullable
-    private Panel dropdownPanel;
+    private Panel dropdownContent;
+    @Nullable
+    private UIManager.PopupHandle popupHandle;
     private boolean expanded = false;
     @Nullable
     private Float dropdownMaxHeightOverride = null;
@@ -95,25 +98,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.addStyleState(StyleState.NORMAL);
 
         this.onClick(e -> toggleDropdown());
-        this.onFocusLost(e -> {
-            if (!this.expanded) return;
-
-            Optional<Component<?>> newFocused = McUtils.getMc().map(mc -> mc.currentScreen)
-                    .flatMap(UIManager::getState)
-                    .map(UIState::getFocusedComponent);
-
-            if (newFocused.isPresent() && this.dropdownPanel != null) {
-                Component<?> current = newFocused.get();
-                while (current != null) {
-                    if (current == this.dropdownPanel) {
-                        return;
-                    }
-                    current = current.getParent();
-                }
-            }
-
-            closeDropdown();
-        });
 
         updateSelectedLabel();
         updateVisualState(0L);
@@ -162,119 +146,100 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 ? this.dropdownMaxHeightOverride
                 : stylesheet.get(this, StyleProps.DROPDOWN_MAX_HEIGHT, 100f);
 
-        McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState).ifPresent(uiState -> {
-            Component<?> root = uiState.getRoot();
-            if (root != null) {
-                this.dropdownPanel = Panel.create()
-                        .setManagedByLayout(false)
-                        .setFocusable(true)
-                        .setWidth(Constraints.pixels(this.getWidth()))
-                        .addStyleClass("combo-box-dropdown");
+        // Build popup content (sized to combo width)
+        this.dropdownContent = Panel.create()
+                .setWidth(Constraints.pixels(this.getWidth()))
+                .addStyleClass("combo-box-dropdown");
 
-                this.dropdownPanel.onFocusLost(ev -> {
-                    Optional<Component<?>> newFocused = McUtils.getMc().map(mc -> mc.currentScreen)
-                            .flatMap(UIManager::getState)
-                            .map(UIState::getFocusedComponent);
-                    if (newFocused.isPresent()) {
-                        Component<?> current = newFocused.get();
-                        while (current != null) {
-                            if (current == this.dropdownPanel) {
-                                return;
-                            }
-                            current = current.getParent();
-                        }
-                    }
-                    closeDropdown();
-                });
+        Panel bg = Panel.create()
+                .setWidth(Constraints.relative(1.0f))
+                .setHeight(Constraints.relative(1.0f))
+                .addStyleClass("combo-box-dropdown-bg");
+        this.dropdownContent.addChild(bg);
 
-                float anchoredX = this.getLeft() - root.getInnerLeft();
-                float anchoredY = (float) Math.ceil((this.getTop() + this.getHeight()) - root.getInnerTop()); // ceil the Y to avoid sub-pixel rendering artifacts
+        ScrollPanel scrollPanel = new ScrollPanel();
+        this.dropdownScrollPanel = scrollPanel;
+        this.dropdownContent.addChild(scrollPanel);
 
-                this.dropdownPanel.setX(Constraints.pixels(anchoredX));
-                this.dropdownPanel.setY(Constraints.pixels(anchoredY));
-
-                Panel bg = Panel.create()
-                        .setWidth(Constraints.relative(1.0f))
-                        .setHeight(Constraints.relative(1.0f))
-                        .addStyleClass("combo-box-dropdown-bg");
-                this.dropdownPanel.addChild(bg);
-
-                ScrollPanel scrollPanel = new ScrollPanel();
-                this.dropdownScrollPanel = scrollPanel;
-                this.dropdownPanel.addChild(scrollPanel);
-
-                if (this.includePlaceholderOption) {
-                    Button optionButton = Button.create()
-                            .setWidth(Constraints.relative(1.0f))
-                            .onClick(e -> {
-                                this.setValue(null);
-                                closeDropdown(true);
-                            });
-                    optionButton.addStyleClass("combo-box-option");
-                    if (this.valueState.get() == null) {
-                        optionButton.addStyleState(StyleState.SELECTED);
-                    }
-
-                    TextRenderer textRenderer = getEffectiveTextRenderer();
-                    float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
-                    float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
-                    optionButton.setHeight(Constraints.pixels(rowHeight));
-
-                    OptionLabel label = new OptionLabel(optionButton, Objects.requireNonNullElse(this.placeholder, ""));
-                    label.setWidth(Constraints.relative(1.0f));
-                    label.setHeight(Constraints.relative(1.0f));
-                    label.setHittable(false);
-                    optionButton.addChild(label);
-
-                    scrollPanel.addChild(optionButton);
-                }
-
-                for (Option<T> option : this.options) {
-                    Button optionButton = Button.create()
-                            .setWidth(Constraints.relative(1.0f))
-                            .onClick(e -> {
-                                this.setValue(option.value());
-                                closeDropdown(true);
-                            });
-                    optionButton.addStyleClass("combo-box-option");
-                    if (Objects.equals(this.valueState.get(), option.value())) {
-                        optionButton.addStyleState(StyleState.SELECTED);
-                    }
-
-                    TextRenderer textRenderer = getEffectiveTextRenderer();
-                    float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
-                    float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
-                    optionButton.setHeight(Constraints.pixels(rowHeight));
-
-                    OptionLabel label = new OptionLabel(optionButton, option.label());
-                    label.setWidth(Constraints.relative(1.0f));
-                    label.setHeight(Constraints.relative(1.0f));
-                    label.setHittable(false);
-                    optionButton.addChild(label);
-
-                    scrollPanel.addChild(optionButton);
-                }
-
-                scrollPanel.getContentPanel().measure(this.getWidth(), Float.MAX_VALUE);
-                float contentHeight = scrollPanel.getContentPanel().getMeasuredHeight();
-                float viewHeight = Math.min(contentHeight, dropdownMaxHeight);
-                this.dropdownPanel.setHeight(Constraints.pixels(viewHeight));
-
-                int initialIndex = computeSelectedIndexForDropdown();
-                float initialScroll = computeInitialScrollForIndex(scrollPanel, initialIndex, viewHeight);
-                scrollPanel.setScrollY(initialScroll);
-
-                root.addChild(this.dropdownPanel);
-                this.dropdownPanel.bringToFront();
-
-                setInitialDropdownHoverAndFocus(initialIndex);
-                attachDropdownKeyNavigation();
-
-                this.dropdownPanel.onMouseEnter(e -> this.addStyleState(StyleState.HOVERED));
-                this.dropdownPanel.onMouseLeave(e -> {
-                    if (!this.expanded) this.removeStyleState(StyleState.HOVERED);
-                });
+        if (this.includePlaceholderOption) {
+            Button optionButton = Button.create()
+                    .setWidth(Constraints.relative(1.0f))
+                    .onClick(e -> {
+                        this.setValue(null);
+                        closeDropdown(true);
+                    });
+            optionButton.addStyleClass("combo-box-option");
+            if (this.valueState.get() == null) {
+                optionButton.addStyleState(StyleState.SELECTED);
             }
+
+            TextRenderer textRenderer = getEffectiveTextRenderer();
+            float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+            float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
+            optionButton.setHeight(Constraints.pixels(rowHeight));
+
+            OptionLabel label = new OptionLabel(optionButton, Objects.requireNonNullElse(this.placeholder, ""));
+            label.setWidth(Constraints.relative(1.0f));
+            label.setHeight(Constraints.relative(1.0f));
+            label.setHittable(false);
+            optionButton.addChild(label);
+
+            scrollPanel.addChild(optionButton);
+        }
+
+        for (Option<T> option : this.options) {
+            Button optionButton = Button.create()
+                    .setWidth(Constraints.relative(1.0f))
+                    .onClick(e -> {
+                        this.setValue(option.value());
+                        closeDropdown(true);
+                    });
+            optionButton.addStyleClass("combo-box-option");
+            if (Objects.equals(this.valueState.get(), option.value())) {
+                optionButton.addStyleState(StyleState.SELECTED);
+            }
+
+            TextRenderer textRenderer = getEffectiveTextRenderer();
+            float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+            float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
+            optionButton.setHeight(Constraints.pixels(rowHeight));
+
+            OptionLabel label = new OptionLabel(optionButton, option.label());
+            label.setWidth(Constraints.relative(1.0f));
+            label.setHeight(Constraints.relative(1.0f));
+            label.setHittable(false);
+            optionButton.addChild(label);
+
+            scrollPanel.addChild(optionButton);
+        }
+
+        scrollPanel.getContentPanel().measure(this.getWidth(), Float.MAX_VALUE);
+        float contentHeight = scrollPanel.getContentPanel().getMeasuredHeight();
+        float viewHeight = Math.min(contentHeight, dropdownMaxHeight);
+        this.dropdownContent.setHeight(Constraints.pixels(viewHeight));
+
+        int initialIndex = computeSelectedIndexForDropdown();
+        float initialScroll = computeInitialScrollForIndex(scrollPanel, initialIndex, viewHeight);
+        scrollPanel.setScrollY(initialScroll);
+
+        // Open popup anchored to this combobox
+        Anchor anchor = new Anchor(this, Anchor.Side.BOTTOM, Anchor.Align.START, 0f, 0f, 0f);
+        PopupOptions opts = new PopupOptions()
+                .setGap(0f)
+                .setTrapFocus(true)
+                .setCloseOnFocusLoss(true)
+                .setCloseOnEsc(true);
+        this.popupHandle = UIManager.openPopup(this.dropdownContent, anchor, opts);
+
+        // Focus dropdown content to receive keyboard navigation
+        McUtils.getMc().map(mc -> mc.currentScreen).ifPresent(screen -> UIManager.requestFocus(screen, this.dropdownContent));
+
+        setInitialDropdownHoverAndFocus(initialIndex);
+        attachDropdownKeyNavigation();
+
+        this.dropdownContent.onMouseEnter(e -> this.addStyleState(StyleState.HOVERED));
+        this.dropdownContent.onMouseLeave(e -> {
+            if (!this.expanded) this.removeStyleState(StyleState.HOVERED);
         });
     }
 
@@ -287,18 +252,13 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.expanded = false;
         removeStyleState(StyleState.ACTIVE);
 
-        if (this.dropdownPanel != null) {
+        if (this.dropdownContent != null) {
             if (this.dropdownScrollPanel != null) {
                 this.savedDropdownScrollY = this.dropdownScrollPanel.getScrollY();
             }
-            Optional<Screen> screen = McUtils.getMc().map(mc -> mc.currentScreen);
-            screen.flatMap(UIManager::getState).ifPresent(uiState -> {
-                Component<?> root = uiState.getRoot();
-                if (root != null) {
-                    root.removeChild(this.dropdownPanel);
-                }
-            });
-            this.dropdownPanel = null;
+            UIManager.closePopup(this.popupHandle);
+            this.popupHandle = null;
+            this.dropdownContent = null;
             this.dropdownScrollPanel = null;
             this.dropdownHoverIndex = -1;
         }
@@ -390,8 +350,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
     private void setInitialDropdownHoverAndFocus(int initialIndex) {
         Optional<Screen> screenOpt = McUtils.getMc().map(mc -> mc.currentScreen);
-        if (screenOpt.isPresent() && this.dropdownPanel != null) {
-            UIManager.requestFocus(screenOpt.get(), this.dropdownPanel);
+        if (screenOpt.isPresent() && this.dropdownContent != null) {
+            UIManager.requestFocus(screenOpt.get(), this.dropdownContent);
         }
 
         List<Button> buttons = getDropdownOptionButtons();
@@ -404,8 +364,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     }
 
     private void attachDropdownKeyNavigation() {
-        if (this.dropdownPanel == null) return;
-        this.dropdownPanel.onEvent(KeyPressEvent.TYPE, e -> {
+        if (this.dropdownContent == null) return;
+        java.util.function.Consumer<KeyPressEvent> handler = e -> {
             int key = e.getKeyCode();
             if (key == GLFW.GLFW_KEY_UP) {
                 moveDropdownHover(-1);
@@ -427,7 +387,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 McUtils.getMc().map(mc -> mc.currentScreen).ifPresent(screen -> UIManager.requestFocus(screen, this));
                 e.cancel();
             }
-        });
+        };
+        this.dropdownContent.onEvent(KeyPressEvent.TYPE, handler);
+        if (this.dropdownContent.getParent() != null) {
+            this.dropdownContent.getParent().onEvent(KeyPressEvent.TYPE, handler);
+        }
     }
 
     private void moveDropdownHover(int delta) {
@@ -496,10 +460,19 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         if (buttons.isEmpty()) return;
         int idx = Math.max(0, this.dropdownHoverIndex);
         if (idx >= buttons.size()) return;
-        Button b = buttons.get(idx);
-        float cx = b.getLeft() + b.getWidth() / 2.0f;
-        float cy = b.getTop() + b.getHeight() / 2.0f;
-        b.fireEvent(new MouseReleaseEvent(b, cx, cy, 0));
+
+        if (this.includePlaceholderOption && idx == 0) {
+            setValue(null);
+            closeDropdown(true);
+            return;
+        }
+
+        int offset = this.includePlaceholderOption ? 1 : 0;
+        int optionIndex = idx - offset;
+        if (optionIndex >= 0 && optionIndex < this.options.size()) {
+            setValue(this.options.get(optionIndex).value());
+            closeDropdown(true);
+        }
     }
 
     private void updateSelectedLabel() {
