@@ -3,7 +3,7 @@
 **Weave** is a declarative, component-based UI library for Minecraft.
 It helps you build clean, responsive, and themeable GUIs that are easy to compose, extend, and ship in your mods.
 
-![Some screen shot of the demo gui !](https://i.imgur.com/KycmXsg.png)
+![Some screen shot of the demo gui !](https://i.imgur.com/ogJiBwc.png)
 
 ---
 

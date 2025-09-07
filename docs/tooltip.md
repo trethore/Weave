@@ -19,14 +19,16 @@ Attach a text tooltip to any component:
 
 ```java
 import net.minecraft.text.Text;
+import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.ui.tooltip.TooltipOptions;
 
-textField.setTooltip(Text.literal("This is a text field.\nPaste, copy, select…"),
+TooltipManager.attach(textField, Text.literal("This is a text field.\nPaste, copy, select…"),
         new TooltipOptions()
             .setDelayMs(250)
             .setMaxWidth(220f)
             .setFollowMouse(true));
 ```
+
 
 ## Options
 

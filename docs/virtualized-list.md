@@ -51,10 +51,11 @@ list.setItemFactory(user -> UserRow.create(user));
 
 ## Height Modes
 
-- `FIXED`: Every row uses the same fixed height set by `setFixedItemHeight(float)`.
+- `FIXED`: Every row uses the same fixed height set by `setFixedItemHeight(float)`. This is the most performant mode.
 - `MEASURE_ONCE` (default): Measures one sample row to determine height; use when rows are uniform but you prefer automatic sizing.
+- `VARIABLE`: Use when items have different heights. The list will measure each item as it comes into view and adjust its position accordingly. This mode is more flexible but has a higher performance cost than the other modes. You can provide an `setEstimatedItemHeight(float)` to make the initial scrollbar size more accurate.
 
-The list sets its internal content height to `rows * itemHeight + gaps` and only mounts visible rows based on scroll position.
+The list sets its internal content height to `rows * itemHeight + gaps` (for `FIXED` and `MEASURE_ONCE` modes) and only mounts visible rows based on scroll position. For `VARIABLE` mode, the total height is the sum of all measured item heights.
 
 ## Selection and Keyboard Navigation
 
