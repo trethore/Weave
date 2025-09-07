@@ -16,6 +16,8 @@ import tytoo.weave.state.ObservableList;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.selector.StyleSelector;
+import tytoo.weave.ui.toast.ToastManager;
+import tytoo.weave.ui.toast.ToastOptions;
 
 import java.awt.*;
 import java.util.List;
@@ -81,6 +83,7 @@ public class TestGui extends WeaveScreen {
                     for (Integer idx : row) {
                         int label = idx + 1;
                         Button b = Button.of("button#" + label).setWidth(Constraints.relative(1.0f));
+                        b.onClick(e -> ToastManager.show("You clicked that button !", new ToastOptions().setDurationMs(2000).setPosition(ToastOptions.Position.BOTTOM_LEFT)));
                         rowPanel.addChild(b);
                     }
                     return rowPanel;

@@ -309,6 +309,37 @@ public class DefaultTheme implements Theme {
                 Map.entry(PopupStyleProperties.BACKDROP_OPACITY, 0.4f),
                 Map.entry(PopupStyleProperties.BACKDROP_CLICK_THROUGH, false)
         )));
+
+        // --- Context Menu ---
+        s = new StyleSelector(Panel.class, null, Set.of("context-menu"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(30, 30, 30, 240))),
+                Map.entry(LayoutStyleProperties.BORDER_COLOR, new Color(70, 70, 70, 240)),
+                Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1f)
+        )));
+
+        s = new StyleSelector(Button.class, null, Set.of("context-menu-item"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(50, 50, 50, 240))),
+                Map.entry(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(70, 70, 70, 240))),
+                Map.entry(ComponentStyle.StyleProps.ACTIVE_RENDERER, new SolidColorRenderer(new Color(60, 60, 60, 240))),
+                Map.entry(Button.StyleProps.MIN_WIDTH, 100f),
+                Map.entry(Button.StyleProps.MIN_HEIGHT, 16f),
+                Map.entry(Button.StyleProps.PADDING, 4f)
+        )));
+
+        s = new StyleSelector(Panel.class, null, Set.of("context-menu-separator"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(80, 80, 80))))
+        ));
+
+        // --- Toast ---
+        s = new StyleSelector(Panel.class, null, Set.of("toast"), null);
+        stylesheet.addRule(new StyleRule(s, Map.ofEntries(
+                Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(25, 25, 25, 235))),
+                Map.entry(LayoutStyleProperties.BORDER_COLOR, new Color(80, 80, 80, 220)),
+                Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1f)
+        )));
     }
 
     @Override

@@ -24,6 +24,7 @@ import tytoo.weave.ui.popup.PopupEntry;
 import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.ui.popup.PopupStyleProperties;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
+import tytoo.weave.ui.toast.ToastManager;
 import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.McUtils;
@@ -67,6 +68,9 @@ public class UIManager {
             Component<?> root = state.getRoot();
             if (root == null) return;
 
+            // Ensure overlay root exists and stays on top of root's children
+            ensureOverlayRoot(state);
+
             if (root.isLayoutDirty()) {
                 McUtils.getMc().ifPresent(client -> {
                     float screenWidth = client.getWindow().getScaledWidth();
@@ -81,10 +85,17 @@ public class UIManager {
                 });
             }
 
+            ToastManager.updatePositions(screen);
+
             updatePopupPositions(screen, state);
             Animator.getInstance().update();
             root.draw(context);
             TooltipManager.onRender(screen, context);
+
+            Panel overlay = state.getOverlayRoot();
+            if (overlay != null && overlay.isVisible()) {
+                overlay.draw(context);
+            }
         });
     }
 
@@ -530,14 +541,13 @@ public class UIManager {
 
         Component<?> priorFocus = state.getFocusedComponent();
 
-        Panel mount = Panel.create();
-        mount.setManagedByLayout(false);
-        // Size to content so anchoring/clamping uses actual popup bounds
-        mount.setWidth(Constraints.childBased());
-        mount.setHeight(Constraints.childBased());
-        mount.addChild(content);
+        Panel finalMount = Panel.create();
+        finalMount.setManagedByLayout(false);
+        finalMount.setWidth(Constraints.childBased());
+        finalMount.setHeight(Constraints.childBased());
+        finalMount.addChild(content);
         if (options.isTrapFocus() || options.isCloseOnFocusLoss()) {
-            mount.setFocusable(true);
+            finalMount.setFocusable(true);
         }
 
         Panel backdrop = null;
@@ -562,18 +572,17 @@ public class UIManager {
             overlay.addChild(backdrop);
         }
 
-        overlay.addChild(mount);
+        overlay.addChild(finalMount);
 
-        PopupEntry entry = new PopupEntry(backdrop, mount, content, anchor, options, priorFocus);
+        PopupEntry entry = new PopupEntry(backdrop, finalMount, content, anchor, options, priorFocus);
         state.getPopups().add(entry);
 
         if (options.isTrapFocus()) {
-            requestFocus(screen, mount);
+            requestFocus(screen, finalMount);
         }
 
         if (options.isCloseOnFocusLoss()) {
-            Panel finalMount = mount;
-            mount.onFocusLost(e -> {
+            finalMount.onFocusLost(e -> {
                 Component<?> newFocused = state.getFocusedComponent();
                 if (newFocused != null) {
                     for (Component<?> cur = newFocused; cur != null; cur = cur.getParent()) {
@@ -592,7 +601,7 @@ public class UIManager {
     private static void closeTopmostForBackdrop(UIState state, Screen screen, Panel backdrop) {
         List<PopupEntry> entries = state.getPopups();
         if (entries.isEmpty()) return;
-        PopupEntry last = entries.get(entries.size() - 1);
+        PopupEntry last = entries.getLast();
         if (last.backdrop() == backdrop) {
             closePopup(new PopupHandle(screen, last));
         }
@@ -636,7 +645,7 @@ public class UIManager {
             root.addChild(overlay);
         } else {
             List<Component<?>> children = root.getChildren();
-            if (children.isEmpty() || children.get(children.size() - 1) != overlay) {
+            if (children.isEmpty() || children.getLast() != overlay) {
                 root.removeChild(overlay);
                 root.addChild(overlay);
             }
@@ -743,7 +752,7 @@ public class UIManager {
     private static boolean tryCloseTopmostOnEsc(Screen screen, UIState state) {
         List<PopupEntry> entries = state.getPopups();
         if (entries.isEmpty()) return false;
-        PopupEntry last = entries.get(entries.size() - 1);
+        PopupEntry last = entries.getLast();
         if (last.options().isCloseOnEsc()) {
             closePopup(new PopupHandle(screen, last));
             return true;
@@ -751,13 +760,6 @@ public class UIManager {
         return false;
     }
 
-    public static final class PopupHandle {
-        private final Screen screen;
-        private final PopupEntry entry;
-
-        private PopupHandle(Screen screen, PopupEntry entry) {
-            this.screen = screen;
-            this.entry = entry;
-        }
+    public record PopupHandle(Screen screen, PopupEntry entry) {
     }
 }

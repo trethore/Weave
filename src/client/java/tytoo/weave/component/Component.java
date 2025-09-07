@@ -170,6 +170,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
 
     public void drawChildren(DrawContext context) {
         for (Component<?> child : children) {
+            if (child.hasStyleClass("overlay-root")) continue;
             child.draw(context);
         }
     }
