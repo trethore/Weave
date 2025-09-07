@@ -15,6 +15,8 @@ public class UIState {
     @Nullable
     private Panel overlayRoot;
     @Nullable
+    private tytoo.weave.theme.Stylesheet stylesheetOverride;
+    @Nullable
     private Component<?> hoveredComponent;
     @Nullable
     private Component<?> clickedComponent;
@@ -39,6 +41,15 @@ public class UIState {
 
     public void setOverlayRoot(@Nullable Panel overlayRoot) {
         this.overlayRoot = overlayRoot;
+    }
+
+    @Nullable
+    public tytoo.weave.theme.Stylesheet getStylesheetOverride() {
+        return stylesheetOverride;
+    }
+
+    public void setStylesheetOverride(@Nullable tytoo.weave.theme.Stylesheet stylesheetOverride) {
+        this.stylesheetOverride = stylesheetOverride;
     }
 
     @Nullable

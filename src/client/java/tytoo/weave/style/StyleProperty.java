@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public record StyleProperty<T>(String name, Class<T> type) {
+public record StyleProperty<T>(String name, Class<?> type) {
 
     @Override
     public boolean equals(Object o) {

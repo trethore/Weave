@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ThemeManager {
+    static final ThreadLocal<Stylesheet> ACTIVE_STYLESHEET = new ThreadLocal<>();
     private static final Map<String, Object> globalStyleVariables = new HashMap<>();
     private static Theme currentTheme = new DefaultTheme();
 
@@ -22,10 +23,20 @@ public class ThemeManager {
             throw new IllegalArgumentException("Theme cannot be null.");
         }
         ThemeManager.currentTheme = theme;
+        UIManager.invalidateAllStyles();
     }
 
     public static Stylesheet getStylesheet() {
-        return currentTheme.getStylesheet();
+        Stylesheet active = ACTIVE_STYLESHEET.get();
+        return active != null ? active : currentTheme.getStylesheet();
+    }
+
+    public static void pushActiveStylesheet(Stylesheet stylesheet) {
+        ACTIVE_STYLESHEET.set(stylesheet);
+    }
+
+    public static void popActiveStylesheet() {
+        ACTIVE_STYLESHEET.remove();
     }
 
     public static Map<String, Object> getGlobalStyleVariables() {

@@ -5,6 +5,9 @@ import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.StyleProperty;
+import tytoo.weave.theme.Stylesheet;
+import tytoo.weave.theme.ThemeManager;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,12 +31,14 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
         return new LinearLayout(orientation, mainAxisAlignment, crossAxisAlignment, 0);
     }
 
-    private static Data getLayoutData(Component<?> component) {
+    private Data getLayoutData(Component<?> component) {
         Object layoutData = component.getLayoutData();
         if (layoutData instanceof Data) {
             return (Data) layoutData;
         }
-        return new Data(0);
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Float grow = ss.get(component, StyleProps.FLEX_GROW, null);
+        return new Data(Math.max(0f, grow != null ? grow : 0f));
     }
 
     public float getGap() {
@@ -68,6 +73,11 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
     }
 
     private void applyHorizontalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Float gapStyle = ss.get(parent, StyleProps.GAP, null);
+        float effGap = gapStyle != null ? gapStyle : gap;
+        Alignment effAlign = ss.get(parent, StyleProps.ALIGN, alignment);
+        CrossAxisAlignment effCross = ss.get(parent, StyleProps.CROSS_ALIGN, crossAxisAlignment);
         float totalGrow = 0;
         float fixedWidth = 0;
 
@@ -79,33 +89,33 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
             }
         }
 
-        float totalGap = Math.max(0, visibleChildren.size() - 1) * gap;
+        float totalGap = Math.max(0, visibleChildren.size() - 1) * effGap;
         float availableWidth = parent.getInnerWidth();
         float remainingWidth = availableWidth - fixedWidth - totalGap;
 
         float offsetX = 0;
-        float gapToUse = gap;
+        float gapToUse = effGap;
         int count = visibleChildren.size();
 
         if (totalGrow == 0 && count > 0 && remainingWidth > 0) {
-            offsetX = switch (this.alignment) {
+            offsetX = switch (effAlign) {
                 case START, SPACE_BETWEEN, SPACE_AROUND, SPACE_EVENLY -> 0f;
                 case CENTER -> remainingWidth / 2f;
                 case END -> remainingWidth;
             };
-            gapToUse = switch (this.alignment) {
+            gapToUse = switch (effAlign) {
                 case SPACE_BETWEEN -> (count > 1) ? gap + remainingWidth / (count - 1) : gap;
                 case SPACE_AROUND -> {
                     float space = remainingWidth / count;
                     offsetX = space / 2f;
-                    yield gap + space;
+                    yield effGap + space;
                 }
                 case SPACE_EVENLY -> {
                     float space = remainingWidth / (count + 1);
                     offsetX = space;
-                    yield gap + space;
+                    yield effGap + space;
                 }
-                default -> gap;
+                default -> effGap;
             };
         }
         float currentX = parent.getInnerLeft() + offsetX;
@@ -130,7 +140,7 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
 
             float childHeightWithMargin = child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom();
             float childY = parent.getInnerTop();
-            switch (crossAxisAlignment) {
+            switch (effCross) {
                 case CENTER:
                     childY += (parent.getInnerHeight() - childHeightWithMargin) / 2f;
                     break;
@@ -149,6 +159,11 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
     }
 
     private void applyVerticalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Float gapStyle = ss.get(parent, StyleProps.GAP, null);
+        float effGap = gapStyle != null ? gapStyle : gap;
+        Alignment effAlign = ss.get(parent, StyleProps.ALIGN, alignment);
+        CrossAxisAlignment effCross = ss.get(parent, StyleProps.CROSS_ALIGN, crossAxisAlignment);
         float totalGrow = 0;
         float fixedHeight = 0;
         for (Component<?> child : visibleChildren) {
@@ -157,33 +172,33 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
             if (data.grow() == 0)
                 fixedHeight += child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom();
         }
-        float totalGap = Math.max(0, visibleChildren.size() - 1) * gap;
+        float totalGap = Math.max(0, visibleChildren.size() - 1) * effGap;
         float availableHeight = parent.getInnerHeight();
         float remainingHeight = availableHeight - fixedHeight - totalGap;
 
         float offsetY = 0;
-        float gapToUse = gap;
+        float gapToUse = effGap;
         int count = visibleChildren.size();
 
         if (totalGrow == 0 && count > 0 && remainingHeight > 0) {
-            offsetY = switch (this.alignment) {
+            offsetY = switch (effAlign) {
                 case START, SPACE_BETWEEN, SPACE_AROUND, SPACE_EVENLY -> 0f;
                 case CENTER -> remainingHeight / 2f;
                 case END -> remainingHeight;
             };
-            gapToUse = switch (this.alignment) {
+            gapToUse = switch (effAlign) {
                 case SPACE_BETWEEN -> (count > 1) ? gap + remainingHeight / (count - 1) : gap;
                 case SPACE_AROUND -> {
                     float space = remainingHeight / count;
                     offsetY = space / 2f;
-                    yield gap + space;
+                    yield effGap + space;
                 }
                 case SPACE_EVENLY -> {
                     float space = remainingHeight / (count + 1);
                     offsetY = space;
-                    yield gap + space;
+                    yield effGap + space;
                 }
-                default -> gap;
+                default -> effGap;
             };
         }
         float currentY = parent.getInnerTop() + offsetY;
@@ -199,7 +214,7 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
                 child.getConstraints().setHeight(Constraints.pixels(newHeight));
             }
 
-            if (this.crossAxisAlignment == CrossAxisAlignment.STRETCH) {
+            if (effCross == CrossAxisAlignment.STRETCH) {
                 float newWidth = parent.getInnerWidth() - (child.getMargin().left() + child.getMargin().right());
                 child.getConstraints().setWidth(Constraints.pixels(newWidth));
             }
@@ -208,7 +223,7 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
 
             float childWidthWithMargin = child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right();
             float childX = parent.getInnerLeft();
-            switch (crossAxisAlignment) {
+            switch (effCross) {
                 case CENTER:
                     childX += (parent.getInnerWidth() - childWidthWithMargin) / 2f;
                     break;
@@ -257,6 +272,16 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
 
         public static Data grow(float factor) {
             return new Data(factor);
+        }
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Float> GAP = new StyleProperty<>("linear.gap", Float.class);
+        public static final StyleProperty<Alignment> ALIGN = new StyleProperty<>("linear.align", Alignment.class);
+        public static final StyleProperty<CrossAxisAlignment> CROSS_ALIGN = new StyleProperty<>("linear.cross-align", CrossAxisAlignment.class);
+        public static final StyleProperty<Float> FLEX_GROW = new StyleProperty<>("linear.grow", Float.class);
+
+        private StyleProps() {
         }
     }
 }

@@ -31,6 +31,7 @@ import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.*;
+import tytoo.weave.style.effects.EffectSpec;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
@@ -47,6 +48,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
 @SuppressWarnings("unused")
@@ -139,33 +141,61 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         try {
             this.renderState.applyTransformations(context);
 
-            for (Effect effect : this.renderState.getEffects()) {
-                effect.beforeDraw(context, this);
-            }
-
-            ComponentRenderer renderer = getStyle().getRenderer(this);
-            if (renderer != null) {
-                renderer.render(context, this);
-                if (renderer instanceof ColorableRenderer colorable) {
-                    lastBackgroundColor = colorable.getColor();
+            List<Effect> effectiveEffects = getEffectiveEffects();
+            for (RenderStage stage : getRenderPipeline()) {
+                switch (stage) {
+                    case PRE_EFFECTS -> {
+                        for (Effect effect : effectiveEffects) effect.beforeDraw(context, this);
+                    }
+                    case BASE_RENDERER -> {
+                        ComponentRenderer renderer = getStyle().getRenderer(this);
+                        if (renderer != null) {
+                            renderer.render(context, this);
+                            if (renderer instanceof ColorableRenderer colorable) {
+                                lastBackgroundColor = colorable.getColor();
+                            }
+                        }
+                    }
+                    case BORDER -> drawBorder(context);
+                    case CHILDREN -> drawChildren(context);
+                    case OVERLAY_RENDERER -> {
+                        ComponentRenderer overlayRenderer = getStyle().getOverlayRenderer(this);
+                        if (overlayRenderer != null) overlayRenderer.render(context, this);
+                    }
+                    case OVERLAY_BORDER -> drawOverlayBorder(context);
+                    case POST_EFFECTS -> {
+                        for (int i = effectiveEffects.size() - 1; i >= 0; i--) {
+                            effectiveEffects.get(i).afterDraw(context, this);
+                        }
+                    }
                 }
-            }
-
-            drawBorder(context);
-            drawChildren(context);
-
-            ComponentRenderer overlayRenderer = getStyle().getOverlayRenderer(this);
-            if (overlayRenderer != null) overlayRenderer.render(context, this);
-            drawOverlayBorder(context);
-
-            for (int i = this.renderState.getEffects().size() - 1; i >= 0; i--) {
-                this.renderState.getEffects().get(i).afterDraw(context, this);
             }
         } finally {
             context.getMatrices().pop();
 
             RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
         }
+    }
+
+    private List<Effect> getEffectiveEffects() {
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Object specsRaw = ss.get(this, EffectStyleProperties.EFFECTS, null);
+        List<Effect> styled = Collections.emptyList();
+        if (specsRaw instanceof List<?> list) {
+            styled = list.stream()
+                    .filter(Objects::nonNull)
+                    .map(o -> {
+                        if (o instanceof EffectSpec spec) return spec.toEffect();
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        }
+        if (this.renderState.getEffects().isEmpty()) return styled;
+        List<Effect> combined = new ArrayList<>(styled.size() + this.renderState.getEffects().size());
+        combined.addAll(styled);
+        combined.addAll(this.renderState.getEffects());
+        return combined;
     }
 
     public void drawChildren(DrawContext context) {
@@ -862,6 +892,20 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return self();
     }
 
+    public T toggleStyleClass(String styleClass, boolean enable) {
+        return enable ? addStyleClass(styleClass) : removeStyleClass(styleClass);
+    }
+
+    public T toggleStyleClassAnimated(String styleClass, boolean enable) {
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Long duration = ss.get(this, CommonStyleProperties.TRANSITION_DURATION, 0L);
+        EasingFunction easing = ss.get(this, CommonStyleProperties.TRANSITION_EASING, Easings.EASE_OUT_SINE);
+        if (duration == null || duration <= 0) {
+            return toggleStyleClass(styleClass, enable);
+        }
+        return enable ? addStyleClassAnimated(styleClass, duration, easing) : removeStyleClassAnimated(styleClass, duration, easing);
+    }
+
     public T transitionStyles(long duration, EasingFunction easing) {
         tytoo.weave.animation.StyleTransitionRegistry.applyTransitions(self(), duration, easing);
         return self();
@@ -1011,6 +1055,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
 
         applyLayoutStylesFromStylesheet();
+        applyComponentStylesFromStylesheet();
 
         WidthConstraint wc = this.layoutState.getConstraints().getWidthConstraint();
         HeightConstraint hc = this.layoutState.getConstraints().getHeightConstraint();
@@ -1047,6 +1092,21 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                 child.measure(this.layoutState.getMeasuredWidth() - horizontalPadding, this.layoutState.getMeasuredHeight() - verticalPadding);
             }
         }
+    }
+
+    protected void applyComponentStylesFromStylesheet() {
+    }
+
+    protected java.util.List<RenderStage> getRenderPipeline() {
+        return java.util.List.of(
+                RenderStage.PRE_EFFECTS,
+                RenderStage.BASE_RENDERER,
+                RenderStage.BORDER,
+                RenderStage.CHILDREN,
+                RenderStage.OVERLAY_RENDERER,
+                RenderStage.OVERLAY_BORDER,
+                RenderStage.POST_EFFECTS
+        );
     }
 
     private void applyLayoutStylesFromStylesheet() {

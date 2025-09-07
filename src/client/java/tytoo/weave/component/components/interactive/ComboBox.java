@@ -16,6 +16,7 @@ import tytoo.weave.effects.implementations.OutlineEffect;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
+import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.Stylesheet;
@@ -26,7 +27,6 @@ import tytoo.weave.ui.popup.Anchor;
 import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
-import tytoo.weave.style.OutlineSides;
 
 import java.awt.*;
 import java.util.ArrayList;

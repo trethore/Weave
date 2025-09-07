@@ -3,6 +3,7 @@ package tytoo.weave.component.components.interactive;
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.style.EdgeInsets;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.Stylesheet;
@@ -36,6 +37,24 @@ public class Button extends InteractiveComponent<Button> {
 
     public static Button of(Text text) {
         return new Button().addChildren(SimpleTextComponent.of(text).setX(Constraints.center()).setY(Constraints.center()).setHittable(false));
+    }
+
+    @Override
+    protected void applyComponentStylesFromStylesheet() {
+        Stylesheet stylesheet = ThemeManager.getStylesheet();
+
+        Float padding = stylesheet.get(this, StyleProps.PADDING, null);
+        if (padding != null) {
+            this.getLayoutState().setPadding(new EdgeInsets(padding));
+            this.getConstraints().setWidth(Constraints.childBased(padding));
+            this.getConstraints().setHeight(Constraints.childBased(padding));
+        }
+
+        Float minWidth = stylesheet.get(this, StyleProps.MIN_WIDTH, null);
+        if (minWidth != null) this.getConstraints().setMinWidth(minWidth);
+
+        Float minHeight = stylesheet.get(this, StyleProps.MIN_HEIGHT, null);
+        if (minHeight != null) this.getConstraints().setMinHeight(minHeight);
     }
 
     public static final class StyleProps {

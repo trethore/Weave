@@ -2,6 +2,9 @@ package tytoo.weave.layout;
 
 import tytoo.weave.WeaveCore;
 import tytoo.weave.component.Component;
+import tytoo.weave.style.StyleProperty;
+import tytoo.weave.theme.Stylesheet;
+import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -32,15 +35,22 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
 
     @Override
     public void arrangeChildren(Component<?> parent) {
+        Stylesheet ss = ThemeManager.getStylesheet();
+        Integer colsStyle = ss.get(parent, StyleProps.COLUMNS, null);
+        Float hGapStyle = ss.get(parent, StyleProps.H_GAP, null);
+        Float vGapStyle = ss.get(parent, StyleProps.V_GAP, null);
+        int effColumns = Math.max(1, colsStyle != null ? colsStyle : columns);
+        float effHGap = hGapStyle != null ? hGapStyle : horizontalGap;
+        float effVGap = vGapStyle != null ? vGapStyle : verticalGap;
         List<Component<?>> managedChildren = parent.getChildren().stream()
                 .filter(Component::isVisible)
                 .filter(Component::isManagedByLayout)
                 .toList();
 
         if (!managedChildren.isEmpty()) {
-            Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(managedChildren);
-            PlacementResult placement = calculatePlacement(managedChildren, gridDataMap);
-            applyArrangement(parent, managedChildren, placement, gridDataMap);
+            Map<Component<?>, GridData> gridDataMap = getGridDataForChildren(managedChildren, ss);
+            PlacementResult placement = calculatePlacement(managedChildren, gridDataMap, effColumns);
+            applyArrangement(parent, managedChildren, placement, gridDataMap, effColumns, effHGap, effVGap);
         }
 
         List<Component<?>> unmanagedChildren = parent.getChildren().stream()
@@ -55,16 +65,22 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
         }
     }
 
-    private Map<Component<?>, GridData> getGridDataForChildren(List<Component<?>> children) {
+    private Map<Component<?>, GridData> getGridDataForChildren(List<Component<?>> children, Stylesheet ss) {
         Map<Component<?>, GridData> gridDataMap = new HashMap<>();
         for (Component<?> child : children) {
             Object layoutData = child.getLayoutData();
-            gridDataMap.put(child, layoutData instanceof GridData data ? data : new GridData());
+            if (layoutData instanceof GridData data) {
+                gridDataMap.put(child, data);
+            } else {
+                Integer col = ss.get(child, StyleProps.COL_SPAN, null);
+                Integer row = ss.get(child, StyleProps.ROW_SPAN, null);
+                gridDataMap.put(child, new GridData(col != null ? col : 1, row != null ? row : 1));
+            }
         }
         return gridDataMap;
     }
 
-    private PlacementResult calculatePlacement(List<Component<?>> children, Map<Component<?>, GridData> gridDataMap) {
+    private PlacementResult calculatePlacement(List<Component<?>> children, Map<Component<?>, GridData> gridDataMap, int effColumns) {
         Map<Component<?>, Point> childPositions = new HashMap<>();
         List<boolean[]> occupied = new ArrayList<>();
         int maxRow = 0;
@@ -73,10 +89,10 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
 
         for (Component<?> child : children) {
             GridData data = gridDataMap.get(child);
-            final int colSpan = Math.max(1, Math.min(columns, data.columnSpan()));
+            final int colSpan = Math.max(1, Math.min(effColumns, data.columnSpan()));
             final int rowSpan = Math.max(1, data.rowSpan());
 
-            Point position = findNextAvailablePosition(occupied, cursorRow, cursorCol, colSpan, rowSpan);
+            Point position = findNextAvailablePosition(occupied, cursorRow, cursorCol, colSpan, rowSpan, effColumns);
             cursorRow = position.y;
             cursorCol = position.x;
 
@@ -88,25 +104,25 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
         return new PlacementResult(childPositions, maxRow + 1);
     }
 
-    private Point findNextAvailablePosition(List<boolean[]> occupied, int startRow, int startCol, int colSpan, int rowSpan) {
+    private Point findNextAvailablePosition(List<boolean[]> occupied, int startRow, int startCol, int colSpan, int rowSpan, int effColumns) {
         int r = startRow;
         int c = startCol;
         while (true) {
-            if (c + colSpan > columns) {
+            if (c + colSpan > effColumns) {
                 c = 0;
                 r++;
                 continue;
             }
 
             while (occupied.size() <= r + rowSpan - 1) {
-                occupied.add(new boolean[columns]);
+                occupied.add(new boolean[effColumns]);
             }
 
             if (isAreaAvailable(occupied, r, c, rowSpan, colSpan)) {
                 return new Point(c, r);
             } else {
                 c++;
-                if (c >= columns) {
+                if (c >= effColumns) {
                     c = 0;
                     r++;
                 }
@@ -131,12 +147,12 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
         }
     }
 
-    private void applyArrangement(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap) {
+    private void applyArrangement(Component<?> parent, List<Component<?>> children, PlacementResult placement, Map<Component<?>, GridData> gridDataMap, int effColumns, float effHGap, float effVGap) {
         if (placement.totalRows() == 0) return;
 
         final int totalRows = placement.totalRows();
-        final float cellWidth = (parent.getInnerWidth() - (columns - 1) * horizontalGap) / columns;
-        final float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * verticalGap) / totalRows;
+        final float cellWidth = (parent.getInnerWidth() - (effColumns - 1) * effHGap) / effColumns;
+        final float cellHeight = (parent.getInnerHeight() - (totalRows - 1) * effVGap) / totalRows;
 
         for (Component<?> child : children) {
             if (!child.isVisible()) continue;
@@ -146,13 +162,13 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
             final int colSpan = Math.max(1, data.columnSpan());
             final int rowSpan = Math.max(1, data.rowSpan());
 
-            float availableWidthForChild = colSpan * cellWidth + (colSpan - 1) * horizontalGap;
-            float availableHeightForChild = rowSpan * cellHeight + (rowSpan - 1) * verticalGap;
+            float availableWidthForChild = colSpan * cellWidth + (colSpan - 1) * effHGap;
+            float availableHeightForChild = rowSpan * cellHeight + (rowSpan - 1) * effVGap;
 
             child.measure(availableWidthForChild, availableHeightForChild);
 
-            final float startX = parent.getInnerLeft() + pos.x * (cellWidth + horizontalGap);
-            final float startY = parent.getInnerTop() + pos.y * (cellHeight + verticalGap);
+            final float startX = parent.getInnerLeft() + pos.x * (cellWidth + effHGap);
+            final float startY = parent.getInnerTop() + pos.y * (cellHeight + effVGap);
 
             final float childX = startX + (availableWidthForChild - (child.getMeasuredWidth() + child.getMargin().left() + child.getMargin().right())) / 2f;
             final float childY = startY + (availableHeightForChild - (child.getMeasuredHeight() + child.getMargin().top() + child.getMargin().bottom())) / 2f;
@@ -179,6 +195,17 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
 
         public static GridData span(int colSpan, int rowSpan) {
             return new GridData(colSpan, rowSpan);
+        }
+    }
+
+    public static final class StyleProps {
+        public static final StyleProperty<Integer> COLUMNS = new StyleProperty<>("grid.columns", Integer.class);
+        public static final StyleProperty<Float> H_GAP = new StyleProperty<>("grid.h-gap", Float.class);
+        public static final StyleProperty<Float> V_GAP = new StyleProperty<>("grid.v-gap", Float.class);
+        public static final StyleProperty<Integer> COL_SPAN = new StyleProperty<>("grid.col-span", Integer.class);
+        public static final StyleProperty<Integer> ROW_SPAN = new StyleProperty<>("grid.row-span", Integer.class);
+
+        private StyleProps() {
         }
     }
 }

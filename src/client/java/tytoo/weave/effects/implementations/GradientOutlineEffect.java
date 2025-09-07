@@ -137,20 +137,27 @@ public class GradientOutlineEffect implements Effect {
 
         if (inside) {
             if (sides.top()) drawHorizontalEdge(context, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.bottom()) drawHorizontalEdge(context, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.bottom())
+                drawHorizontalEdge(context, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, 90f);
 
             float topOffset = sides.top() ? lw : 0f;
             float bottomOffset = sides.bottom() ? lw : 0f;
             float vertLen = h - (topOffset + bottomOffset);
             if (vertLen > 0f) {
-                if (sides.left()) drawVerticalEdge(context, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, 0f);
-                if (sides.right()) drawVerticalEdge(context, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+                if (sides.left())
+                    drawVerticalEdge(context, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, 0f);
+                if (sides.right())
+                    drawVerticalEdge(context, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, 0f);
             }
         } else {
-            if (sides.top()) drawHorizontalEdge(context, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.bottom()) drawHorizontalEdge(context, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.left()) drawVerticalEdge(context, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, 0f);
-            if (sides.right()) drawVerticalEdge(context, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.top())
+                drawHorizontalEdge(context, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.bottom())
+                drawHorizontalEdge(context, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.left())
+                drawVerticalEdge(context, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.right())
+                drawVerticalEdge(context, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, 0f);
         }
     }
 
