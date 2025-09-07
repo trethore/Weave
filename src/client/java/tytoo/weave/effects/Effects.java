@@ -1,9 +1,6 @@
 package tytoo.weave.effects;
 
-import tytoo.weave.effects.implementations.GradientOutlineEffect;
-import tytoo.weave.effects.implementations.OutlineEffect;
-import tytoo.weave.effects.implementations.ScissorEffect;
-import tytoo.weave.effects.implementations.ShadowEffect;
+import tytoo.weave.effects.implementations.*;
 import tytoo.weave.style.ColorWave;
 
 import java.awt.*;
@@ -26,8 +23,16 @@ public final class Effects {
         return new OutlineEffect(color, width, inside);
     }
 
-    public static Effect shadow(Color color, float offsetX, float offsetY, float size, float cornerRadius) {
-        return new ShadowEffect(color, offsetX, offsetY, size, cornerRadius);
+    public static Effect boxShadow(Color color, float offsetX, float offsetY, float spread, float cornerRadius) {
+        return new BoxShadowEffect(color, offsetX, offsetY, spread, cornerRadius);
+    }
+
+    public static Effect shadow(Color color, float offsetX, float offsetY, float blurRadius, float cornerRadius) {
+        return new GaussianShadowEffect(color, offsetX, offsetY, blurRadius, 0f, cornerRadius);
+    }
+
+    public static Effect shadow(Color color, float offsetX, float offsetY, float blurRadius, float spread, float cornerRadius) {
+        return new GaussianShadowEffect(color, offsetX, offsetY, blurRadius, spread, cornerRadius);
     }
 
     public static Effect gradientOutline(List<Color> colors, float width) {

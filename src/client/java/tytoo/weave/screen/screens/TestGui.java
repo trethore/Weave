@@ -32,6 +32,7 @@ public class TestGui extends WeaveScreen {
         window.setPadding(10);
 
         window.addEffect(Effects.gradientOutline(List.of(Color.GRAY, Color.WHITE), 1f, false, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT));
+        window.addEffect(Effects.boxShadow(Color.decode("#222222"), 4f, 4f, 0f, 0));
 
         Panel titlePanel = Panel.create()
                 .setWidth(Constraints.relative(1.0f))

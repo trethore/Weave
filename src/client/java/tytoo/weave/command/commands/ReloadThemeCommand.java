@@ -1,4 +1,4 @@
-package tytoo.weave.command;
+package tytoo.weave.command.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
