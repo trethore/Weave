@@ -15,6 +15,7 @@ import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.ObservableList;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.ui.toast.ToastManager;
 import tytoo.weave.ui.toast.ToastOptions;
@@ -31,7 +32,7 @@ public class TestGui extends WeaveScreen {
         window.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 5));
         window.setPadding(10);
 
-        window.addEffect(Effects.gradientOutline(List.of(Color.GRAY, Color.WHITE), 1f, false, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT));
+        window.addEffect(Effects.gradientOutline(new ColorWave(List.of(Color.GRAY, Color.WHITE), 0f), 1f, false, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT, new OutlineSides(true, true, false, true)));
         window.addEffect(Effects.boxShadow(Color.decode("#222222"), 4f, 4f, 0f, 0));
 
         Panel titlePanel = Panel.create()

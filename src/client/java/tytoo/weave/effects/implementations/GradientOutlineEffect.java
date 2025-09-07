@@ -5,6 +5,7 @@ import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.Component;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.OutlineSides;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
@@ -16,6 +17,7 @@ public class GradientOutlineEffect implements Effect {
     private boolean inside;
     private float angleDegrees;
     private ColorWave colorWave;
+    private OutlineSides sides = OutlineSides.all();
 
     public GradientOutlineEffect(List<Color> colors, float width) {
         this(colors, width, true, Direction.LEFT_TO_RIGHT);
@@ -34,6 +36,11 @@ public class GradientOutlineEffect implements Effect {
             case TOP_LEFT_TO_BOTTOM_RIGHT -> 45f;
             case BOTTOM_LEFT_TO_TOP_RIGHT -> 135f;
         };
+    }
+
+    public GradientOutlineEffect(ColorWave wave, float width, boolean inside, Direction direction, OutlineSides sides) {
+        this(wave, width, inside, direction);
+        this.sides = sides == null ? OutlineSides.all() : sides;
     }
 
     private static float clamp01(float v) {
@@ -87,6 +94,14 @@ public class GradientOutlineEffect implements Effect {
         this.angleDegrees = angleDegrees;
     }
 
+    public OutlineSides getSides() {
+        return sides;
+    }
+
+    public void setSides(OutlineSides sides) {
+        this.sides = sides == null ? OutlineSides.all() : sides;
+    }
+
     @Override
     public void afterDraw(DrawContext context, Component<?> component) {
         if (colorWave == null || colorWave.colors().isEmpty()) return;
@@ -121,15 +136,21 @@ public class GradientOutlineEffect implements Effect {
         if (Math.abs(range) < 1e-6f) range = 1f;
 
         if (inside) {
-            drawHorizontalEdge(context, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            drawHorizontalEdge(context, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            drawVerticalEdge(context, x, y + lw, h - (lw * 2), lw, x + lw * 0.5f, dirX, dirY, minProj, range, 0f);
-            drawVerticalEdge(context, x + w - lw, y + lw, h - (lw * 2), lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.top()) drawHorizontalEdge(context, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.bottom()) drawHorizontalEdge(context, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, 90f);
+
+            float topOffset = sides.top() ? lw : 0f;
+            float bottomOffset = sides.bottom() ? lw : 0f;
+            float vertLen = h - (topOffset + bottomOffset);
+            if (vertLen > 0f) {
+                if (sides.left()) drawVerticalEdge(context, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, 0f);
+                if (sides.right()) drawVerticalEdge(context, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            }
         } else {
-            drawHorizontalEdge(context, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            drawHorizontalEdge(context, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            drawVerticalEdge(context, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, 0f);
-            drawVerticalEdge(context, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.top()) drawHorizontalEdge(context, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.bottom()) drawHorizontalEdge(context, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, 90f);
+            if (sides.left()) drawVerticalEdge(context, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.right()) drawVerticalEdge(context, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, 0f);
         }
     }
 

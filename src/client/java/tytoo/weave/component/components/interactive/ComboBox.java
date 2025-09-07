@@ -26,6 +26,7 @@ import tytoo.weave.ui.popup.Anchor;
 import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
+import tytoo.weave.style.OutlineSides;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -126,6 +127,10 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
     public void applyOutlineColor(Color color) {
         if (this.outlineEffect != null) this.outlineEffect.setColor(color);
+    }
+
+    public void applyOutlineSides(OutlineSides sides) {
+        if (this.outlineEffect != null) this.outlineEffect.setSides(sides);
     }
 
     private void toggleDropdown() {

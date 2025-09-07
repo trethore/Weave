@@ -8,6 +8,7 @@ import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.state.State;
 import tytoo.weave.style.LayoutStyleProperties;
 import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
@@ -129,6 +130,11 @@ public final class StyleTransitionRegistry {
         registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_INSIDE, Boolean.TRUE,
                 (start, end, progress) -> progress < 1.0f ? start : end,
                 BaseTextInput::applyOutlineInside,
+                null);
+
+        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_SIDES, OutlineSides.all(),
+                (start, end, progress) -> progress < 1.0f ? start : end,
+                BaseTextInput::applyOutlineSides,
                 null);
     }
 

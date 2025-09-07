@@ -2,6 +2,7 @@ package tytoo.weave.effects;
 
 import tytoo.weave.effects.implementations.*;
 import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.OutlineSides;
 
 import java.awt.*;
 import java.util.List;
@@ -21,6 +22,10 @@ public final class Effects {
 
     public static Effect outline(Color color, float width, boolean inside) {
         return new OutlineEffect(color, width, inside);
+    }
+
+    public static Effect outline(Color color, float width, boolean inside, OutlineSides sides) {
+        return new OutlineEffect(color, width, inside, sides);
     }
 
     public static Effect boxShadow(Color color, float offsetX, float offsetY, float spread, float cornerRadius) {
@@ -45,6 +50,10 @@ public final class Effects {
 
     public static Effect gradientOutline(ColorWave wave, float width, boolean inside, GradientOutlineEffect.Direction direction) {
         return new GradientOutlineEffect(wave, width, inside, direction);
+    }
+
+    public static Effect gradientOutline(ColorWave wave, float width, boolean inside, GradientOutlineEffect.Direction direction, OutlineSides sides) {
+        return new GradientOutlineEffect(wave, width, inside, direction, sides);
     }
 
 }

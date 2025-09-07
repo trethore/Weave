@@ -11,6 +11,7 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.OutlineSides;
 
 import java.awt.*;
 
@@ -71,16 +72,30 @@ public final class Render2DUtils {
     }
 
     public static void drawOutline(DrawContext context, float x, float y, float width, float height, float lineWidth, Color color, boolean inside) {
+        drawOutline(context, x, y, width, height, lineWidth, color, inside, OutlineSides.all());
+    }
+
+    public static void drawOutline(DrawContext context,
+                                   float x, float y, float width, float height,
+                                   float lineWidth, Color color, boolean inside,
+                                   OutlineSides sides) {
+        if (sides == null) sides = OutlineSides.all();
         if (inside) {
-            drawHLine(context, x, y, width, lineWidth, color);
-            drawHLine(context, x, y + height - lineWidth, width, lineWidth, color);
-            drawVLine(context, x, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
-            drawVLine(context, x + width - lineWidth, y + lineWidth, lineWidth, height - (lineWidth * 2), color);
+            if (sides.top()) drawHLine(context, x, y, width, lineWidth, color);
+            if (sides.bottom()) drawHLine(context, x, y + height - lineWidth, width, lineWidth, color);
+
+            float topOffset = sides.top() ? lineWidth : 0f;
+            float bottomOffset = sides.bottom() ? lineWidth : 0f;
+            float vertLen = height - (topOffset + bottomOffset);
+            if (vertLen > 0f) {
+                if (sides.left()) drawVLine(context, x, y + topOffset, lineWidth, vertLen, color);
+                if (sides.right()) drawVLine(context, x + width - lineWidth, y + topOffset, lineWidth, vertLen, color);
+            }
         } else {
-            drawHLine(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
-            drawHLine(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
-            drawVLine(context, x - lineWidth, y, lineWidth, height, color);
-            drawVLine(context, x + width, y, lineWidth, height, color);
+            if (sides.top()) drawHLine(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
+            if (sides.bottom()) drawHLine(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
+            if (sides.left()) drawVLine(context, x - lineWidth, y, lineWidth, height, color);
+            if (sides.right()) drawVLine(context, x + width, y, lineWidth, height, color);
         }
     }
 

@@ -13,6 +13,7 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -532,6 +533,12 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         }
     }
 
+    public void applyOutlineSides(OutlineSides sides) {
+        if (this.outlineEffect instanceof OutlineEffect outline) {
+            outline.setSides(sides);
+        }
+    }
+
     public T setOutlineEffect(Effect effect) {
         if (effect == null) return self();
         if (this.outlineEffect != null) {
@@ -567,5 +574,6 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
         public static final StyleProperty<Float> OUTLINE_WIDTH = new StyleProperty<>("outline.width", Float.class);
         public static final StyleProperty<Boolean> OUTLINE_INSIDE = new StyleProperty<>("outline.inside", Boolean.class);
+        public static final StyleProperty<OutlineSides> OUTLINE_SIDES = new StyleProperty<>("outline.sides", OutlineSides.class);
     }
 }
