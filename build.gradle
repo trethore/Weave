@@ -1,7 +1,3 @@
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import net.fabricmc.loom.task.RemapJarTask
-
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
@@ -23,14 +19,7 @@ repositories {
 }
 
 loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"weave-ui" {
-			sourceSet sourceSets.client
-		}
-	}
-
+    splitEnvironmentSourceSets()
 }
 
 dependencies {
@@ -42,6 +31,14 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	
+}
+
+loom {
+    mods {
+        "weave-ui" {
+            sourceSet sourceSets.client
+        }
+    }
 }
 
 processResources {
@@ -73,14 +70,6 @@ java {
 	targetCompatibility = JavaVersion.VERSION_21
 }
 
-jar {
-    inputs.property "archivesName", project.base.archivesName
-
-    from("LICENSE") {
-        rename { "${it}_${inputs.properties.archivesName}"}
-    }
-}
-
 def releaseResourcesDir = layout.buildDirectory.dir("releaseResources")
 
 tasks.register("generateReleaseFabricMod") {
@@ -90,51 +79,46 @@ tasks.register("generateReleaseFabricMod") {
         def src = file("${projectDir}/src/client/resources/fabric.mod.json")
         def destDir = releaseResourcesDir.get().asFile
         destDir.mkdirs()
-        def json = new JsonSlurper().parse(src)
+        def json = new groovy.json.JsonSlurper().parse(src)
         json.version = project.version
         json.remove('entrypoints')
-        def text = JsonOutput.prettyPrint(JsonOutput.toJson(json))
+        def text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
         new File(destDir, 'fabric.mod.json').text = text
     }
 }
 
-tasks.register("releaseResources", Copy) {
-    from(sourceSets.client.resources.srcDirs) {
-        exclude("fabric.mod.json")
+jar {
+    inputs.property "archivesName", project.base.archivesName
+
+    // Exclude dev-only classes from the packaged jar
+    exclude("tytoo/weave/WeaveClient.class")
+    exclude('tytoo/weave/WeaveClient$*.class')
+    exclude("tytoo/weave/screen/screens/TestGui.class")
+    exclude('tytoo/weave/screen/screens/TestGui$*.class')
+    exclude("tytoo/weave/command/commands/TestGuiCommand.class")
+    exclude('tytoo/weave/command/commands/TestGuiCommand$*.class')
+
+    // Override fabric.mod.json in the jar with a release variant without entrypoints
+    exclude("fabric.mod.json")
+    from(releaseResourcesDir) {
+        include("fabric.mod.json")
     }
-    into(releaseResourcesDir)
     dependsOn("generateReleaseFabricMod")
-}
 
-tasks.register("releaseJar", Jar) {
-    from(sourceSets.client.output.classesDirs) {
-        exclude("tytoo/weave/WeaveClient.class")
-        exclude("tytoo/weave/screen/screens/TestGui.class")
-        exclude("tytoo/weave/command/TestGuiCommand.class")
+    from("LICENSE") {
+        rename { "${it}_${inputs.properties.archivesName}"}
     }
-
-    from(releaseResourcesDir)
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set("release")
-    dependsOn("classes", "releaseResources")
 }
 
-tasks.register("remapReleaseJar", RemapJarTask) {
-    inputFile.set(tasks.named("releaseJar", Jar).flatMap { it.archiveFile })
-    archiveClassifier.set("release")
-    addNestedDependencies.set(false)
-    dependsOn("releaseJar")
-}
+// No custom release JAR; default remapJar is published. Dev-only code lives in the 'dev' source set
+// and a separate dev mod entry is loaded only in dev runs.
 
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
             artifactId = project.archives_base_name
-            artifact(tasks.named("remapReleaseJar")) {
-                classifier = null
-            }
-            artifact(tasks.named("remapSourcesJar"))
-            
+            from components.java
+
             pom {
                 name = project.archives_base_name
                 description = "Weave UI: composable UI library for Fabric mods"
