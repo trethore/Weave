@@ -1,36 +1,43 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
-	id 'maven-publish'
+    id 'fabric-loom' version "${loom_version}"
+    id 'maven-publish'
 }
 
-version = "${project.mod_version}+${project.minecraft_version}"
+version = project.mod_version
 group = project.maven_group
 
+// version
+def mcVersion    = project.property('minecraft_version')
+def fabricVer    = project.property('fabric_version')
+def yarnMappings = project.property('yarn_mappings')
+def yarnSuffix = yarnMappings.startsWith("${mcVersion}+")
+        ? yarnMappings.substring(("${mcVersion}+").length())
+        : yarnMappings
+def compatSuffix = "${fabricVer}+${yarnSuffix}"
+
+version = "${project.mod_version}-${compatSuffix}"
+
 base {
-	archivesName = project.archives_base_name
+    archivesName = project.archives_base_name
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+    // Add repositories to retrieve artifacts from in here.
+    // You should only use this when depending on other mods because
+    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 }
 
 loom {
-    splitEnvironmentSourceSets()
+    splitEnvironmentSourceSets() // so sourceSets.client is available
 }
-
-dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
+def clientSS = sourceSets.named('client')
+sourceSets {
+    debug {
+        java.srcDir 'src/debug/java'
+        resources.srcDir 'src/debug/resources'
+        compileClasspath += clientSS.get().compileClasspath + clientSS.get().output
+        runtimeClasspath += clientSS.get().runtimeClasspath + clientSS.get().output
+    }
 }
 
 loom {
@@ -38,7 +45,49 @@ loom {
         "weave-ui" {
             sourceSet sourceSets.client
         }
+        "weave-debug" {
+            sourceSet sourceSets.named('debug').get()
+        }
     }
+    runs {
+        client {
+            client()
+            source sourceSets.named('client').get() // clean lib run (no debug mod)
+            ideConfigGenerated true
+        }
+        debugClient {
+            client()
+            source sourceSets.named('debug').get() // dev run (weave-ui + weave-debug)
+            ideConfigGenerated true
+        }
+    }
+}
+
+tasks.named("processDebugResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property("version", project.version)
+    filesMatching("fabric.mod.json") { expand(version: project.version) }
+}
+
+configurations {
+    debugImplementation.extendsFrom configurations.clientImplementation
+    debugCompileOnly.extendsFrom configurations.clientCompileOnly
+    debugRuntimeOnly.extendsFrom configurations.clientRuntimeOnly
+
+    if (configurations.findByName('clientAnnotationProcessor')) {
+        debugAnnotationProcessor.extendsFrom configurations.clientAnnotationProcessor
+    }
+}
+
+dependencies {
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
 }
 
 processResources {
@@ -49,75 +98,53 @@ processResources {
     }
 }
 
-tasks.named("processClientResources") {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
-    }
-}
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+    it.options.release = 21
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
-}
-
-def releaseResourcesDir = layout.buildDirectory.dir("releaseResources")
-
-tasks.register("generateReleaseFabricMod") {
-    inputs.file("${projectDir}/src/client/resources/fabric.mod.json")
-    outputs.file(releaseResourcesDir.map { it.file("fabric.mod.json").asFile })
-    doLast {
-        def src = file("${projectDir}/src/client/resources/fabric.mod.json")
-        def destDir = releaseResourcesDir.get().asFile
-        destDir.mkdirs()
-        def json = new groovy.json.JsonSlurper().parse(src)
-        json.version = project.version
-        json.remove('entrypoints')
-        def text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json))
-        new File(destDir, 'fabric.mod.json').text = text
-    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
     inputs.property "archivesName", project.base.archivesName
-
-    // Exclude dev-only classes from the packaged jar
-    exclude("tytoo/weave/WeaveClient.class")
-    exclude('tytoo/weave/WeaveClient$*.class')
-    exclude("tytoo/weave/screen/screens/TestGui.class")
-    exclude('tytoo/weave/screen/screens/TestGui$*.class')
-    exclude("tytoo/weave/command/commands/TestGuiCommand.class")
-    exclude('tytoo/weave/command/commands/TestGuiCommand$*.class')
-
-    // Override fabric.mod.json in the jar with a release variant without entrypoints
-    exclude("fabric.mod.json")
-    from(releaseResourcesDir) {
-        include("fabric.mod.json")
-    }
-    dependsOn("generateReleaseFabricMod")
-
     from("LICENSE") {
         rename { "${it}_${inputs.properties.archivesName}"}
     }
+
+    exclude 'tytoo/weave_debug/**'
 }
 
-// No custom release JAR; default remapJar is published. Dev-only code lives in the 'dev' source set
-// and a separate dev mod entry is loaded only in dev runs.
+tasks.named("processClientResources") {
+    inputs.property("version", project.version)
+    filesMatching("fabric.mod.json") {
+        expand(version: project.version)
+    }
+}
 
+// configure the maven publication
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
+            groupId = project.maven_group
             artifactId = project.archives_base_name
-            from components.java
+            version = project.version
+
+            artifact(tasks.named("remapJar")) {
+                builtBy(tasks.named("remapJar"))
+            }
+
+            artifact(tasks.named("remapSourcesJar")) {
+                builtBy(tasks.named("remapSourcesJar"))
+                classifier = 'sources'
+            }
 
             pom {
                 name = project.archives_base_name
@@ -138,23 +165,13 @@ publishing {
         }
     }
 
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
-
-        // Publish to GitHub Packages when credentials are provided.
-        // Set env vars: GITHUB_ACTOR and GITHUB_TOKEN (with `write:packages`).
-        if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
-            maven {
-                name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/trethore/Weave")
-                credentials {
-                    username = System.getenv("GITHUB_ACTOR")
-                    password = System.getenv("GITHUB_TOKEN")
-                }
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/trethore/Weave")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR") ?: (findProperty("gpr.user") ?: "")
+                password = System.getenv("GITHUB_TOKEN") ?: (findProperty("gpr.key") ?: "")
             }
         }
     }

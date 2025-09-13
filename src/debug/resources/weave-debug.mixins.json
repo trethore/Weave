@@ -1,0 +1,11 @@
+{
+  "required": false,
+  "refmap": "weave-debug.refmap.json",
+  "package": "tytoo.weave_debug.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

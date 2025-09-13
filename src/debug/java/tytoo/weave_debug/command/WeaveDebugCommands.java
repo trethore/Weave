@@ -1,20 +1,17 @@
-package tytoo.weave.command;
+package tytoo.weave_debug.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import tytoo.weave.command.commands.DemoCommand;
-import tytoo.weave.command.commands.ReloadThemeCommand;
 
-public final class WeaveCommands {
-    private WeaveCommands() {
+public final class WeaveDebugCommands {
+    private WeaveDebugCommands() {
     }
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         LiteralArgumentBuilder<FabricClientCommandSource> root = ClientCommandManager.literal("weave")
-                .then(DemoCommand.build())
-                .then(ReloadThemeCommand.build());
+                .then(TestGuiCommand.build());
         dispatcher.register(root);
     }
 }

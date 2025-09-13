@@ -1,11 +1,11 @@
-package tytoo.weave.command.commands;
+package tytoo.weave_debug.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import tytoo.weave.screen.screens.TestGui;
+import tytoo.weave_debug.screen.TestGui;
 
 public final class TestGuiCommand {
     private TestGuiCommand() {

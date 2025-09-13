@@ -8,16 +8,14 @@
     "Me!"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/trethore/Weave",
+    "sources": "https://github.com/trethore/Weave"
   },
   "license": "CC0-1.0",
   "icon": "assets/weave-ui/icon.png",
   "environment": "*",
   "entrypoints": {
-    "client": [
-      "tytoo.weave.WeaveClient"
-    ]
+    "client": []
   },
   "mixins": [
     {

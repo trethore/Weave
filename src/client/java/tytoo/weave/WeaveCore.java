@@ -43,9 +43,7 @@ public final class WeaveCore {
      * /weave reloadtheme
      */
     private static void registerDevCommands() {
-        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> WeaveCommands.register(dispatcher));
-        }
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> WeaveCommands.register(dispatcher));
     }
 
     /**

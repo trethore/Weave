@@ -1,4 +1,4 @@
-package tytoo.weave.screen.screens;
+package tytoo.weave_debug.screen;
 
 import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;

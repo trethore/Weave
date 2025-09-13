@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "weave-debug",
+  "version": "${version}",
+  "name": "Weave Debug",
+  "description": "Debug and demo module for Weave UI. Provides test screens, commands, and client entrypoints for development only.",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://github.com/trethore/Weave",
+    "sources": "https://github.com/trethore/Weave"
+  },
+  "license": "MIT",
+  "icon": "assets/weave_debug/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "tytoo.weave_debug.WeaveDebugClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.2",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*",
+    "weave-ui": "*"
+  }
+}
