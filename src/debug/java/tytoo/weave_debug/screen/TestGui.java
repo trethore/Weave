@@ -21,6 +21,7 @@ import tytoo.weave.ui.toast.ToastManager;
 import tytoo.weave.ui.toast.ToastOptions;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class TestGui extends WeaveScreen {
         ObservableList<List<Integer>> rows = new ObservableList<>();
         for (int i = 0; i < totalButtons; i += columns) {
             int end = Math.min(totalButtons, i + columns);
-            java.util.List<Integer> row = new java.util.ArrayList<>();
+            List<Integer> row = new ArrayList<>();
             for (int j = i; j < end; j++) row.add(j);
             rows.add(row);
         }

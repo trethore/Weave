@@ -14,11 +14,34 @@ import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.OutlineSides;
 
 import java.awt.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 @SuppressWarnings("unused")
 public final class Render2DUtils {
 
+    private static final ThreadLocal<Deque<Integer>> AA_STACK = ThreadLocal.withInitial(() -> {
+        ArrayDeque<Integer> d = new ArrayDeque<>();
+        d.addLast(9);
+        return d;
+    });
+
     private Render2DUtils() {
+    }
+
+    public static void pushAntialiasSegmentsPer90(int segments) {
+        if (segments < 1) segments = 1;
+        AA_STACK.get().addLast(segments);
+    }
+
+    public static void popAntialiasSegmentsPer90() {
+        Deque<Integer> d = AA_STACK.get();
+        if (d.size() > 1) d.removeLast();
+    }
+
+    private static int currentAntialiasSegmentsPer90() {
+        Integer v = AA_STACK.get().peekLast();
+        return v == null ? 9 : Math.max(1, v);
     }
 
     private static BufferBuilder setupRender(ShaderProgramKey shaderProgramKey, VertexFormat.DrawMode drawMode, VertexFormat vertexFormat) {
@@ -206,7 +229,11 @@ public final class Render2DUtils {
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
 
         int angleRange = Math.abs(endAngle - startAngle);
-        int segments = Math.max(8, (int) Math.ceil(angleRange / 10.0));
+        int aaPer90 = currentAntialiasSegmentsPer90();
+        float perDegree = aaPer90 / 90.0f;
+        int segmentsAA = Math.max(8, Math.round(angleRange * perDegree));
+        int segmentsBase = Math.max(8, (int) Math.ceil(angleRange / 10.0));
+        int segments = Math.max(segmentsAA, segmentsBase);
 
         BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
 

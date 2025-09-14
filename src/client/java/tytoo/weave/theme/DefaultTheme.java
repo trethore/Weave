@@ -10,6 +10,7 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.Separator;
 import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.style.*;
+import tytoo.weave.style.effects.AntialiasingSpec;
 import tytoo.weave.style.renderer.*;
 import tytoo.weave.style.selector.StyleSelector;
 import tytoo.weave.style.value.StyleVariable;
@@ -21,6 +22,7 @@ import tytoo.weave.utils.McUtils;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -104,7 +106,8 @@ public class DefaultTheme implements Theme {
                 Map.entry(ProgressBar.StyleProps.VALUE_COLOR, new Color(40, 160, 220)),
                 Map.entry(ProgressBar.StyleProps.BACKGROUND_COLOR, new Color(80, 80, 80)),
                 Map.entry(ProgressBar.StyleProps.ANIMATION_DURATION, 250L),
-                Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT)
+                Map.entry(ProgressBar.StyleProps.FILL_POLICY, ProgressBar.FillPolicy.LEFT_TO_RIGHT),
+                Map.entry(EffectStyleProperties.EFFECTS, List.of(new AntialiasingSpec(24)))
         )));
 
         s = new StyleSelector(ProgressBar.class, null, null, Set.of(StyleState.HOVERED));
@@ -230,7 +233,8 @@ public class DefaultTheme implements Theme {
         stylesheet.addRule(new StyleRule(s, Map.ofEntries(
                 Map.entry(RadioButton.StyleProps.GAP, 5f),
                 Map.entry(RadioButton.StyleProps.OUTLINE_SIZE, 12f),
-                Map.entry(RadioButton.StyleProps.DOT_SIZE, 6f)
+                Map.entry(RadioButton.StyleProps.DOT_SIZE, 6f),
+                Map.entry(EffectStyleProperties.EFFECTS, List.of(new AntialiasingSpec(24)))
         )));
 
         s = StyleSelector.part(RadioButton.class, "outline", Panel.class, null, null, null);

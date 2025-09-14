@@ -56,4 +56,8 @@ public final class Effects {
         return new GradientOutlineEffect(wave, width, inside, direction, sides);
     }
 
+    public static Effect antialiasing(int segmentsPer90) {
+        return new AntialiasingEffect(segmentsPer90);
+    }
+
 }
