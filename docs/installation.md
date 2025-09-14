@@ -89,8 +89,10 @@ public final class MyModClient implements ClientModInitializer {
 
 In-game dev commands:
 
-* `/weave testgui` → open the demo screen.
+* `/weave demo` → open the demo screen.
 * `/weave reloadtheme` → reload the default theme.
+
+Note: debug-only commands (like `/weave testgui`) are available only when developing the Weave library with `./gradlew runDebugClient` and are not included in the published artifact.
 
 ---
 

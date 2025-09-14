@@ -38,9 +38,10 @@ Weave currently only supports the version 1.21.4 of Minecraft (with Fabric API).
 
 ## Development tips
 
-- In development:
-    - `/weave testgui` opens the demo screen.
+- Consumer dev runs (Weave used as a dependency):
+    - `/weave demo` opens the demo screen.
     - `/weave reloadtheme` reloads the default theme.
+- Library development (working on Weave itself): run `./gradlew runDebugClient` to enable extra debug commands (not included in published artifacts), including `/weave testgui` to open the debug test GUI.
 - Start with structure (components and layout), then layer styling, then add animations last.
 - Prefer binding component state to your data model rather than pushing values from event handlers.
 - Keep theme rules generic; use ids/classes for one-offs to avoid over-specific selectors.

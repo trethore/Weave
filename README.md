@@ -71,8 +71,9 @@ This makes UI code predictable and modular:
 - Input/render bridging via mixins
 
 **Dev Commands**
-- `/weave testgui` → open demo screen
+- `/weave demo` → open demo screen (available in dev when `WeaveCore.init()` is called)
 - `/weave reloadtheme` → reload theme in dev environment
+- Debug-only (library development via `./gradlew runDebugClient`): `/weave testgui` → open the debug test GUI
 
 ---
 
@@ -146,12 +147,20 @@ public final class MyModClient implements ClientModInitializer {
 
 4) Run in dev
 
+For developing this library (with extra debug commands):
+
+```
+./gradlew runDebugClient
+```
+
+For using Weave inside another mod’s dev environment:
+
 ```
 ./gradlew runClient
 ```
 
 In-game:
-- `/weave testgui` → open the demo screen
+- `/weave demo` → open the demo screen
 - `/weave reloadtheme` → reload the theme in dev
 
 ---
@@ -165,9 +174,13 @@ Contributions are welcome!
 - Before contributing, make sure you can build and test the project locally:
 
   ```bash
-  ./gradlew build        # build artifacts
-  ./gradlew runClient    # run in dev environment
+  ./gradlew build            # build artifacts
+  ./gradlew runDebugClient   # develop this library (debug commands enabled)
+  # or, when testing as a dependency in another mod:
+  ./gradlew runClient
   ```
+
+Note: debug-only commands (like `/weave testgui`) are included only in the debug run and are not present in the published artifact.
 
 Please follow best practices (clean code, descriptive commits, small PRs).
 
