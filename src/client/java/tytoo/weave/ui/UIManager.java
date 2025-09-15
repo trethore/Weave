@@ -290,7 +290,7 @@ public class UIManager {
 
         current = component;
         while (current != null) {
-            CursorType cursorType = ThemeManager.getStylesheet().get(current, CommonStyleProperties.CURSOR, null);
+            CursorType cursorType = current.getCachedStyleValue(CommonStyleProperties.CURSOR, null);
             if (cursorType != null) {
                 CursorManager.setCursor(cursorType);
                 return;

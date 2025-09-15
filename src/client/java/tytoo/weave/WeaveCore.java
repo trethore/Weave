@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tytoo.weave.command.WeaveCommands;
+import tytoo.weave.style.contract.StyleContracts;
 import tytoo.weave.ui.CursorManager;
 import tytoo.weave.utils.FontManager;
 import tytoo.weave.utils.ImageManager;
@@ -17,7 +18,6 @@ public final class WeaveCore {
     public static final String ID = "weave-ui";
     public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
-
     private WeaveCore() {
     }
 
@@ -25,8 +25,8 @@ public final class WeaveCore {
      * Initializes Weave by registering debug commands and close event handlers.
      * Call this method in your mod's client initializer.
      */
-
     public static void init() {
+        StyleContracts.bootstrap();
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             registerDevCommands();
         }

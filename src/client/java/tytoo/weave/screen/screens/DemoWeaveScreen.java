@@ -11,6 +11,7 @@ import tytoo.weave.component.components.interactive.TextField;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
+import tytoo.weave.component.components.layout.Window;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.GradientOutlineEffect;
@@ -21,7 +22,7 @@ import tytoo.weave.style.*;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +60,9 @@ public class DemoWeaveScreen extends WeaveScreen {
         Color end = new Color(153, 74, 255);
 
         window.addLocalStyleRule(new StyleRule(
-                new StyleSelector(tytoo.weave.component.components.layout.Window.class, null, null, null),
+                new StyleSelector(Window.class, null, null, null),
                 Map.ofEntries(
-                        Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(Color.decode("#222222"))),
+                        Map.entry(ComponentStyle.Slots.BASE_RENDERER, new SolidColorRenderer(Color.decode("#222222"))),
                         Map.entry(LayoutStyleProperties.BORDER_RADIUS, 0f),
                         Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1.5f),
                         Map.entry(LayoutStyleProperties.BORDER_COLOR, new Color(30, 30, 30, 160)),
@@ -71,7 +72,7 @@ public class DemoWeaveScreen extends WeaveScreen {
         ));
 
         List<Color> outline = Arrays.asList(start, end);
-        window.addEffect(Effects.gradientOutline(outline, 1.5f, true, GradientOutlineEffect.Direction.LEFT_TO_RIGHT));
+        window.addEffect(Effects.gradientOutline(outline, 1.5f, true, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT));
         window.addEffect(Effects.shadow(new Color(0, 0, 0, 130), 0f, 2.5f, 10f, 0f));
     }
 

@@ -53,7 +53,7 @@ This makes UI code predictable and modular:
 - Constraints: pixel, relative, center, aspect ratio, child-based, sum-of-children
 
 **Styling & Theming**
-- Stylesheet, StyleRule, typed StyleProperty & StyleValue
+- Stylesheet, StyleRule, contract-driven StyleSlots & StyleValue
 - Variables, computed values, dedicated renderers (solid, rounded, gradient, progress, text field parts, etc.)
 
 **Effects**

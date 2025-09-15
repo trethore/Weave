@@ -18,14 +18,21 @@ Weave uses a powerful styling system inspired by CSS to separate a UI's appearan
 
 1.  **Theme:** The active `Theme` provides a global `Stylesheet`. `ThemeManager` controls which theme is active.
 2.  **Stylesheet:** A collection of `StyleRule` objects.
-3.  **StyleRule:** A rule connects a `StyleSelector` to a map of `StyleProperty` values.
+3.  **StyleRule:** A rule connects a `StyleSelector` to a map of `StyleSlot` values.
 4.  **Selector:** A query that determines which components a rule applies to (e.g., "all buttons with the class `primary` that are currently hovered").
-5.  **Property:** A typed key for a visual attribute (e.g., `LayoutStyleProperties.BORDER_COLOR`).
+5.  **Style Slot:** A typed key for a visual attribute (e.g., `LayoutStyleProperties.BORDER_COLOR`). Slots belong to component/theme contracts so themes know exactly which visuals they can supply.
 6.  **Cascade:** Styles are resolved by collecting all matching rules from the global theme and any local stylesheets on the component or its ancestors. Rules with more specific selectors override those with less specific ones.
 
 ## Stylesheets and Rules
 
 The `Stylesheet` is the central repository for your UI's visual language. You add rules to define how components should look.
+
+### Contracts & Slots
+
+Every component declares a `ComponentThemeContract` listing the style slots it understands. Slots are typed (`StyleSlot`) and
+scoped to specific component types, so supplying a value that does not match a component's contract will be ignored (or
+warned about if the slot is required). You can introspect contracts at runtime via `StyleContractRegistry.resolve(Button.class)`
+to drive editors or validations, and custom components should register their own contracts during initialization.
 
 ```java
 // Get the active stylesheet
@@ -40,9 +47,9 @@ StyleRule rule = new StyleRule(
         Set.of("primary-button"),                                    // Must have the "primary-button" class
         Set.of(StyleState.HOVERED)                                   // Must be in the HOVERED state
     ),
-    // The properties define the visual styles
+    // The slots define the visual styles
     Map.of(
-        ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 150, 255)),
+        ComponentStyle.Slots.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 150, 255)),
         TextComponent.StyleProps.TEXT_COLOR, Color.WHITE
     )
 );
@@ -89,7 +96,7 @@ public static final StyleVariable<Color> PRIMARY_ACCENT = new StyleVariable<>("w
 ```java
 stylesheet.addRule(new StyleRule(
     ...,
-    Map.of(ComponentStyle.StyleProps.ACTIVE_RENDERER, new Var(PRIMARY_ACCENT))
+    Map.of(ComponentStyle.Slots.ACTIVE_RENDERER, new Var(PRIMARY_ACCENT))
 ));
 ```
 

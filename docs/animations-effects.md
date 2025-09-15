@@ -112,13 +112,13 @@ import java.awt.Color;
 // Default background renderer for buttons
 stylesheet.addRule(new StyleRule(
     new StyleSelector(tytoo.weave.component.components.interactive.Button.class, null, null, null),
-    Map.of(ComponentStyle.StyleProps.NORMAL_RENDERER, new SolidColorRenderer(new Color(60, 60, 60)))
+    Map.of(ComponentStyle.Slots.NORMAL_RENDERER, new SolidColorRenderer(new Color(60, 60, 60)))
 ));
 
 // Background renderer when the button is hovered
 stylesheet.addRule(new StyleRule(
     new StyleSelector(tytoo.weave.component.components.interactive.Button.class, null, null, Set.of(StyleState.HOVERED)),
-    Map.of(ComponentStyle.StyleProps.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)))
+    Map.of(ComponentStyle.Slots.HOVERED_RENDERER, new SolidColorRenderer(new Color(80, 80, 80)))
 ));
 ```
 

@@ -118,7 +118,7 @@ window.addLocalStyleRule(new StyleRule(
         Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1.0f),
         Map.entry(LayoutStyleProperties.BORDER_RADIUS, 6.0f),
         Map.entry(LayoutStyleProperties.BORDER_COLOR, new java.awt.Color(100, 100, 100)),
-        Map.entry(ComponentStyle.StyleProps.BASE_RENDERER, new SolidColorRenderer(new Color(40, 40, 40, 180)))
+        Map.entry(ComponentStyle.Slots.BASE_RENDERER, new SolidColorRenderer(new Color(40, 40, 40, 180)))
     )
 ));
 

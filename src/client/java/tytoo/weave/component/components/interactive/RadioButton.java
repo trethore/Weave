@@ -2,14 +2,15 @@ package tytoo.weave.component.components.interactive;
 
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.animation.Easings;
+import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -130,9 +131,11 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("radio.gap", Float.class);
-        public static final StyleProperty<Float> OUTLINE_SIZE = new StyleProperty<>("radio.outline.size", Float.class);
-        public static final StyleProperty<Float> DOT_SIZE = new StyleProperty<>("radio.dot.size", Float.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(RadioButton.class);
+
+        public static final StyleSlot GAP = StyleSlot.of("radio.gap", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot OUTLINE_SIZE = StyleSlot.of("radio.outline.size", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DOT_SIZE = StyleSlot.of("radio.dot.size", COMPONENT_CLASS, Float.class);
 
         private StyleProps() {
         }

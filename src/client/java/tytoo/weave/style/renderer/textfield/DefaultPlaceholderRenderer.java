@@ -7,11 +7,10 @@ import net.minecraft.text.Text;
 import tytoo.weave.component.components.interactive.BaseTextInput;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
-import tytoo.weave.theme.ThemeManager;
-
 import java.awt.*;
 
 public class DefaultPlaceholderRenderer implements PlaceholderRenderer {
+    private static final Color DEFAULT_PLACEHOLDER_COLOR = new Color(150, 150, 150);
     @Override
     public void render(DrawContext context, BaseTextInput<?> textInput) {
         if (!textInput.getText().isEmpty() || textInput.isFocused() || textInput.getPlaceholder() == null) {
@@ -19,7 +18,7 @@ public class DefaultPlaceholderRenderer implements PlaceholderRenderer {
         }
 
         TextRenderer textRenderer = textInput.getEffectiveTextRenderer();
-        Color placeholderColor = ThemeManager.getStylesheet().get(textInput, BaseTextInput.StyleProps.PLACEHOLDER_COLOR, new Color(150, 150, 150));
+        Color placeholderColor = textInput.getCachedStyleValue(BaseTextInput.StyleProps.PLACEHOLDER_COLOR, DEFAULT_PLACEHOLDER_COLOR);
 
         if (placeholderColor == null) return;
 

@@ -5,7 +5,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -276,10 +276,10 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("linear.gap", Float.class);
-        public static final StyleProperty<Alignment> ALIGN = new StyleProperty<>("linear.align", Alignment.class);
-        public static final StyleProperty<CrossAxisAlignment> CROSS_ALIGN = new StyleProperty<>("linear.cross-align", CrossAxisAlignment.class);
-        public static final StyleProperty<Float> FLEX_GROW = new StyleProperty<>("linear.grow", Float.class);
+        public static final StyleSlot GAP = StyleSlot.forRoot("linear.gap", Float.class);
+        public static final StyleSlot ALIGN = StyleSlot.forRoot("linear.align", Alignment.class);
+        public static final StyleSlot CROSS_ALIGN = StyleSlot.forRoot("linear.cross-align", CrossAxisAlignment.class);
+        public static final StyleSlot FLEX_GROW = StyleSlot.forRoot("linear.grow", Float.class);
 
         private StyleProps() {
         }

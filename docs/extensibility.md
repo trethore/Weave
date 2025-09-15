@@ -18,7 +18,7 @@ Weave is designed from the ground up to be extended. You can add your own compon
 ## The Extensibility Mindset
 
 - **Prefer Public APIs:** Build on top of Weave's contracts (`Component`, `Effect`, `ComponentRenderer`, etc.) rather than forking or modifying internals.
-- **Expose Style Properties:** For custom components, define public static `StyleProperty` constants. This creates a clear API for theming and allows others to style your component.
+- **Expose Style Slots:** For custom components, define public static `StyleSlot` constants and register a `ComponentThemeContract`. This creates a clear API for theming and allows others to style your component.
 - **Stylesheet-Driven Visuals:** Define your component's default appearance in your theme's stylesheet. This allows users to easily override the look and feel without changing your component's logic.
 - **Register When Needed:** If you create new concepts that should interact with Weave's systems—like animatable style properties—be sure to register them with the appropriate registry (e.g., `StyleTransitionRegistry`).
 
@@ -28,17 +28,17 @@ Here is the basic skeleton for a new `Badge` component.
 
 ```java
 import tytoo.weave.component.Component;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.constraint.constraints.Constraints;
 import java.awt.Color;
 
 public final class Badge extends Component<Badge> {
-    // 1. Expose typed StyleProperty keys in a nested class for organization.
-    public static final class StyleProps {
-        public static final StyleProperty<Color> BADGE_COLOR = new StyleProperty<>("badge.color", Color.class);
-        public static final StyleProperty<Float> CORNER_RADIUS = new StyleProperty<>("badge.radius", Float.class);
+    // 1. Expose typed StyleSlot keys in a nested class for organization.
+    public static final class StyleSlots {
+        public static final StyleSlot BADGE_COLOR = StyleSlot.of("badge.color", Badge.class, Color.class);
+        public static final StyleSlot CORNER_RADIUS = StyleSlot.of("badge.radius", Badge.class, Float.class);
     }
 
     private Badge() {
@@ -61,12 +61,27 @@ Now, in your theme's `Stylesheet`, you can define the default appearance for all
 stylesheet.addRule(new StyleRule(
     new StyleSelector(Badge.class, null, null, null),
     Map.of(
-        Badge.StyleProps.BADGE_COLOR, new Color(40, 160, 220),
-        Badge.StyleProps.CORNER_RADIUS, 4f,
+        Badge.StyleSlots.BADGE_COLOR, new Color(40, 160, 220),
+        Badge.StyleSlots.CORNER_RADIUS, 4f,
         // We can also assign a custom renderer.
-        ComponentStyle.StyleProps.BASE_RENDERER, new SolidBadgeRenderer()
+        ComponentStyle.Slots.BASE_RENDERER, new SolidBadgeRenderer()
     )
 ));
+```
+
+Don't forget to register the contract so themes and tools can discover your slots:
+
+```java
+import tytoo.weave.style.contract.ComponentThemeContract;
+import tytoo.weave.style.contract.SlotRequirement;
+import tytoo.weave.style.contract.StyleContractRegistry;
+
+StyleContractRegistry.register(
+    ComponentThemeContract.builder(Badge.class)
+        .slot(Badge.StyleSlots.BADGE_COLOR, SlotRequirement.REQUIRED)
+        .slot(Badge.StyleSlots.CORNER_RADIUS, SlotRequirement.OPTIONAL)
+        .build()
+);
 ```
 
 ## Creating a Custom Renderer
@@ -81,8 +96,8 @@ public final class SolidBadgeRenderer implements ComponentRenderer {
 
         // Get style values from the stylesheet at render time.
         Stylesheet ss = ThemeManager.getStylesheet();
-        Color color = ss.get(badge, Badge.StyleProps.BADGE_COLOR, Color.RED);
-        float radius = ss.get(badge, Badge.StyleProps.CORNER_RADIUS, 0f);
+        Color color = ss.get(badge, Badge.StyleSlots.BADGE_COLOR, Color.RED);
+        float radius = ss.get(badge, Badge.StyleSlots.CORNER_RADIUS, 0f);
 
         // Use your rendering logic.
         Render2DUtils.drawRoundedRect(
@@ -106,7 +121,7 @@ import tytoo.weave.animation.Interpolators;
 // In your mod's initializer:
 StyleTransitionRegistry.registerStyleProperty(
     Badge.class,                        // The component type this applies to
-    Badge.StyleProps.CORNER_RADIUS,     // The StyleProperty to animate
+    Badge.StyleSlots.CORNER_RADIUS,     // The StyleSlot to animate
     0.0f,                               // The default value if none is found
     Interpolators.FLOAT,                // How to interpolate between two float values
     (badge, radius) -> {                // A function to apply the value during animation

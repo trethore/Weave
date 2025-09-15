@@ -31,6 +31,7 @@ import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.*;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.effects.EffectSpec;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
@@ -85,6 +86,10 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private EdgeInsets animatedPadding;
     @Nullable
     private TooltipAttachment tooltipAttachment;
+    private final Map<Long, Map<StyleSlot, Object>> cachedStyleValues = new HashMap<>();
+    private final Map<Long, List<Effect>> styledEffectsCache = new HashMap<>();
+
+    private static final Object NULL_STYLE_SENTINEL = new Object();
 
     public Component() {
         this.layoutState = new LayoutState(this);
@@ -178,20 +183,30 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     private List<Effect> getEffectiveEffects() {
-        Stylesheet ss = ThemeManager.getStylesheet();
-        Object specsRaw = ss.get(this, EffectStyleProperties.EFFECTS, null);
-        List<Effect> styled = Collections.emptyList();
-        if (specsRaw instanceof List<?> list) {
-            styled = list.stream()
-                    .filter(Objects::nonNull)
-                    .map(o -> {
-                        if (o instanceof EffectSpec spec) return spec.toEffect();
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+        long stateKey = getCurrentStyleStateKey();
+        List<Effect> styled = this.styledEffectsCache.get(stateKey);
+        if (styled == null) {
+            Object specsRaw = getCachedStyleValue(EffectStyleProperties.EFFECTS, null);
+            if (specsRaw instanceof List<?> list) {
+                List<Effect> resolved = list.stream()
+                        .filter(Objects::nonNull)
+                        .map(o -> {
+                            if (o instanceof EffectSpec spec) {
+                                return spec.toEffect();
+                            }
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toCollection(ArrayList::new));
+                styled = Collections.unmodifiableList(resolved);
+            } else {
+                styled = Collections.emptyList();
+            }
+            this.styledEffectsCache.put(stateKey, styled);
         }
-        if (this.renderState.getEffects().isEmpty()) return styled;
+        if (this.renderState.getEffects().isEmpty()) {
+            return styled;
+        }
         List<Effect> combined = new ArrayList<>(styled.size() + this.renderState.getEffects().size());
         combined.addAll(styled);
         combined.addAll(this.renderState.getEffects());
@@ -566,6 +581,27 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
     }
 
+    private long getCurrentStyleStateKey() {
+        long bits = 0L;
+        for (StyleState state : this.activeStyleStates) {
+            bits |= 1L << state.ordinal();
+        }
+        return bits;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getCachedStyleValue(StyleSlot slot, T defaultValue) {
+        long stateKey = getCurrentStyleStateKey();
+        Map<StyleSlot, Object> stateCache = this.cachedStyleValues.computeIfAbsent(stateKey, k -> new HashMap<>());
+        Object cached = stateCache.get(slot);
+        if (cached != null || stateCache.containsKey(slot)) {
+            return cached == NULL_STYLE_SENTINEL ? defaultValue : (T) cached;
+        }
+        T resolved = ThemeManager.getStylesheet().get(this, slot, defaultValue);
+        stateCache.put(slot, resolved != null ? resolved : NULL_STYLE_SENTINEL);
+        return resolved;
+    }
+
     public T addChildren(Component<?>... components) {
         for (Component<?> component : components) {
             this.addChild(component);
@@ -747,6 +783,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private void invalidateStyleCache() {
         this.style = null;
         ThemeManager.getStylesheet().clearCache(this);
+        this.cachedStyleValues.clear();
+        this.styledEffectsCache.clear();
     }
 
     public T removeStyleState(StyleState state) {

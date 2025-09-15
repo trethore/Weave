@@ -13,8 +13,8 @@ import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
@@ -183,10 +183,10 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Color> CHECK_COLOR = new StyleProperty<>("checkbox.check.color", Color.class);
-        public static final StyleProperty<Float> BOX_SIZE = new StyleProperty<>("checkbox.box.size", Float.class);
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("checkbox.gap", Float.class);
-        public static final StyleProperty<Float> CHECK_THICKNESS = new StyleProperty<>("checkbox.check.thickness", Float.class);
+        public static final StyleSlot CHECK_COLOR = StyleSlot.of("checkbox.check.color", CheckBox.class, Color.class);
+        public static final StyleSlot BOX_SIZE = StyleSlot.of("checkbox.box.size", CheckBox.class, Float.class);
+        public static final StyleSlot GAP = StyleSlot.of("checkbox.gap", CheckBox.class, Float.class);
+        public static final StyleSlot CHECK_THICKNESS = StyleSlot.of("checkbox.check.thickness", CheckBox.class, Float.class);
 
         private StyleProps() {
         }

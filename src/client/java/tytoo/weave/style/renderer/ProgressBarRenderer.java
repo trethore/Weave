@@ -3,20 +3,20 @@ package tytoo.weave.style.renderer;
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.ProgressBar;
-import tytoo.weave.theme.Stylesheet;
-import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
 public class ProgressBarRenderer implements ComponentRenderer, CloneableRenderer {
+    private static final Color DEFAULT_BACKGROUND = new Color(80, 80, 80);
+    private static final Color DEFAULT_FOREGROUND = new Color(40, 160, 220);
+
     @Override
     public void render(DrawContext context, Component<?> component) {
         if (!(component instanceof ProgressBar bar)) return;
 
-        Stylesheet ss = ThemeManager.getStylesheet();
-        Color bg = ss.get(bar, ProgressBar.StyleProps.BACKGROUND_COLOR, new Color(80, 80, 80));
-        Color fg = ss.get(bar, ProgressBar.StyleProps.VALUE_COLOR, new Color(40, 160, 220));
+        Color bg = bar.getCachedStyleValue(ProgressBar.StyleProps.BACKGROUND_COLOR, DEFAULT_BACKGROUND);
+        Color fg = bar.getCachedStyleValue(ProgressBar.StyleProps.VALUE_COLOR, DEFAULT_FOREGROUND);
 
         float x = bar.getLeft();
         float y = bar.getTop();
@@ -48,4 +48,3 @@ public class ProgressBarRenderer implements ComponentRenderer, CloneableRenderer
         return new ProgressBarRenderer();
     }
 }
-

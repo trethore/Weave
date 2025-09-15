@@ -7,8 +7,8 @@ import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.state.State;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.ThemeManager;
 
 import java.awt.*;
@@ -143,15 +143,14 @@ public class ProgressBar extends Component<ProgressBar> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> THICKNESS = new StyleProperty<>("progress.thickness", Float.class);
-        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("progress.default-width", Float.class);
-        public static final StyleProperty<Color> VALUE_COLOR = new StyleProperty<>("progress.value.color", Color.class);
-        public static final StyleProperty<Color> BACKGROUND_COLOR = new StyleProperty<>("progress.background.color", Color.class);
-        public static final StyleProperty<Long> ANIMATION_DURATION = new StyleProperty<>("progress.animation-duration", Long.class);
-        public static final StyleProperty<FillPolicy> FILL_POLICY = new StyleProperty<>("progress.fill-policy", FillPolicy.class);
+        public static final StyleSlot THICKNESS = StyleSlot.of("progress.thickness", ProgressBar.class, Float.class);
+        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("progress.default-width", ProgressBar.class, Float.class);
+        public static final StyleSlot VALUE_COLOR = StyleSlot.of("progress.value.color", ProgressBar.class, Color.class);
+        public static final StyleSlot BACKGROUND_COLOR = StyleSlot.of("progress.background.color", ProgressBar.class, Color.class);
+        public static final StyleSlot ANIMATION_DURATION = StyleSlot.of("progress.animation-duration", ProgressBar.class, Long.class);
+        public static final StyleSlot FILL_POLICY = StyleSlot.of("progress.fill-policy", ProgressBar.class, FillPolicy.class);
 
         private StyleProps() {
         }
     }
 }
-

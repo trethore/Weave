@@ -8,8 +8,8 @@ import tytoo.weave.component.components.interactive.ComboBox;
 import tytoo.weave.state.State;
 import tytoo.weave.style.LayoutStyleProperties;
 import tytoo.weave.style.OutlineSides;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
@@ -25,40 +25,41 @@ import java.util.function.BiFunction;
 public final class StyleTransitionRegistry {
     private static final List<Registration<?, ?>> REGISTRATIONS = new ArrayList<>();
     private static final WeakHashMap<Component<?>, Map<Object, Object>> LAST_VALUES = new WeakHashMap<>();
+    private static final Class<Component<?>> ROOT_COMPONENT_CLASS = (Class<Component<?>>) (Class<?>) Component.class;
 
     static {
-        registerStyleProperty(Component.class, LayoutStyleProperties.PADDING, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.PADDING, null,
                 Interpolators.EDGE_INSETS,
                 Component::setAnimatedPadding,
                 Component::commitAnimatedPadding);
 
-        registerStyleProperty(Component.class, LayoutStyleProperties.BORDER_WIDTH, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_WIDTH, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedBorderWidth,
                 Component::commitAnimatedBorderWidth);
-        registerStyleProperty(Component.class, LayoutStyleProperties.BORDER_COLOR, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_COLOR, null,
                 Interpolators.COLOR,
                 Component::setAnimatedBorderColor,
                 Component::commitAnimatedBorderColor);
-        registerStyleProperty(Component.class, LayoutStyleProperties.BORDER_RADIUS, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_RADIUS, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedBorderRadius,
                 Component::commitAnimatedBorderRadius);
 
-        registerStyleProperty(Component.class, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedOverlayBorderWidth,
                 Component::commitAnimatedOverlayBorderWidth);
-        registerStyleProperty(Component.class, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null,
                 Interpolators.COLOR,
                 Component::setAnimatedOverlayBorderColor,
                 Component::commitAnimatedOverlayBorderColor);
-        registerStyleProperty(Component.class, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedOverlayBorderRadius,
                 Component::commitAnimatedOverlayBorderRadius);
 
-        registerComputed(Component.class, Keys.BACKGROUND_COLOR,
+        registerComputed(ROOT_COMPONENT_CLASS, Keys.BACKGROUND_COLOR,
                 (ss, c) -> {
                     ComponentRenderer r = c.getStyle().getRenderer(c);
                     if (r instanceof ColorableRenderer cr) return cr.getColor();
@@ -71,7 +72,7 @@ public final class StyleTransitionRegistry {
                 },
                 null);
 
-        registerComputed(Component.class, Keys.OVERLAY_BACKGROUND_COLOR,
+        registerComputed(ROOT_COMPONENT_CLASS, Keys.OVERLAY_BACKGROUND_COLOR,
                 (ss, c) -> {
                     ComponentRenderer r = c.getStyle().getOverlayRenderer(c);
                     if (r instanceof ColorableRenderer cr) return cr.getColor();
@@ -143,7 +144,7 @@ public final class StyleTransitionRegistry {
 
     public static <C extends Component<?>, T> void registerStyleProperty(
             Class<C> componentClass,
-            StyleProperty<T> property,
+            StyleSlot property,
             T defaultValue,
             PropertyInterpolator<T> interpolator,
             BiConsumer<C, T> applyUpdate,

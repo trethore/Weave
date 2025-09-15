@@ -1,11 +1,11 @@
 package tytoo.weave.style;
 
-import tytoo.weave.style.effects.EffectSpec;
+import tytoo.weave.style.contract.StyleSlot;
 
 import java.util.List;
 
 public final class EffectStyleProperties {
-    public static final StyleProperty<List<EffectSpec>> EFFECTS = new StyleProperty<>("effects", List.class);
+    public static final StyleSlot EFFECTS = StyleSlot.forRoot("effects", List.class);
 
     private EffectStyleProperties() {
     }

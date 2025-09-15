@@ -4,8 +4,8 @@ import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.event.mouse.MouseReleaseEvent;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -104,12 +104,14 @@ public abstract class InteractiveComponent<T extends InteractiveComponent<T>> ex
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Long> ANIMATION_DURATION = new StyleProperty<>("animation.duration", Long.class);
-        public static final StyleProperty<Color> COLOR_NORMAL = new StyleProperty<>("color.normal", Color.class);
-        public static final StyleProperty<Color> COLOR_HOVERED = new StyleProperty<>("color.hovered", Color.class);
-        public static final StyleProperty<Color> COLOR_FOCUSED = new StyleProperty<>("color.focused", Color.class);
-        public static final StyleProperty<Color> COLOR_ACTIVE = new StyleProperty<>("color.active", Color.class);
-        public static final StyleProperty<Color> COLOR_DISABLED = new StyleProperty<>("color.disabled", Color.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(InteractiveComponent.class);
+
+        public static final StyleSlot ANIMATION_DURATION = StyleSlot.of("animation.duration", COMPONENT_CLASS, Long.class);
+        public static final StyleSlot COLOR_NORMAL = StyleSlot.of("color.normal", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot COLOR_HOVERED = StyleSlot.of("color.hovered", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot COLOR_FOCUSED = StyleSlot.of("color.focused", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot COLOR_ACTIVE = StyleSlot.of("color.active", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot COLOR_DISABLED = StyleSlot.of("color.disabled", COMPONENT_CLASS, Color.class);
 
         private StyleProps() {
         }

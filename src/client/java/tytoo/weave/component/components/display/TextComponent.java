@@ -8,7 +8,11 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.state.State;
-import tytoo.weave.style.*;
+import tytoo.weave.style.ColorWave;
+import tytoo.weave.style.StyleState;
+import tytoo.weave.style.Styling;
+import tytoo.weave.style.TextSegment;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
@@ -293,19 +297,21 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Color> TEXT_COLOR = new StyleProperty<>("text-color", Color.class);
-        public static final StyleProperty<Boolean> BOLD = new StyleProperty<>("bold", Boolean.class);
-        public static final StyleProperty<Boolean> ITALIC = new StyleProperty<>("italic", Boolean.class);
-        public static final StyleProperty<Boolean> UNDERLINE = new StyleProperty<>("underline", Boolean.class);
-        public static final StyleProperty<Boolean> STRIKETHROUGH = new StyleProperty<>("strikethrough", Boolean.class);
-        public static final StyleProperty<Boolean> OBFUSCATED = new StyleProperty<>("obfuscated", Boolean.class);
-        public static final StyleProperty<Boolean> SHADOW = new StyleProperty<>("shadow", Boolean.class);
-        public static final StyleProperty<Color> SHADOW_COLOR = new StyleProperty<>("shadow-color", Color.class);
-        public static final StyleProperty<ColorWave> COLOR_WAVE = new StyleProperty<>("color-wave", ColorWave.class);
-        public static final StyleProperty<TextRenderer> FONT = new StyleProperty<>("font", TextRenderer.class);
-        public static final StyleProperty<Float> LETTER_SPACING = new StyleProperty<>("letter-spacing", Float.class);
-        public static final StyleProperty<Float> LINE_HEIGHT_MULTIPLIER = new StyleProperty<>("line-height-multiplier", Float.class);
-        public static final StyleProperty<Float> TEXT_SCALE = new StyleProperty<>("text-scale", Float.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(TextComponent.class);
+
+        public static final StyleSlot TEXT_COLOR = StyleSlot.of("text-color", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BOLD = StyleSlot.of("bold", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot ITALIC = StyleSlot.of("italic", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot UNDERLINE = StyleSlot.of("underline", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot STRIKETHROUGH = StyleSlot.of("strikethrough", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot OBFUSCATED = StyleSlot.of("obfuscated", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot SHADOW = StyleSlot.of("shadow", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot SHADOW_COLOR = StyleSlot.of("shadow-color", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot COLOR_WAVE = StyleSlot.of("color-wave", COMPONENT_CLASS, ColorWave.class);
+        public static final StyleSlot FONT = StyleSlot.of("font", COMPONENT_CLASS, TextRenderer.class);
+        public static final StyleSlot LETTER_SPACING = StyleSlot.of("letter-spacing", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot LINE_HEIGHT_MULTIPLIER = StyleSlot.of("line-height-multiplier", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot TEXT_SCALE = StyleSlot.of("text-scale", COMPONENT_CLASS, Float.class);
 
         private StyleProps() {
         }

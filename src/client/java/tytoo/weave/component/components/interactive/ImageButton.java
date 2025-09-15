@@ -8,8 +8,8 @@ import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -120,8 +120,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> IMAGE_BUTTON_PADDING = new StyleProperty<>("imageButton.padding", Float.class);
-        public static final StyleProperty<Float> IMAGE_BUTTON_GAP = new StyleProperty<>("imageButton.gap", Float.class);
+        public static final StyleSlot IMAGE_BUTTON_PADDING = StyleSlot.of("imageButton.padding", ImageButton.class, Float.class);
+        public static final StyleSlot IMAGE_BUTTON_GAP = StyleSlot.of("imageButton.gap", ImageButton.class, Float.class);
 
         private StyleProps() {
         }

@@ -5,7 +5,7 @@ import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -190,11 +190,11 @@ public class Separator extends BasePanel<Separator> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> THICKNESS = new StyleProperty<>("separator.thickness", Float.class);
-        public static final StyleProperty<Float> LABEL_GAP = new StyleProperty<>("separator.label-gap", Float.class);
-        public static final StyleProperty<Float> LABEL_TEXT_SCALE = new StyleProperty<>("separator.label-text-scale", Float.class);
-        public static final StyleProperty<Color> COLOR = new StyleProperty<>("separator.color", Color.class);
-        public static final StyleProperty<Float> SMALL_LINE_RATIO = new StyleProperty<>("separator.small-line-ratio", Float.class);
+        public static final StyleSlot THICKNESS = StyleSlot.of("separator.thickness", Separator.class, Float.class);
+        public static final StyleSlot LABEL_GAP = StyleSlot.of("separator.label-gap", Separator.class, Float.class);
+        public static final StyleSlot LABEL_TEXT_SCALE = StyleSlot.of("separator.label-text-scale", Separator.class, Float.class);
+        public static final StyleSlot COLOR = StyleSlot.of("separator.color", Separator.class, Color.class);
+        public static final StyleSlot SMALL_LINE_RATIO = StyleSlot.of("separator.small-line-ratio", Separator.class, Float.class);
 
         private StyleProps() {
         }

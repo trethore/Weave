@@ -2,7 +2,7 @@ package tytoo.weave.layout;
 
 import tytoo.weave.WeaveCore;
 import tytoo.weave.component.Component;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -199,11 +199,11 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Integer> COLUMNS = new StyleProperty<>("grid.columns", Integer.class);
-        public static final StyleProperty<Float> H_GAP = new StyleProperty<>("grid.h-gap", Float.class);
-        public static final StyleProperty<Float> V_GAP = new StyleProperty<>("grid.v-gap", Float.class);
-        public static final StyleProperty<Integer> COL_SPAN = new StyleProperty<>("grid.col-span", Integer.class);
-        public static final StyleProperty<Integer> ROW_SPAN = new StyleProperty<>("grid.row-span", Integer.class);
+        public static final StyleSlot COLUMNS = StyleSlot.forRoot("grid.columns", Integer.class);
+        public static final StyleSlot H_GAP = StyleSlot.forRoot("grid.h-gap", Float.class);
+        public static final StyleSlot V_GAP = StyleSlot.forRoot("grid.v-gap", Float.class);
+        public static final StyleSlot COL_SPAN = StyleSlot.forRoot("grid.col-span", Integer.class);
+        public static final StyleSlot ROW_SPAN = StyleSlot.forRoot("grid.row-span", Integer.class);
 
         private StyleProps() {
         }

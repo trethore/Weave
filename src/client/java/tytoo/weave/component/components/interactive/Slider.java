@@ -2,14 +2,15 @@ package tytoo.weave.component.components.interactive;
 
 import tytoo.weave.animation.Easings;
 import tytoo.weave.animation.Interpolators;
+import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.state.State;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -302,10 +303,12 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> TRACK_PADDING = new StyleProperty<>("slider.track.padding", Float.class);
-        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("slider.default-width", Float.class);
-        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("slider.default-height", Float.class);
-        public static final StyleProperty<Float> THUMB_SIZE = new StyleProperty<>("slider.thumb.size", Float.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(Slider.class);
+
+        public static final StyleSlot TRACK_PADDING = StyleSlot.of("slider.track.padding", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("slider.default-width", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("slider.default-height", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot THUMB_SIZE = StyleSlot.of("slider.thumb.size", COMPONENT_CLASS, Float.class);
 
 
         private StyleProps() {

@@ -1,17 +1,18 @@
 package tytoo.weave.style;
 
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.selector.StyleSelector;
 
 import java.util.Map;
 
 public class StyleRule {
     private final StyleSelector selector;
-    private final Map<StyleProperty<?>, Object> properties;
+    private final Map<StyleSlot, Object> values;
     private final int specificity;
 
-    public StyleRule(StyleSelector selector, Map<StyleProperty<?>, Object> properties) {
+    public StyleRule(StyleSelector selector, Map<StyleSlot, Object> values) {
         this.selector = selector;
-        this.properties = properties;
+        this.values = values;
         this.specificity = selector.getSpecificity();
     }
 
@@ -19,8 +20,8 @@ public class StyleRule {
         return selector;
     }
 
-    public Map<StyleProperty<?>, Object> getProperties() {
-        return properties;
+    public Map<StyleSlot, Object> getValues() {
+        return values;
     }
 
     public int getSpecificity() {

@@ -5,12 +5,12 @@ import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.components.interactive.BaseTextInput;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
-import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
 public class DefaultSelectionRenderer implements SelectionRenderer {
+    private static final Color DEFAULT_SELECTION_COLOR = new Color(50, 100, 200, 128);
     @Override
     public void render(DrawContext context, BaseTextInput<?> textInput) {
         int selectionStart = Math.min(textInput.getCursorPos(), textInput.getSelectionAnchor());
@@ -38,7 +38,7 @@ public class DefaultSelectionRenderer implements SelectionRenderer {
 
             String selected = visibleText.substring(visibleSelectionStart, visibleSelectionEnd);
             float highlightX2 = highlightX1 + textRenderer.getWidth(selected);
-            Color selectionColor = ThemeManager.getStylesheet().get(textField, BaseTextInput.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+            Color selectionColor = textField.getCachedStyleValue(BaseTextInput.StyleProps.SELECTION_COLOR, DEFAULT_SELECTION_COLOR);
 
             float textY = textField.getInnerTop() + (textField.getInnerHeight() - (textRenderer.fontHeight - 1)) / 2.0f + 1f;
             float highlightY = textY - 2;
@@ -53,7 +53,7 @@ public class DefaultSelectionRenderer implements SelectionRenderer {
         TextRenderer textRenderer = textArea.getEffectiveTextRenderer();
         float lineHeight = textRenderer.fontHeight + 1;
         float yOffset = textArea.getInnerTop() + textArea.getScrollY() + 1;
-        Color selectionColor = ThemeManager.getStylesheet().get(textArea, BaseTextInput.StyleProps.SELECTION_COLOR, new Color(50, 100, 200, 128));
+        Color selectionColor = textArea.getCachedStyleValue(BaseTextInput.StyleProps.SELECTION_COLOR, DEFAULT_SELECTION_COLOR);
 
         int lineCount = textArea.getVisualLineCount();
         for (int i = 0; i < lineCount; i++) {

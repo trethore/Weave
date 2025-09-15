@@ -1,7 +1,7 @@
 package tytoo.weave.component.components.layout;
 
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -22,8 +22,8 @@ public class Window extends BasePanel<Window> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("window.default-width", Float.class);
-        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("window.default-height", Float.class);
+        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("window.default-width", Window.class, Float.class);
+        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("window.default-height", Window.class, Float.class);
 
         private StyleProps() {
         }

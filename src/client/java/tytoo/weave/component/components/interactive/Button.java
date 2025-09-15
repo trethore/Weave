@@ -4,8 +4,8 @@ import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.style.EdgeInsets;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -56,9 +56,9 @@ public class Button extends InteractiveComponent<Button> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> MIN_WIDTH = new StyleProperty<>("button.min-width", Float.class);
-        public static final StyleProperty<Float> MIN_HEIGHT = new StyleProperty<>("button.min-height", Float.class);
-        public static final StyleProperty<Float> PADDING = new StyleProperty<>("button.padding", Float.class);
+        public static final StyleSlot MIN_WIDTH = StyleSlot.of("button.min-width", Button.class, Float.class);
+        public static final StyleSlot MIN_HEIGHT = StyleSlot.of("button.min-height", Button.class, Float.class);
+        public static final StyleSlot PADDING = StyleSlot.of("button.padding", Button.class, Float.class);
 
         private StyleProps() {
         }

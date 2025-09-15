@@ -17,8 +17,8 @@ import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
@@ -609,10 +609,12 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("combo-box.default-width", Float.class);
-        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("combo-box.default-height", Float.class);
-        public static final StyleProperty<Float> DROPDOWN_MAX_HEIGHT = new StyleProperty<>("combo-box.dropdown-max-height", Float.class);
-        public static final StyleProperty<Color> BORDER_COLOR_HOVERED = new StyleProperty<>("combo-box.borderColor.hovered", Color.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(ComboBox.class);
+
+        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("combo-box.default-width", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("combo-box.default-height", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DROPDOWN_MAX_HEIGHT = StyleSlot.of("combo-box.dropdown-max-height", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot BORDER_COLOR_HOVERED = StyleSlot.of("combo-box.borderColor.hovered", COMPONENT_CLASS, Color.class);
     }
 
     private static class ArrowIcon extends Component<ArrowIcon> {

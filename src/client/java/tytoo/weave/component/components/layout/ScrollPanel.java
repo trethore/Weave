@@ -10,7 +10,7 @@ import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.CommonStyleProperties;
-import tytoo.weave.style.StyleProperty;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
@@ -303,12 +303,12 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Float> WIDTH = new StyleProperty<>("scroll-panel.scrollbar.width", Float.class);
-        public static final StyleProperty<Float> GAP = new StyleProperty<>("scroll-panel.scrollbar.gap", Float.class);
-        public static final StyleProperty<Float> THUMB_MIN_HEIGHT = new StyleProperty<>("scroll-panel.scrollbar.thumbMinHeight", Float.class);
-        public static final StyleProperty<Color> TRACK_COLOR = new StyleProperty<>("scroll-panel.scrollbar.trackColor", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR = new StyleProperty<>("scroll-panel.scrollbar.thumbColor", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR_HOVERED = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.hovered", Color.class);
-        public static final StyleProperty<Color> THUMB_COLOR_ACTIVE = new StyleProperty<>("scroll-panel.scrollbar.thumbColor.active", Color.class);
+        public static final StyleSlot WIDTH = StyleSlot.of("scroll-panel.scrollbar.width", ScrollPanel.class, Float.class);
+        public static final StyleSlot GAP = StyleSlot.of("scroll-panel.scrollbar.gap", ScrollPanel.class, Float.class);
+        public static final StyleSlot THUMB_MIN_HEIGHT = StyleSlot.of("scroll-panel.scrollbar.thumbMinHeight", ScrollPanel.class, Float.class);
+        public static final StyleSlot TRACK_COLOR = StyleSlot.of("scroll-panel.scrollbar.trackColor", ScrollPanel.class, Color.class);
+        public static final StyleSlot THUMB_COLOR = StyleSlot.of("scroll-panel.scrollbar.thumbColor", ScrollPanel.class, Color.class);
+        public static final StyleSlot THUMB_COLOR_HOVERED = StyleSlot.of("scroll-panel.scrollbar.thumbColor.hovered", ScrollPanel.class, Color.class);
+        public static final StyleSlot THUMB_COLOR_ACTIVE = StyleSlot.of("scroll-panel.scrollbar.thumbColor.active", ScrollPanel.class, Color.class);
     }
 }

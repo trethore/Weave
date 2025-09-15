@@ -2,6 +2,7 @@ package tytoo.weave.style;
 
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 
@@ -108,28 +109,28 @@ public class ComponentStyle implements Cloneable {
         }
     }
 
-    public static final class StyleProps {
-        public static final StyleProperty<ComponentRenderer> BASE_RENDERER = new StyleProperty<>("renderer", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> NORMAL_RENDERER = new StyleProperty<>("renderer-normal", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> HOVERED_RENDERER = new StyleProperty<>("renderer-hovered", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> FOCUSED_RENDERER = new StyleProperty<>("renderer-focused", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> ACTIVE_RENDERER = new StyleProperty<>("renderer-active", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> SELECTED_RENDERER = new StyleProperty<>("renderer-selected", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> DISABLED_RENDERER = new StyleProperty<>("renderer-disabled", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> VALID_RENDERER = new StyleProperty<>("renderer-valid", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> INVALID_RENDERER = new StyleProperty<>("renderer-invalid", ComponentRenderer.class);
+    public static final class Slots {
+        public static final StyleSlot BASE_RENDERER = StyleSlot.forRoot("component.renderer.base", ComponentRenderer.class);
+        public static final StyleSlot NORMAL_RENDERER = StyleSlot.forRoot("component.renderer.normal", ComponentRenderer.class);
+        public static final StyleSlot HOVERED_RENDERER = StyleSlot.forRoot("component.renderer.hovered", ComponentRenderer.class);
+        public static final StyleSlot FOCUSED_RENDERER = StyleSlot.forRoot("component.renderer.focused", ComponentRenderer.class);
+        public static final StyleSlot ACTIVE_RENDERER = StyleSlot.forRoot("component.renderer.active", ComponentRenderer.class);
+        public static final StyleSlot SELECTED_RENDERER = StyleSlot.forRoot("component.renderer.selected", ComponentRenderer.class);
+        public static final StyleSlot DISABLED_RENDERER = StyleSlot.forRoot("component.renderer.disabled", ComponentRenderer.class);
+        public static final StyleSlot VALID_RENDERER = StyleSlot.forRoot("component.renderer.valid", ComponentRenderer.class);
+        public static final StyleSlot INVALID_RENDERER = StyleSlot.forRoot("component.renderer.invalid", ComponentRenderer.class);
 
-        public static final StyleProperty<ComponentRenderer> BASE_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> NORMAL_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-normal", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> HOVERED_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-hovered", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> FOCUSED_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-focused", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> ACTIVE_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-active", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> SELECTED_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-selected", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> DISABLED_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-disabled", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> VALID_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-valid", ComponentRenderer.class);
-        public static final StyleProperty<ComponentRenderer> INVALID_OVERLAY_RENDERER = new StyleProperty<>("overlay-renderer-invalid", ComponentRenderer.class);
+        public static final StyleSlot BASE_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.base", ComponentRenderer.class);
+        public static final StyleSlot NORMAL_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.normal", ComponentRenderer.class);
+        public static final StyleSlot HOVERED_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.hovered", ComponentRenderer.class);
+        public static final StyleSlot FOCUSED_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.focused", ComponentRenderer.class);
+        public static final StyleSlot ACTIVE_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.active", ComponentRenderer.class);
+        public static final StyleSlot SELECTED_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.selected", ComponentRenderer.class);
+        public static final StyleSlot DISABLED_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.disabled", ComponentRenderer.class);
+        public static final StyleSlot VALID_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.valid", ComponentRenderer.class);
+        public static final StyleSlot INVALID_OVERLAY_RENDERER = StyleSlot.forRoot("component.overlay.invalid", ComponentRenderer.class);
 
-        private StyleProps() {
+        private Slots() {
         }
     }
 }

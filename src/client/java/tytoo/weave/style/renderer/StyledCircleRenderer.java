@@ -2,18 +2,17 @@ package tytoo.weave.style.renderer;
 
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
-import tytoo.weave.style.StyleProperty;
-import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
 
-public record StyledCircleRenderer(StyleProperty<Color> colorProperty,
+public record StyledCircleRenderer(StyleSlot colorSlot,
                                    Color defaultColor) implements ComponentRenderer {
 
     @Override
     public void render(DrawContext context, Component<?> component) {
-        Color color = ThemeManager.getStylesheet().get(component, colorProperty, defaultColor);
+        Color color = component.getCachedStyleValue(colorSlot, defaultColor);
         if (color == null) return;
 
         float x = component.getLeft();
@@ -28,4 +27,3 @@ public record StyledCircleRenderer(StyleProperty<Color> colorProperty,
         Render2DUtils.drawCircle(context, centerX, centerY, radius, color);
     }
 }
-

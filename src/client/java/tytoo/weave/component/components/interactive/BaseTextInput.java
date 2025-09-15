@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+import tytoo.weave.component.Component;
 import tytoo.weave.effects.ColorableEffect;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.effects.Effects;
@@ -12,8 +13,8 @@ import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
-import tytoo.weave.style.StyleProperty;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -558,22 +559,24 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     public static final class StyleProps {
-        public static final StyleProperty<Long> CURSOR_BLINK_INTERVAL = new StyleProperty<>("cursor.blink-interval", Long.class);
-        public static final StyleProperty<Long> MULTI_CLICK_INTERVAL = new StyleProperty<>("click.multi-interval", Long.class);
-        public static final StyleProperty<Color> SELECTION_COLOR = new StyleProperty<>("selectionColor", Color.class);
-        public static final StyleProperty<Color> BORDER_COLOR_VALID = new StyleProperty<>("borderColor.valid", Color.class);
-        public static final StyleProperty<Color> BORDER_COLOR_INVALID = new StyleProperty<>("borderColor.invalid", Color.class);
-        public static final StyleProperty<Color> BORDER_COLOR_FOCUSED = new StyleProperty<>("borderColor.focused", Color.class);
-        public static final StyleProperty<Color> BORDER_COLOR_HOVERED = new StyleProperty<>("borderColor.hovered", Color.class);
-        public static final StyleProperty<Color> BORDER_COLOR_UNFOCUSED = new StyleProperty<>("borderColor.unfocused", Color.class);
-        public static final StyleProperty<Color> PLACEHOLDER_COLOR = new StyleProperty<>("placeholderColor", Color.class);
-        public static final StyleProperty<Color> CURSOR_COLOR = new StyleProperty<>("cursorColor", Color.class);
+        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(BaseTextInput.class);
 
-        public static final StyleProperty<Float> DEFAULT_WIDTH = new StyleProperty<>("text-input.default-width", Float.class);
-        public static final StyleProperty<Float> DEFAULT_HEIGHT = new StyleProperty<>("text-input.default-height", Float.class);
+        public static final StyleSlot CURSOR_BLINK_INTERVAL = StyleSlot.of("cursor.blink-interval", COMPONENT_CLASS, Long.class);
+        public static final StyleSlot MULTI_CLICK_INTERVAL = StyleSlot.of("click.multi-interval", COMPONENT_CLASS, Long.class);
+        public static final StyleSlot SELECTION_COLOR = StyleSlot.of("selectionColor", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BORDER_COLOR_VALID = StyleSlot.of("borderColor.valid", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BORDER_COLOR_INVALID = StyleSlot.of("borderColor.invalid", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BORDER_COLOR_FOCUSED = StyleSlot.of("borderColor.focused", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BORDER_COLOR_HOVERED = StyleSlot.of("borderColor.hovered", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot BORDER_COLOR_UNFOCUSED = StyleSlot.of("borderColor.unfocused", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot PLACEHOLDER_COLOR = StyleSlot.of("placeholderColor", COMPONENT_CLASS, Color.class);
+        public static final StyleSlot CURSOR_COLOR = StyleSlot.of("cursorColor", COMPONENT_CLASS, Color.class);
 
-        public static final StyleProperty<Float> OUTLINE_WIDTH = new StyleProperty<>("outline.width", Float.class);
-        public static final StyleProperty<Boolean> OUTLINE_INSIDE = new StyleProperty<>("outline.inside", Boolean.class);
-        public static final StyleProperty<OutlineSides> OUTLINE_SIDES = new StyleProperty<>("outline.sides", OutlineSides.class);
+        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("text-input.default-width", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("text-input.default-height", COMPONENT_CLASS, Float.class);
+
+        public static final StyleSlot OUTLINE_WIDTH = StyleSlot.of("outline.width", COMPONENT_CLASS, Float.class);
+        public static final StyleSlot OUTLINE_INSIDE = StyleSlot.of("outline.inside", COMPONENT_CLASS, Boolean.class);
+        public static final StyleSlot OUTLINE_SIDES = StyleSlot.of("outline.sides", COMPONENT_CLASS, OutlineSides.class);
     }
 }
