@@ -40,13 +40,14 @@ public class Animation<T> {
         }
 
         long elapsed = Animator.nowMillis() - startTime;
-        float progress = Math.min(1.0f, (float) elapsed / duration);
-        float easedProgress = easing.ease(progress);
+        double progress = Math.min(1.0, (double) elapsed / (double) duration);
+        double easedProgress = easing.ease(progress);
 
         target.set(interpolator.interpolate(startValue, endValue, easedProgress));
 
-        if (progress >= 1.0f) {
+        if (progress >= 1.0) {
             finished = true;
+            target.set(endValue);
         }
     }
 

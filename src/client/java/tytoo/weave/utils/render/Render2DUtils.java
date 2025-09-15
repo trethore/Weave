@@ -12,6 +12,7 @@ import org.joml.Vector4f;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.OutlineSides;
+import tytoo.weave.utils.Precision;
 
 import java.awt.*;
 import java.util.ArrayDeque;
@@ -67,16 +68,24 @@ public final class Render2DUtils {
     }
 
     public static void drawRect(DrawContext context, float x, float y, float width, float height, Color color) {
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) {
+            return;
+        }
+
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
-        float x2 = x + width;
-        float y2 = y + height;
+        float x2 = snappedX + snappedWidth;
+        float y2 = snappedY + snappedHeight;
 
         BufferBuilder buffer = setupRender(ShaderProgramKeys.POSITION_COLOR, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
-        buffer.vertex(matrix, x, y2, 0).color(color.getRGB());
+        buffer.vertex(matrix, snappedX, y2, 0).color(color.getRGB());
         buffer.vertex(matrix, x2, y2, 0).color(color.getRGB());
-        buffer.vertex(matrix, x2, y, 0).color(color.getRGB());
-        buffer.vertex(matrix, x, y, 0).color(color.getRGB());
+        buffer.vertex(matrix, x2, snappedY, 0).color(color.getRGB());
+        buffer.vertex(matrix, snappedX, snappedY, 0).color(color.getRGB());
 
         endRender(buffer);
     }
@@ -102,30 +111,63 @@ public final class Render2DUtils {
                                    float lineWidth, Color color, boolean inside,
                                    OutlineSides sides) {
         if (sides == null) sides = OutlineSides.all();
+        float snappedLineWidth = Precision.snapLength(lineWidth);
+        if (snappedLineWidth <= 0f) {
+            return;
+        }
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) {
+            return;
+        }
         if (inside) {
-            if (sides.top()) drawHLine(context, x, y, width, lineWidth, color);
-            if (sides.bottom()) drawHLine(context, x, y + height - lineWidth, width, lineWidth, color);
+            if (sides.top()) drawHLine(context, snappedX, snappedY, snappedWidth, snappedLineWidth, color);
+            if (sides.bottom()) drawHLine(context, snappedX, snappedY + snappedHeight - snappedLineWidth, snappedWidth, snappedLineWidth, color);
 
-            float topOffset = sides.top() ? lineWidth : 0f;
-            float bottomOffset = sides.bottom() ? lineWidth : 0f;
-            float vertLen = height - (topOffset + bottomOffset);
+            float topOffset = sides.top() ? snappedLineWidth : 0f;
+            float bottomOffset = sides.bottom() ? snappedLineWidth : 0f;
+            float vertLen = snappedHeight - (topOffset + bottomOffset);
             if (vertLen > 0f) {
-                if (sides.left()) drawVLine(context, x, y + topOffset, lineWidth, vertLen, color);
-                if (sides.right()) drawVLine(context, x + width - lineWidth, y + topOffset, lineWidth, vertLen, color);
+                if (sides.left()) drawVLine(context, snappedX, snappedY + topOffset, snappedLineWidth, vertLen, color);
+                if (sides.right()) drawVLine(context, snappedX + snappedWidth - snappedLineWidth, snappedY + topOffset, snappedLineWidth, vertLen, color);
             }
         } else {
-            if (sides.top()) drawHLine(context, x - lineWidth, y - lineWidth, width + 2 * lineWidth, lineWidth, color);
-            if (sides.bottom()) drawHLine(context, x - lineWidth, y + height, width + 2 * lineWidth, lineWidth, color);
-            if (sides.left()) drawVLine(context, x - lineWidth, y, lineWidth, height, color);
-            if (sides.right()) drawVLine(context, x + width, y, lineWidth, height, color);
+            if (sides.top()) drawHLine(context, snappedX - snappedLineWidth, snappedY - snappedLineWidth, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
+            if (sides.bottom()) drawHLine(context, snappedX - snappedLineWidth, snappedY + snappedHeight, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
+            if (sides.left()) drawVLine(context, snappedX - snappedLineWidth, snappedY, snappedLineWidth, snappedHeight, color);
+            if (sides.right()) drawVLine(context, snappedX + snappedWidth, snappedY, snappedLineWidth, snappedHeight, color);
         }
     }
 
     public static void drawRoundedOutline(DrawContext context, float x, float y, float width, float height, float radius, float lineWidth, Color color) {
-        int thickness = Math.max(1, Math.round(lineWidth));
+        float snappedLineWidth = Precision.snapLength(lineWidth);
+        if (snappedLineWidth <= 0f) {
+            return;
+        }
+        float snappedRadius = Precision.snapLength(radius);
+        if (snappedRadius <= 0f) {
+            drawOutline(context, x, y, width, height, snappedLineWidth, color, true);
+            return;
+        }
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) {
+            return;
+        }
+        int thickness = Math.max(1, Math.round(snappedLineWidth));
         for (int inset = 0; inset < thickness; inset++) {
-            float r = Math.max(0, radius - inset);
-            drawRoundedRect(context, x + (float) inset, y + (float) inset, width - (float) inset * 2, height - (float) inset * 2, r, color);
+            float r = Math.max(0, snappedRadius - (float) inset);
+            drawRoundedRect(context,
+                    snappedX + (float) inset,
+                    snappedY + (float) inset,
+                    snappedWidth - (float) inset * 2,
+                    snappedHeight - (float) inset * 2,
+                    r,
+                    color);
         }
     }
 
@@ -226,6 +268,12 @@ public final class Render2DUtils {
     }
 
     public static void drawCircle(DrawContext context, float centerX, float centerY, float radius, int startAngle, int endAngle, Color color) {
+        float snappedRadius = Precision.snapLength(radius);
+        if (snappedRadius <= 0f) {
+            return;
+        }
+        float snappedCenterX = Precision.snapCoordinate(centerX);
+        float snappedCenterY = Precision.snapCoordinate(centerY);
         Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
 
         int angleRange = Math.abs(endAngle - startAngle);
@@ -245,12 +293,12 @@ public final class Render2DUtils {
             double angle1 = startRad + (i / (double) segments) * (endRad - startRad);
             double angle2 = startRad + ((i + 1) / (double) segments) * (endRad - startRad);
 
-            float x1 = centerX + (float) (Math.cos(angle1) * radius);
-            float y1 = centerY + (float) (Math.sin(angle1) * radius);
-            float x2 = centerX + (float) (Math.cos(angle2) * radius);
-            float y2 = centerY + (float) (Math.sin(angle2) * radius);
+            float x1 = snappedCenterX + (float) (Math.cos(angle1) * snappedRadius);
+            float y1 = snappedCenterY + (float) (Math.sin(angle1) * snappedRadius);
+            float x2 = snappedCenterX + (float) (Math.cos(angle2) * snappedRadius);
+            float y2 = snappedCenterY + (float) (Math.sin(angle2) * snappedRadius);
 
-            buffer.vertex(matrix, centerX, centerY, 0).color(argb);
+            buffer.vertex(matrix, snappedCenterX, snappedCenterY, 0).color(argb);
             buffer.vertex(matrix, x2, y2, 0).color(argb);
             buffer.vertex(matrix, x1, y1, 0).color(argb);
         }
@@ -260,24 +308,34 @@ public final class Render2DUtils {
 
 
     public static void drawRoundedRect(DrawContext context, float x, float y, float width, float height, float radius, Color color) {
-        if (radius <= 0) {
+        float snappedRadius = Precision.snapLength(radius);
+        if (snappedRadius <= 0f) {
             drawRect(context, x, y, width, height, color);
             return;
         }
-        radius = Math.min(radius, Math.min(width, height) / 2);
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) {
+            return;
+        }
 
-        float x2 = x + width;
-        float y2 = y + height;
+        float maxRadius = Math.min(snappedWidth, snappedHeight) / 2f;
+        float radiusValue = Math.min(snappedRadius, maxRadius);
 
-        drawRect(context, x + radius, y, width - 2 * radius, height, color);
+        float x2 = snappedX + snappedWidth;
+        float y2 = snappedY + snappedHeight;
 
-        drawRect(context, x, y + radius, radius, height - 2 * radius, color);
-        drawRect(context, x2 - radius, y + radius, radius, height - 2 * radius, color);
+        drawRect(context, snappedX + radiusValue, snappedY, snappedWidth - 2 * radiusValue, snappedHeight, color);
 
-        drawCircle(context, x + radius, y + radius, radius, 180, 270, color);
-        drawCircle(context, x2 - radius, y + radius, radius, 270, 360, color);
-        drawCircle(context, x2 - radius, y2 - radius, radius, 0, 90, color);
-        drawCircle(context, x + radius, y2 - radius, radius, 90, 180, color);
+        drawRect(context, snappedX, snappedY + radiusValue, radiusValue, snappedHeight - 2 * radiusValue, color);
+        drawRect(context, x2 - radiusValue, snappedY + radiusValue, radiusValue, snappedHeight - 2 * radiusValue, color);
+
+        drawCircle(context, snappedX + radiusValue, snappedY + radiusValue, radiusValue, 180, 270, color);
+        drawCircle(context, x2 - radiusValue, snappedY + radiusValue, radiusValue, 270, 360, color);
+        drawCircle(context, x2 - radiusValue, y2 - radiusValue, radiusValue, 0, 90, color);
+        drawCircle(context, snappedX + radiusValue, y2 - radiusValue, radiusValue, 90, 180, color);
     }
 
     public static void drawGradientRect(DrawContext context, float x, float y, float width, float height, Color color1, Color color2, float angleDegrees) {

@@ -129,12 +129,12 @@ public final class StyleTransitionRegistry {
                 null);
 
         registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_INSIDE, Boolean.TRUE,
-                (start, end, progress) -> progress < 1.0f ? start : end,
+                (start, end, progress) -> progress < 1.0 ? start : end,
                 BaseTextInput::applyOutlineInside,
                 null);
 
         registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_SIDES, OutlineSides.all(),
-                (start, end, progress) -> progress < 1.0f ? start : end,
+                (start, end, progress) -> progress < 1.0 ? start : end,
                 BaseTextInput::applyOutlineSides,
                 null);
     }

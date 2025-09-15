@@ -42,6 +42,7 @@ import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.ui.tooltip.TooltipManager.TooltipAttachment;
 import tytoo.weave.ui.tooltip.TooltipOptions;
 import tytoo.weave.utils.McUtils;
+import tytoo.weave.utils.Precision;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
@@ -49,7 +50,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 @SuppressWarnings("unused")
@@ -188,7 +188,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         if (styled == null) {
             Object specsRaw = getCachedStyleValue(EffectStyleProperties.EFFECTS, null);
             if (specsRaw instanceof List<?> list) {
-                List<Effect> resolved = list.stream()
+                styled = list.stream()
                         .filter(Objects::nonNull)
                         .map(o -> {
                             if (o instanceof EffectSpec spec) {
@@ -196,9 +196,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
                             }
                             return null;
                         })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toCollection(ArrayList::new));
-                styled = Collections.unmodifiableList(resolved);
+                        .filter(Objects::nonNull).toList();
             } else {
                 styled = Collections.emptyList();
             }
@@ -1017,23 +1015,41 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void setAnimatedPadding(EdgeInsets padding) {
-        this.animatedPadding = padding;
+        if (padding == null) {
+            this.animatedPadding = null;
+        } else {
+            this.animatedPadding = new EdgeInsets(
+                    Precision.toFloat(padding.top()),
+                    Precision.toFloat(padding.right()),
+                    Precision.toFloat(padding.bottom()),
+                    Precision.toFloat(padding.left())
+            );
+        }
         invalidateLayout();
     }
 
     public void commitAnimatedPadding(EdgeInsets padding) {
         this.animatedPadding = null;
-        this.lastPadding = padding;
+        if (padding == null) {
+            this.lastPadding = null;
+        } else {
+            this.lastPadding = new EdgeInsets(
+                    Precision.toFloat(padding.top()),
+                    Precision.toFloat(padding.right()),
+                    Precision.toFloat(padding.bottom()),
+                    Precision.toFloat(padding.left())
+            );
+        }
         invalidateLayout();
     }
 
     public void setAnimatedBorderWidth(Float width) {
-        this.animatedBorderWidth = width;
+        this.animatedBorderWidth = width == null ? null : Precision.snapLength(width);
     }
 
     public void commitAnimatedBorderWidth(Float width) {
         this.animatedBorderWidth = null;
-        this.lastBorderWidth = width;
+        this.lastBorderWidth = width == null ? null : Precision.snapLength(width);
     }
 
     public void setAnimatedBorderColor(Color color) {
@@ -1046,21 +1062,21 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void setAnimatedBorderRadius(Float radius) {
-        this.animatedBorderRadius = radius;
+        this.animatedBorderRadius = radius == null ? null : Precision.snapLength(radius);
     }
 
     public void commitAnimatedBorderRadius(Float radius) {
         this.animatedBorderRadius = null;
-        this.lastBorderRadius = radius;
+        this.lastBorderRadius = radius == null ? null : Precision.snapLength(radius);
     }
 
     public void setAnimatedOverlayBorderWidth(Float width) {
-        this.animatedOverlayBorderWidth = width;
+        this.animatedOverlayBorderWidth = width == null ? null : Precision.snapLength(width);
     }
 
     public void commitAnimatedOverlayBorderWidth(Float width) {
         this.animatedOverlayBorderWidth = null;
-        this.lastOverlayBorderWidth = width;
+        this.lastOverlayBorderWidth = width == null ? null : Precision.snapLength(width);
     }
 
     public void setAnimatedOverlayBorderColor(Color color) {
@@ -1073,12 +1089,12 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     }
 
     public void setAnimatedOverlayBorderRadius(Float radius) {
-        this.animatedOverlayBorderRadius = radius;
+        this.animatedOverlayBorderRadius = radius == null ? null : Precision.snapLength(radius);
     }
 
     public void commitAnimatedOverlayBorderRadius(Float radius) {
         this.animatedOverlayBorderRadius = null;
-        this.lastOverlayBorderRadius = radius;
+        this.lastOverlayBorderRadius = radius == null ? null : Precision.snapLength(radius);
     }
 
     public boolean isLayoutDirty() {
@@ -1217,36 +1233,58 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         Float borderWidth = animatedBorderWidth != null ? animatedBorderWidth : stylesheet.get(this, LayoutStyleProperties.BORDER_WIDTH, 0.0f);
         if (borderWidth == null || borderWidth <= 0f) return;
+        float snappedBorderWidth = Precision.snapLength(borderWidth);
+        if (snappedBorderWidth <= 0f) return;
         Color borderColor = animatedBorderColor != null ? animatedBorderColor : stylesheet.get(this, LayoutStyleProperties.BORDER_COLOR, null);
         if (borderColor == null) return;
 
+        float left = Precision.snapCoordinate(getLeft());
+        float top = Precision.snapCoordinate(getTop());
+        float width = Precision.snapLength(getWidth());
+        float height = Precision.snapLength(getHeight());
+
         Float radius = animatedBorderRadius != null ? animatedBorderRadius : stylesheet.get(this, LayoutStyleProperties.BORDER_RADIUS, 0.0f);
-        if (radius != null && radius > 0f) {
-            Render2DUtils.drawRoundedOutline(context, getLeft(), getTop(), getWidth(), getHeight(), radius, borderWidth, borderColor);
+        Float snappedRadius = null;
+        if (radius != null) {
+            snappedRadius = Precision.snapLength(radius);
+        }
+        if (snappedRadius != null && snappedRadius > 0f) {
+            Render2DUtils.drawRoundedOutline(context, left, top, width, height, snappedRadius, snappedBorderWidth, borderColor);
         } else {
-            Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), borderWidth, borderColor, true);
+            Render2DUtils.drawOutline(context, left, top, width, height, snappedBorderWidth, borderColor, true);
         }
         lastBorderColor = borderColor;
-        lastBorderWidth = borderWidth;
-        lastBorderRadius = radius;
+        lastBorderWidth = snappedBorderWidth;
+        lastBorderRadius = snappedRadius;
     }
 
     private void drawOverlayBorder(DrawContext context) {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         Float borderWidth = animatedOverlayBorderWidth != null ? animatedOverlayBorderWidth : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f);
         if (borderWidth == null || borderWidth <= 0f) return;
+        float snappedBorderWidth = Precision.snapLength(borderWidth);
+        if (snappedBorderWidth <= 0f) return;
         Color borderColor = animatedOverlayBorderColor != null ? animatedOverlayBorderColor : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null);
         if (borderColor == null) return;
 
+        float left = Precision.snapCoordinate(getLeft());
+        float top = Precision.snapCoordinate(getTop());
+        float width = Precision.snapLength(getWidth());
+        float height = Precision.snapLength(getHeight());
+
         Float radius = animatedOverlayBorderRadius != null ? animatedOverlayBorderRadius : stylesheet.get(this, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f);
-        if (radius != null && radius > 0f) {
-            Render2DUtils.drawRoundedOutline(context, getLeft(), getTop(), getWidth(), getHeight(), radius, borderWidth, borderColor);
+        Float snappedRadius = null;
+        if (radius != null) {
+            snappedRadius = Precision.snapLength(radius);
+        }
+        if (snappedRadius != null && snappedRadius > 0f) {
+            Render2DUtils.drawRoundedOutline(context, left, top, width, height, snappedRadius, snappedBorderWidth, borderColor);
         } else {
-            Render2DUtils.drawOutline(context, getLeft(), getTop(), getWidth(), getHeight(), borderWidth, borderColor, true);
+            Render2DUtils.drawOutline(context, left, top, width, height, snappedBorderWidth, borderColor, true);
         }
         lastOverlayBorderColor = borderColor;
-        lastOverlayBorderWidth = borderWidth;
-        lastOverlayBorderRadius = radius;
+        lastOverlayBorderWidth = snappedBorderWidth;
+        lastOverlayBorderRadius = snappedRadius;
     }
 
     public void arrange(float x, float y) {
