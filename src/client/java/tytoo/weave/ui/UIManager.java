@@ -5,7 +5,9 @@ import net.minecraft.client.gui.screen.Screen;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Animator;
+import tytoo.weave.effects.Effect;
 import tytoo.weave.component.Component;
+import tytoo.weave.component.RenderStage;
 import tytoo.weave.component.components.interactive.*;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -19,6 +21,8 @@ import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.profile.FrameProfiler;
+import tytoo.weave.profile.FrameProfiler.EffectPhase;
 import tytoo.weave.ui.popup.Anchor;
 import tytoo.weave.ui.popup.PopupEntry;
 import tytoo.weave.ui.popup.PopupOptions;
@@ -34,6 +38,17 @@ import java.util.function.BiConsumer;
 
 public class UIManager {
     private static final WeakHashMap<Screen, UIState> screenStates = new WeakHashMap<>();
+    private static final boolean PERF_DEBUG_ENABLED = resolvePerfEnabled();
+    private static final long PERF_LOG_INTERVAL_NANOS = resolveLongProperty("weave.debugPerfIntervalNanos", "WEAVE_DEBUG_PERF_INTERVAL_NANOS", 1_000_000_000L);
+    private static final int PERF_LOG_FRAME_WINDOW = (int) resolveLongProperty("weave.debugPerfFrameWindow", "WEAVE_DEBUG_PERF_FRAME_WINDOW", 120L);
+    @Nullable
+    private static final FrameProfiler FRAME_PROFILER = PERF_DEBUG_ENABLED ? new FrameProfiler(PERF_LOG_FRAME_WINDOW, PERF_LOG_INTERVAL_NANOS) : null;
+
+    static {
+        if (PERF_DEBUG_ENABLED) {
+            System.out.println("[WeavePerf] profiler enabled (window=" + PERF_LOG_FRAME_WINDOW + ", interval=" + PERF_LOG_INTERVAL_NANOS + "ns)");
+        }
+    }
 
     public static UIState getOrCreateState(Screen screen) {
         return screenStates.computeIfAbsent(screen, s -> new UIState());
@@ -71,38 +86,107 @@ public class UIManager {
                 Component<?> root = state.getRoot();
                 if (root == null) return;
 
-                // Ensure overlay root exists and stays on top of root's children
-                ensureOverlayRoot(state);
+                FrameProfiler profiler = FRAME_PROFILER;
+                if (profiler != null) profiler.beginFrame();
+                try {
+                    ensureOverlayRoot(state);
 
-                if (root.isLayoutDirty()) {
-                    McUtils.getMc().ifPresent(client -> {
-                        float screenWidth = client.getWindow().getScaledWidth();
-                        float screenHeight = client.getWindow().getScaledHeight();
+                    if (root.isLayoutDirty()) {
+                        McUtils.getMc().ifPresent(client -> {
+                            float screenWidth = client.getWindow().getScaledWidth();
+                            float screenHeight = client.getWindow().getScaledHeight();
 
-                        root.measure(screenWidth, screenHeight);
-                        float widthWithMargin = root.getMeasuredWidth() + root.getMargin().left() + root.getMargin().right();
-                        float heightWithMargin = root.getMeasuredHeight() + root.getMargin().top() + root.getMargin().bottom();
-                        float rootX = root.getConstraints().getXConstraint().calculateX(root, screenWidth, widthWithMargin);
-                        float rootY = root.getConstraints().getYConstraint().calculateY(root, screenHeight, heightWithMargin);
-                        root.arrange(rootX, rootY);
-                    });
-                }
+                            long measureStart = profiler != null ? System.nanoTime() : 0L;
+                            root.measure(screenWidth, screenHeight);
+                            long measureEnd = profiler != null ? System.nanoTime() : 0L;
 
-                ToastManager.updatePositions(screen);
+                            float widthWithMargin = root.getMeasuredWidth() + root.getMargin().left() + root.getMargin().right();
+                            float heightWithMargin = root.getMeasuredHeight() + root.getMargin().top() + root.getMargin().bottom();
+                            float rootX = root.getConstraints().getXConstraint().calculateX(root, screenWidth, widthWithMargin);
+                            float rootY = root.getConstraints().getYConstraint().calculateY(root, screenHeight, heightWithMargin);
 
-                updatePopupPositions(screen, state);
-                Animator.getInstance().update();
-                root.draw(context);
-                TooltipManager.onRender(screen, context);
+                            long arrangeStart = profiler != null ? measureEnd : 0L;
+                            root.arrange(rootX, rootY);
+                            if (profiler != null) {
+                                profiler.recordMeasure(measureEnd - measureStart);
+                                profiler.recordArrange(System.nanoTime() - arrangeStart);
+                                profiler.incrementLayoutPass();
+                            }
+                        });
+                    }
 
-                Panel overlay = state.getOverlayRoot();
-                if (overlay != null && overlay.isVisible()) {
-                    overlay.draw(context);
+                    long toastStart = profiler != null ? System.nanoTime() : 0L;
+                    ToastManager.updatePositions(screen);
+                    if (profiler != null) profiler.recordToast(System.nanoTime() - toastStart);
+
+                    long popupStart = profiler != null ? System.nanoTime() : 0L;
+                    updatePopupPositions(screen, state);
+                    if (profiler != null) profiler.recordPopup(System.nanoTime() - popupStart);
+
+                    long animatorStart = profiler != null ? System.nanoTime() : 0L;
+                    Animator.getInstance().update();
+                    if (profiler != null) profiler.recordAnimator(System.nanoTime() - animatorStart);
+
+                    long drawStart = profiler != null ? System.nanoTime() : 0L;
+                    root.draw(context);
+                    if (profiler != null) profiler.recordDraw(System.nanoTime() - drawStart);
+
+                    long tooltipStart = profiler != null ? System.nanoTime() : 0L;
+                    TooltipManager.onRender(screen, context);
+                    if (profiler != null) profiler.recordTooltip(System.nanoTime() - tooltipStart);
+
+                    Panel overlay = state.getOverlayRoot();
+                    if (overlay != null && overlay.isVisible()) {
+                        long overlayStart = profiler != null ? System.nanoTime() : 0L;
+                        overlay.draw(context);
+                        if (profiler != null) profiler.recordOverlay(System.nanoTime() - overlayStart);
+                    }
+                } finally {
+                    if (profiler != null) profiler.endFrame();
                 }
             } finally {
                 ThemeManager.popActiveStylesheet();
             }
         });
+    }
+
+    public static void onComponentMeasured() {
+        if (FRAME_PROFILER != null) {
+            FRAME_PROFILER.onComponentMeasure();
+        }
+    }
+
+    public static Object beginComponentDraw(Component<?> component) {
+        FrameProfiler profiler = FRAME_PROFILER;
+        if (profiler == null) {
+            return null;
+        }
+        return profiler.beginComponentDraw(component);
+    }
+
+    public static void endComponentDraw(Component<?> component, Object token) {
+        FrameProfiler profiler = FRAME_PROFILER;
+        if (profiler != null) {
+            profiler.endComponentDraw(component, token);
+        }
+    }
+
+    public static boolean isProfilerActive() {
+        return FRAME_PROFILER != null;
+    }
+
+    public static void recordComponentStage(Component<?> component, RenderStage stage, long nanos) {
+        FrameProfiler profiler = FRAME_PROFILER;
+        if (profiler != null) {
+            profiler.recordComponentStage(component, stage, nanos);
+        }
+    }
+
+    public static void recordEffect(Component<?> component, Effect effect, EffectPhase phase, long nanos) {
+        FrameProfiler profiler = FRAME_PROFILER;
+        if (profiler != null) {
+            profiler.recordEffect(component, effect, phase, nanos);
+        }
     }
 
     public static void onInit(Screen screen) {
@@ -770,6 +854,29 @@ public class UIManager {
         UIState state = getOrCreateState(screen);
         state.setStylesheetOverride(stylesheet);
         invalidateAllStyles();
+    }
+
+    private static boolean resolvePerfEnabled() {
+        if (Boolean.getBoolean("weave.debugPerf")) {
+            return true;
+        }
+        String envValue = System.getenv("WEAVE_DEBUG_PERF");
+        return Boolean.parseBoolean(envValue);
+    }
+
+    private static long resolveLongProperty(String propertyKey, String envKey, long defaultValue) {
+        Long propertyValue = Long.getLong(propertyKey);
+        if (propertyValue != null) {
+            return propertyValue;
+        }
+        String envValue = System.getenv(envKey);
+        if (envValue != null) {
+            try {
+                return Long.parseLong(envValue);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
     }
 
     public record PopupHandle(Screen screen, PopupEntry entry) {

@@ -9,6 +9,7 @@ import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
+import tytoo.weave.constraint.constraints.PixelConstraint;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.ObservableList;
 import tytoo.weave.state.State;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ListView<T> extends BasePanel<ListView<T>> {
+    private static final float PIXEL_EPSILON = 0.5f;
     private final ScrollPanel scrollPanel;
     private final Panel contentPanel;
     private final Map<Integer, ItemHolder> active = new HashMap<>();
@@ -52,6 +54,8 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private boolean[] measuredFlags = new boolean[0];
     private FenwickTree fenwick = new FenwickTree(0);
     private final ObservableList.ChangeListener<T> changeListener = c -> invalidateAll();
+    private float lastContentHeight = Float.NaN;
+    private boolean contentHeightDirty = true;
 
     public ListView() {
         this.scrollPanel = new ScrollPanel();
@@ -152,6 +156,11 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         return this;
     }
 
+    private void markContentHeightDirty() {
+        contentHeightDirty = true;
+        lastContentHeight = Float.NaN;
+    }
+
     private List<T> snapshotItems() {
         if (observableItems != null) return List.copyOf(observableItems);
         if (itemsState != null) {
@@ -165,28 +174,22 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         clearActive();
         measuredItemHeight = (heightMode == HeightMode.MEASURE_ONCE) ? -1f : measuredItemHeight;
         if (heightMode == HeightMode.VARIABLE) initVariableCaches();
+        markContentHeightDirty();
         updateTotalContentHeight();
         invalidateLayout();
     }
 
     private void updateTotalContentHeight() {
-        int count = snapshotItems().size();
-        if (heightMode == HeightMode.VARIABLE) {
-            ensureFenwickSize(count);
-            float total = (count > 0) ? fenwick.sum(count) - gap : 0f;
-            contentPanel.setHeight(Constraints.pixels(total));
-            return;
-        }
-        float itemH = getItemHeightForLayout();
-        float g = (count > 0) ? (count - 1) * gap : 0f;
-        float totalContentHeight = count * itemH + g;
-        contentPanel.setHeight(Constraints.pixels(totalContentHeight));
+        ensureContentHeight(snapshotItems());
     }
 
     private float getItemHeightForLayout() {
+        return getItemHeightForLayout(snapshotItems());
+    }
+
+    private float getItemHeightForLayout(List<T> items) {
         if (heightMode == HeightMode.FIXED) return fixedItemHeight;
         if (measuredItemHeight > 0) return measuredItemHeight;
-        List<T> items = snapshotItems();
         if (items.isEmpty()) return fixedItemHeight;
         Component<?> sample = itemFactory.apply(items.getFirst());
         sample.setWidth(Constraints.relative(1.0f));
@@ -194,6 +197,36 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         measuredItemHeight = sample.getMeasuredHeight();
         if (measuredItemHeight <= 0) measuredItemHeight = fixedItemHeight;
         return measuredItemHeight;
+    }
+
+    private void ensureContentHeight(List<T> items) {
+        int count = items.size();
+        if (heightMode == HeightMode.VARIABLE) {
+            ensureFenwickSize(count);
+        }
+        if (!contentHeightDirty && !Float.isNaN(lastContentHeight)) {
+            return;
+        }
+        float total;
+        if (heightMode == HeightMode.VARIABLE) {
+            total = count > 0 ? fenwick.sum(count) - gap : 0f;
+        } else {
+            float itemH = getItemHeightForLayout(items);
+            float g = count > 0 ? (count - 1) * gap : 0f;
+            total = count * itemH + g;
+        }
+        applyContentHeight(total);
+        contentHeightDirty = false;
+    }
+
+    private void applyContentHeight(float requestedHeight) {
+        float clamped = Math.max(0f, requestedHeight);
+        if (!Float.isNaN(lastContentHeight) && Math.abs(lastContentHeight - clamped) <= PIXEL_EPSILON) {
+            lastContentHeight = clamped;
+            return;
+        }
+        lastContentHeight = clamped;
+        contentPanel.setHeight(Constraints.pixels(clamped));
     }
 
     @Override
@@ -205,8 +238,9 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private void ensureVirtualization() {
         float viewportH = this.getInnerHeight();
         float scrollY = scrollPanel.getScrollY();
-        int count = snapshotItems().size();
-        updateTotalContentHeight();
+        List<T> items = snapshotItems();
+        int count = items.size();
+        ensureContentHeight(items);
         if (count == 0) {
             clearActive();
             lastFirst = lastLast = -1;
@@ -236,11 +270,21 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             for (int idx : active.keySet()) if (!needed.contains(idx)) toRemove.add(idx);
             for (int idx : toRemove) release(idx);
 
-            List<T> items = snapshotItems();
+            boolean heightChanged = false;
             for (int i = first; i <= last; i++) {
                 if (!active.containsKey(i)) acquireVariable(i, items.get(i));
                 positionVariable(i);
-                measureAndUpdate(i);
+                if (measureAndUpdate(i, items)) {
+                    heightChanged = true;
+                }
+            }
+
+            if (heightChanged) {
+                contentHeightDirty = true;
+                ensureContentHeight(items);
+                for (int i = first; i <= last; i++) {
+                    positionVariable(i);
+                }
             }
 
             lastFirst = first;
@@ -250,7 +294,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             return;
         }
 
-        float itemH = getItemHeightForLayout();
+        float itemH = getItemHeightForLayout(items);
         float viewportStart = -scrollY;
         float viewportEnd = viewportStart + viewportH;
         float stride = itemH + gap;
@@ -272,7 +316,6 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         for (int idx : active.keySet()) if (!needed.contains(idx)) toRemove.add(idx);
         for (int idx : toRemove) release(idx);
 
-        List<T> items = snapshotItems();
         for (int i = first; i <= last; i++) {
             if (!active.containsKey(i)) acquireFixed(i, items.get(i), itemH);
             positionFixed(i, itemH);
@@ -289,9 +332,12 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         if (holder == null) return;
         float stride = itemH + gap;
         float y = index * stride;
-        holder.container.setY(Constraints.pixels(y));
-        holder.container.setHeight(Constraints.pixels(itemH));
-        holder.container.invalidateLayout();
+        boolean changed = false;
+        changed |= applyPixelY(holder.container, y);
+        changed |= applyPixelHeight(holder.container, itemH);
+        if (changed) {
+            holder.container.invalidateLayout();
+        }
     }
 
     private void positionVariable(int index) {
@@ -300,9 +346,12 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         float top = fenwick.sum(index) - (heightAt(index) + gap);
         if (top < 0) top = 0f;
         float h = heightAt(index);
-        holder.container.setY(Constraints.pixels(top));
-        holder.container.setHeight(Constraints.pixels(h));
-        holder.container.invalidateLayout();
+        boolean changed = false;
+        changed |= applyPixelY(holder.container, top);
+        changed |= applyPixelHeight(holder.container, h);
+        if (changed) {
+            holder.container.invalidateLayout();
+        }
     }
 
     private void acquireFixed(int index, T item, float itemH) {
@@ -578,6 +627,7 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         FenwickTree newFenwick = new FenwickTree(n);
         for (int i = 0; i < n; i++) newFenwick.add(i + 1, heightAt(i) + gap);
         fenwick = newFenwick;
+        markContentHeightDirty();
         updateTotalContentHeight();
     }
 
@@ -587,10 +637,10 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         return h > 0 ? h : Math.max(1f, estimatedItemHeight);
     }
 
-    private void measureAndUpdate(int index) {
+    private boolean measureAndUpdate(int index, List<T> items) {
         ItemHolder holder = active.get(index);
-        if (holder == null) return;
-        if (holder.content == null) return;
+        if (holder == null) return false;
+        if (holder.content == null) return false;
         float availW = contentPanel.getInnerWidth();
         float availH = contentPanel.getInnerHeight();
         holder.content.measure(availW, availH);
@@ -602,17 +652,44 @@ public class ListView<T> extends BasePanel<ListView<T>> {
             measuredFlags[index] = true;
             float delta = (measured + gap) - (old + gap);
             fenwick.add(index + 1, delta);
-            holder.container.setHeight(Constraints.pixels(measured));
+            boolean changed = applyPixelHeight(holder.container, measured);
             if (index < lastFirst) {
                 scrollPanel.setScrollY(scrollPanel.getScrollY() - (measured - old));
             }
-            updateTotalContentHeight();
+            if (changed) {
+                holder.container.invalidateLayout();
+            }
+            markContentHeightDirty();
+            return true;
         }
+        return false;
     }
 
     public enum HeightMode {FIXED, MEASURE_ONCE, VARIABLE}
 
     public enum SelectionMode {SINGLE, MULTIPLE}
+
+    private static boolean applyPixelY(Component<?> component, float value) {
+        float clamped = value;
+        if (component.getConstraints().getYConstraint() instanceof PixelConstraint pixel) {
+            if (Math.abs(pixel.value() - clamped) <= PIXEL_EPSILON) {
+                return false;
+            }
+        }
+        component.setY(Constraints.pixels(clamped));
+        return true;
+    }
+
+    private static boolean applyPixelHeight(Component<?> component, float value) {
+        float clamped = Math.max(0f, value);
+        if (component.getConstraints().getHeightConstraint() instanceof PixelConstraint pixel) {
+            if (Math.abs(pixel.value() - clamped) <= PIXEL_EPSILON) {
+                return false;
+            }
+        }
+        component.setHeight(Constraints.pixels(clamped));
+        return true;
+    }
 
     private static final class ItemHolder {
         int index;

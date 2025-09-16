@@ -1,12 +1,23 @@
 package tytoo.weave.effects.implementations;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.BuiltBuffer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector4f;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.Component;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.OutlineSides;
-import tytoo.weave.utils.render.Render2DUtils;
+import tytoo.weave.utils.Precision;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -114,7 +125,6 @@ public class GradientOutlineEffect implements Effect {
         float angleHorizontal = this.angleDegrees;
         float angleVertical = this.angleDegrees - 90f;
 
-
         float angleRad = (float) Math.toRadians(90 - this.angleDegrees);
         float dirX = (float) Math.cos(angleRad);
         float dirY = (float) Math.sin(angleRad);
@@ -135,33 +145,29 @@ public class GradientOutlineEffect implements Effect {
         float range = maxProj - minProj;
         if (Math.abs(range) < 1e-6f) range = 1f;
 
-        if (inside) {
-            if (sides.top()) drawHorizontalEdge(context, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.bottom())
-                drawHorizontalEdge(context, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, 90f);
+        GradientBatch batch = new GradientBatch(context);
 
+        if (inside) {
+            if (sides.top()) drawHorizontalEdge(batch, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.bottom()) drawHorizontalEdge(batch, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
             float topOffset = sides.top() ? lw : 0f;
             float bottomOffset = sides.bottom() ? lw : 0f;
             float vertLen = h - (topOffset + bottomOffset);
             if (vertLen > 0f) {
-                if (sides.left())
-                    drawVerticalEdge(context, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, 0f);
-                if (sides.right())
-                    drawVerticalEdge(context, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, 0f);
+                if (sides.left()) drawVerticalEdge(batch, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+                if (sides.right()) drawVerticalEdge(batch, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
             }
         } else {
-            if (sides.top())
-                drawHorizontalEdge(context, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.bottom())
-                drawHorizontalEdge(context, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, 90f);
-            if (sides.left())
-                drawVerticalEdge(context, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, 0f);
-            if (sides.right())
-                drawVerticalEdge(context, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, 0f);
+            if (sides.top()) drawHorizontalEdge(batch, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.bottom()) drawHorizontalEdge(batch, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.left()) drawVerticalEdge(batch, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+            if (sides.right()) drawVerticalEdge(batch, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
         }
+
+        batch.flush();
     }
 
-    private void drawHorizontalEdge(DrawContext context, float rectX, float rectY, float rectW, float rectH, float yEdge,
+    private void drawHorizontalEdge(GradientBatch batch, float rectX, float rectY, float rectW, float rectH, float yEdge,
                                     float dirX, float dirY, float minProj, float range, float angle) {
         if (rectW <= 0 || rectH <= 0) return;
 
@@ -173,7 +179,7 @@ public class GradientOutlineEffect implements Effect {
             if (s < 0f) s = 0f;
             if (s > 1f) s = 1f;
             Color c = sampleWaveNonCyclic(colorWave.colors(), s);
-            Render2DUtils.drawRect(context, rectX, rectY, rectW, rectH, c);
+            batch.addSolidRect(rectX, rectY, rectW, rectH, c);
             return;
         }
 
@@ -223,11 +229,11 @@ public class GradientOutlineEffect implements Effect {
             Color c0 = sampleWaveNonCyclic(colorWave.colors(), clamp01(s0));
             Color c1 = sampleWaveNonCyclic(colorWave.colors(), clamp01(s1));
 
-            Render2DUtils.drawGradientRect(context, segX, rectY, segW, rectH, c0, c1, angle);
+            batch.addGradientRect(segX, rectY, segW, rectH, c0, c1, angle);
         }
     }
 
-    private void drawVerticalEdge(DrawContext context, float rectX, float rectY, float rectH, float rectW, float xEdge,
+    private void drawVerticalEdge(GradientBatch batch, float rectX, float rectY, float rectH, float rectW, float xEdge,
                                   float dirX, float dirY, float minProj, float range, float angle) {
         if (rectW <= 0 || rectH <= 0) return;
 
@@ -239,7 +245,7 @@ public class GradientOutlineEffect implements Effect {
             if (s < 0f) s = 0f;
             if (s > 1f) s = 1f;
             Color c = sampleWaveNonCyclic(colorWave.colors(), s);
-            Render2DUtils.drawRect(context, rectX, rectY, rectW, rectH, c);
+            batch.addSolidRect(rectX, rectY, rectW, rectH, c);
             return;
         }
 
@@ -289,7 +295,92 @@ public class GradientOutlineEffect implements Effect {
             Color c0 = sampleWaveNonCyclic(colorWave.colors(), clamp01(s0));
             Color c1 = sampleWaveNonCyclic(colorWave.colors(), clamp01(s1));
 
-            Render2DUtils.drawGradientRect(context, rectX, segY, rectW, segH, c0, c1, angle);
+            batch.addGradientRect(rectX, segY, rectW, segH, c0, c1, angle);
+        }
+    }
+
+    private static void appendGradientRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color1, Color color2, float angleDegrees) {
+        if (width <= 0f || height <= 0f) return;
+        float angleRad = (float) Math.toRadians(90 - angleDegrees);
+        Vector2f dir = new Vector2f((float) Math.cos(angleRad), (float) Math.sin(angleRad));
+        Vector4f[] vertices = {
+                new Vector4f(x, y, 0, 1),
+                new Vector4f(x + width, y, 0, 1),
+                new Vector4f(x + width, y + height, 0, 1),
+                new Vector4f(x, y + height, 0, 1)
+        };
+        float[] projections = new float[4];
+        float min = Float.MAX_VALUE;
+        float max = -Float.MAX_VALUE;
+        for (int i = 0; i < 4; i++) {
+            float p = dir.x * vertices[i].x + dir.y * vertices[i].y;
+            projections[i] = p;
+            if (p < min) min = p;
+            if (p > max) max = p;
+        }
+        float range = max - min;
+        if (Math.abs(range) < 0.0001f) range = 1f;
+        int[] quadOrder = {3, 2, 1, 0};
+        for (int index : quadOrder) {
+            float progress = (projections[index] - min) / range;
+            Color interpolated = Interpolators.COLOR.interpolate(color1, color2, progress);
+            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(interpolated.getRGB());
+        }
+    }
+
+    private static void appendSolidRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color) {
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) return;
+        float x2 = snappedX + snappedWidth;
+        float y2 = snappedY + snappedHeight;
+        int rgb = color.getRGB();
+        buffer.vertex(matrix, snappedX, y2, 0).color(rgb);
+        buffer.vertex(matrix, x2, y2, 0).color(rgb);
+        buffer.vertex(matrix, x2, snappedY, 0).color(rgb);
+        buffer.vertex(matrix, snappedX, snappedY, 0).color(rgb);
+    }
+
+    private static final class GradientBatch {
+        private final DrawContext context;
+        private BufferBuilder buffer;
+        private Matrix4f matrix;
+        private boolean started;
+
+        GradientBatch(DrawContext context) {
+            this.context = context;
+        }
+
+        void addSolidRect(float x, float y, float width, float height, Color color) {
+            ensureStarted();
+            appendSolidRect(buffer, matrix, x, y, width, height, color);
+        }
+
+        void addGradientRect(float x, float y, float width, float height, Color color1, Color color2, float angleDegrees) {
+            ensureStarted();
+            appendGradientRect(buffer, matrix, x, y, width, height, color1, color2, angleDegrees);
+        }
+
+        void flush() {
+            if (!started) return;
+            BuiltBuffer builtBuffer = buffer.end();
+            if (builtBuffer != null) {
+                BufferRenderer.drawWithGlobalProgram(builtBuffer);
+            }
+            RenderSystem.disableBlend();
+            started = false;
+            buffer = null;
+        }
+
+        private void ensureStarted() {
+            if (started) return;
+            started = true;
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+            matrix = context.getMatrices().peek().getPositionMatrix();
+            buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         }
     }
 

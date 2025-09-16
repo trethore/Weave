@@ -21,6 +21,7 @@ import tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
 import tytoo.weave.effects.Effect;
+import tytoo.weave.profile.FrameProfiler.EffectPhase;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.EventType;
 import tytoo.weave.event.focus.FocusGainedEvent;
@@ -139,46 +140,68 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         if (!this.renderState.isVisible()) return;
         if (this.renderState.opacity.get() <= 0.001f) return;
 
-        float[] lastColor = RenderSystem.getShaderColor().clone();
-        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * this.renderState.opacity.get());
+        Object profilerToken = UIManager.beginComponentDraw(this);
 
-        context.getMatrices().push();
         try {
-            this.renderState.applyTransformations(context);
+            float[] lastColor = RenderSystem.getShaderColor().clone();
+            RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * this.renderState.opacity.get());
 
-            List<Effect> effectiveEffects = getEffectiveEffects();
-            for (RenderStage stage : getRenderPipeline()) {
-                switch (stage) {
-                    case PRE_EFFECTS -> {
-                        for (Effect effect : effectiveEffects) effect.beforeDraw(context, this);
-                    }
-                    case BASE_RENDERER -> {
-                        ComponentRenderer renderer = getStyle().getRenderer(this);
-                        if (renderer != null) {
-                            renderer.render(context, this);
-                            if (renderer instanceof ColorableRenderer colorable) {
-                                lastBackgroundColor = colorable.getColor();
+            context.getMatrices().push();
+            try {
+                this.renderState.applyTransformations(context);
+
+                List<Effect> effectiveEffects = getEffectiveEffects();
+                boolean profiling = UIManager.isProfilerActive();
+                for (RenderStage stage : getRenderPipeline()) {
+                    long stageStart = profiling ? System.nanoTime() : 0L;
+                    switch (stage) {
+                        case PRE_EFFECTS -> {
+                            for (Effect effect : effectiveEffects) {
+                                long effectStart = profiling ? System.nanoTime() : 0L;
+                                effect.beforeDraw(context, this);
+                                if (profiling) {
+                                    UIManager.recordEffect(this, effect, EffectPhase.BEFORE, System.nanoTime() - effectStart);
+                                }
+                            }
+                        }
+                        case BASE_RENDERER -> {
+                            ComponentRenderer renderer = getStyle().getRenderer(this);
+                            if (renderer != null) {
+                                renderer.render(context, this);
+                                if (renderer instanceof ColorableRenderer colorable) {
+                                    lastBackgroundColor = colorable.getColor();
+                                }
+                            }
+                        }
+                        case BORDER -> drawBorder(context);
+                        case CHILDREN -> drawChildren(context);
+                        case OVERLAY_RENDERER -> {
+                            ComponentRenderer overlayRenderer = getStyle().getOverlayRenderer(this);
+                            if (overlayRenderer != null) overlayRenderer.render(context, this);
+                        }
+                        case OVERLAY_BORDER -> drawOverlayBorder(context);
+                        case POST_EFFECTS -> {
+                            for (int i = effectiveEffects.size() - 1; i >= 0; i--) {
+                                Effect effect = effectiveEffects.get(i);
+                                long effectStart = profiling ? System.nanoTime() : 0L;
+                                effect.afterDraw(context, this);
+                                if (profiling) {
+                                    UIManager.recordEffect(this, effect, EffectPhase.AFTER, System.nanoTime() - effectStart);
+                                }
                             }
                         }
                     }
-                    case BORDER -> drawBorder(context);
-                    case CHILDREN -> drawChildren(context);
-                    case OVERLAY_RENDERER -> {
-                        ComponentRenderer overlayRenderer = getStyle().getOverlayRenderer(this);
-                        if (overlayRenderer != null) overlayRenderer.render(context, this);
-                    }
-                    case OVERLAY_BORDER -> drawOverlayBorder(context);
-                    case POST_EFFECTS -> {
-                        for (int i = effectiveEffects.size() - 1; i >= 0; i--) {
-                            effectiveEffects.get(i).afterDraw(context, this);
-                        }
+                    if (profiling) {
+                        UIManager.recordComponentStage(this, stage, System.nanoTime() - stageStart);
                     }
                 }
+            } finally {
+                context.getMatrices().pop();
+
+                RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
             }
         } finally {
-            context.getMatrices().pop();
-
-            RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
+            UIManager.endComponentDraw(this, profilerToken);
         }
     }
 
@@ -1107,6 +1130,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             this.layoutState.setMeasuredHeight(0);
             return;
         }
+
+        UIManager.onComponentMeasured();
 
         applyLayoutStylesFromStylesheet();
         applyComponentStylesFromStylesheet();

@@ -7,8 +7,8 @@ version = project.mod_version
 group = project.maven_group
 
 // version
-def mcVersion    = project.property('minecraft_version')
-def fabricVer    = project.property('fabric_version')
+def mcVersion = project.property('minecraft_version')
+def fabricVer = project.property('fabric_version')
 def yarnMappings = project.property('yarn_mappings')
 def yarnSuffix = yarnMappings.startsWith("${mcVersion}+")
         ? yarnMappings.substring(("${mcVersion}+").length())
@@ -58,6 +58,9 @@ loom {
         debugClient {
             client()
             source sourceSets.named('debug').get() // dev run (weave-ui + weave-debug)
+            // Force-enable Weave perf profiler for debug runs.
+            vmArg "-Dweave.debugPerf=true"
+            vmArg "-Dweave.debugPerfFrameWindow=60"
             ideConfigGenerated true
         }
     }
@@ -116,7 +119,7 @@ java {
 jar {
     inputs.property "archivesName", project.base.archivesName
     from("LICENSE") {
-        rename { "${it}_${inputs.properties.archivesName}"}
+        rename { "${it}_${inputs.properties.archivesName}" }
     }
 
     exclude 'tytoo/weave_debug/**'
@@ -141,8 +144,8 @@ publishing {
                 builtBy(tasks.named("remapJar"))
             }
 
-            artifact(tasks.named("remapSourcesJar")) {
-                builtBy(tasks.named("remapSourcesJar"))
+            artifact(tasks.named("sourcesJar")) {
+                builtBy(tasks.named("sourcesJar"))
                 classifier = 'sources'
             }
 
