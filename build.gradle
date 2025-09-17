@@ -59,8 +59,8 @@ loom {
             client()
             source sourceSets.named('debug').get() // dev run (weave-ui + weave-debug)
             // Force-enable Weave perf profiler for debug runs.
-            vmArg "-Dweave.debugPerf=true"
-            vmArg "-Dweave.debugPerfFrameWindow=60"
+            //vmArg "-Dweave.debugPerf=true"
+            //vmArg "-Dweave.debugPerfFrameWindow=60"
             ideConfigGenerated true
         }
     }

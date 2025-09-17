@@ -3,12 +3,7 @@ package tytoo.weave.effects.implementations;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.BuiltBuffer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -71,6 +66,50 @@ public class GradientOutlineEffect implements Effect {
         Color c0 = colors.get(i);
         Color c1 = colors.get(i + 1);
         return Interpolators.COLOR.interpolate(c0, c1, f);
+    }
+
+    private static void appendGradientRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color1, Color color2, float angleDegrees) {
+        if (width <= 0f || height <= 0f) return;
+        float angleRad = (float) Math.toRadians(90 - angleDegrees);
+        Vector2f dir = new Vector2f((float) Math.cos(angleRad), (float) Math.sin(angleRad));
+        Vector4f[] vertices = {
+                new Vector4f(x, y, 0, 1),
+                new Vector4f(x + width, y, 0, 1),
+                new Vector4f(x + width, y + height, 0, 1),
+                new Vector4f(x, y + height, 0, 1)
+        };
+        float[] projections = new float[4];
+        float min = Float.MAX_VALUE;
+        float max = -Float.MAX_VALUE;
+        for (int i = 0; i < 4; i++) {
+            float p = dir.x * vertices[i].x + dir.y * vertices[i].y;
+            projections[i] = p;
+            if (p < min) min = p;
+            if (p > max) max = p;
+        }
+        float range = max - min;
+        if (Math.abs(range) < 0.0001f) range = 1f;
+        int[] quadOrder = {3, 2, 1, 0};
+        for (int index : quadOrder) {
+            float progress = (projections[index] - min) / range;
+            Color interpolated = Interpolators.COLOR.interpolate(color1, color2, progress);
+            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(interpolated.getRGB());
+        }
+    }
+
+    private static void appendSolidRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color) {
+        float snappedX = Precision.snapCoordinate(x);
+        float snappedY = Precision.snapCoordinate(y);
+        float snappedWidth = Precision.snapLength(width);
+        float snappedHeight = Precision.snapLength(height);
+        if (snappedWidth <= 0f || snappedHeight <= 0f) return;
+        float x2 = snappedX + snappedWidth;
+        float y2 = snappedY + snappedHeight;
+        int rgb = color.getRGB();
+        buffer.vertex(matrix, snappedX, y2, 0).color(rgb);
+        buffer.vertex(matrix, x2, y2, 0).color(rgb);
+        buffer.vertex(matrix, x2, snappedY, 0).color(rgb);
+        buffer.vertex(matrix, snappedX, snappedY, 0).color(rgb);
     }
 
     public float getWidth() {
@@ -148,20 +187,28 @@ public class GradientOutlineEffect implements Effect {
         GradientBatch batch = new GradientBatch(context);
 
         if (inside) {
-            if (sides.top()) drawHorizontalEdge(batch, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
-            if (sides.bottom()) drawHorizontalEdge(batch, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.top())
+                drawHorizontalEdge(batch, x, y, w, lw, y + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.bottom())
+                drawHorizontalEdge(batch, x, y + h - lw, w, lw, y + h - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
             float topOffset = sides.top() ? lw : 0f;
             float bottomOffset = sides.bottom() ? lw : 0f;
             float vertLen = h - (topOffset + bottomOffset);
             if (vertLen > 0f) {
-                if (sides.left()) drawVerticalEdge(batch, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
-                if (sides.right()) drawVerticalEdge(batch, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+                if (sides.left())
+                    drawVerticalEdge(batch, x, y + topOffset, vertLen, lw, x + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+                if (sides.right())
+                    drawVerticalEdge(batch, x + w - lw, y + topOffset, vertLen, lw, x + w - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
             }
         } else {
-            if (sides.top()) drawHorizontalEdge(batch, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
-            if (sides.bottom()) drawHorizontalEdge(batch, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
-            if (sides.left()) drawVerticalEdge(batch, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
-            if (sides.right()) drawVerticalEdge(batch, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+            if (sides.top())
+                drawHorizontalEdge(batch, x - lw, y - lw, w + lw * 2, lw, y - lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.bottom())
+                drawHorizontalEdge(batch, x - lw, y + h, w + lw * 2, lw, y + h + lw * 0.5f, dirX, dirY, minProj, range, angleHorizontal);
+            if (sides.left())
+                drawVerticalEdge(batch, x - lw, y, h, lw, x - lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
+            if (sides.right())
+                drawVerticalEdge(batch, x + w, y, h, lw, x + w + lw * 0.5f, dirX, dirY, minProj, range, angleVertical);
         }
 
         batch.flush();
@@ -299,48 +346,10 @@ public class GradientOutlineEffect implements Effect {
         }
     }
 
-    private static void appendGradientRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color1, Color color2, float angleDegrees) {
-        if (width <= 0f || height <= 0f) return;
-        float angleRad = (float) Math.toRadians(90 - angleDegrees);
-        Vector2f dir = new Vector2f((float) Math.cos(angleRad), (float) Math.sin(angleRad));
-        Vector4f[] vertices = {
-                new Vector4f(x, y, 0, 1),
-                new Vector4f(x + width, y, 0, 1),
-                new Vector4f(x + width, y + height, 0, 1),
-                new Vector4f(x, y + height, 0, 1)
-        };
-        float[] projections = new float[4];
-        float min = Float.MAX_VALUE;
-        float max = -Float.MAX_VALUE;
-        for (int i = 0; i < 4; i++) {
-            float p = dir.x * vertices[i].x + dir.y * vertices[i].y;
-            projections[i] = p;
-            if (p < min) min = p;
-            if (p > max) max = p;
-        }
-        float range = max - min;
-        if (Math.abs(range) < 0.0001f) range = 1f;
-        int[] quadOrder = {3, 2, 1, 0};
-        for (int index : quadOrder) {
-            float progress = (projections[index] - min) / range;
-            Color interpolated = Interpolators.COLOR.interpolate(color1, color2, progress);
-            buffer.vertex(matrix, vertices[index].x, vertices[index].y, 0).color(interpolated.getRGB());
-        }
-    }
-
-    private static void appendSolidRect(BufferBuilder buffer, Matrix4f matrix, float x, float y, float width, float height, Color color) {
-        float snappedX = Precision.snapCoordinate(x);
-        float snappedY = Precision.snapCoordinate(y);
-        float snappedWidth = Precision.snapLength(width);
-        float snappedHeight = Precision.snapLength(height);
-        if (snappedWidth <= 0f || snappedHeight <= 0f) return;
-        float x2 = snappedX + snappedWidth;
-        float y2 = snappedY + snappedHeight;
-        int rgb = color.getRGB();
-        buffer.vertex(matrix, snappedX, y2, 0).color(rgb);
-        buffer.vertex(matrix, x2, y2, 0).color(rgb);
-        buffer.vertex(matrix, x2, snappedY, 0).color(rgb);
-        buffer.vertex(matrix, snappedX, snappedY, 0).color(rgb);
+    public enum Direction {
+        LEFT_TO_RIGHT,
+        TOP_LEFT_TO_BOTTOM_RIGHT,
+        BOTTOM_LEFT_TO_TOP_RIGHT
     }
 
     private static final class GradientBatch {
@@ -382,11 +391,5 @@ public class GradientOutlineEffect implements Effect {
             matrix = context.getMatrices().peek().getPositionMatrix();
             buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
         }
-    }
-
-    public enum Direction {
-        LEFT_TO_RIGHT,
-        TOP_LEFT_TO_BOTTOM_RIGHT,
-        BOTTOM_LEFT_TO_TOP_RIGHT
     }
 }

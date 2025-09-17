@@ -1,20 +1,19 @@
 package tytoo.weave.profile;
 
 import tytoo.weave.component.Component;
-
 import tytoo.weave.component.RenderStage;
 import tytoo.weave.effects.Effect;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+
+import java.util.*;
 
 public final class FrameProfiler {
     private final int frameWindow;
     private final long logIntervalNanos;
+    private final Map<String, Long> componentDrawNanos = new HashMap<>();
+    private final Map<String, Integer> componentDrawCounts = new HashMap<>();
+    private final Deque<FrameCall> componentStack = new ArrayDeque<>();
+    private final Map<StageKey, StageStat> componentStageStats = new HashMap<>();
+    private final Map<EffectKey, StageStat> effectStats = new HashMap<>();
     private long frameStart;
     private long currentMeasureNanos;
     private long currentArrangeNanos;
@@ -41,11 +40,6 @@ public final class FrameProfiler {
     private long sumMeasureCalls;
     private int frames;
     private long lastPrintNano;
-    private final Map<String, Long> componentDrawNanos = new HashMap<>();
-    private final Map<String, Integer> componentDrawCounts = new HashMap<>();
-    private final Deque<FrameCall> componentStack = new ArrayDeque<>();
-    private final Map<StageKey, StageStat> componentStageStats = new HashMap<>();
-    private final Map<EffectKey, StageStat> effectStats = new HashMap<>();
 
     public FrameProfiler(int frameWindow, long logIntervalNanos) {
         this.frameWindow = frameWindow;

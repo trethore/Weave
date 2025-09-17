@@ -46,6 +46,11 @@ public final class StyleSlot {
         return castComponentClass(Objects.requireNonNull(type, "type"));
     }
 
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Component<?>> castComponentClass(Class<?> type) {
+        return (Class<? extends Component<?>>) type;
+    }
+
     public @NotNull String id() {
         return id;
     }
@@ -82,10 +87,5 @@ public final class StyleSlot {
     @Override
     public String toString() {
         return id;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Class<? extends Component<?>> castComponentClass(Class<?> type) {
-        return (Class<? extends Component<?>>) type;
     }
 }

@@ -1,15 +1,15 @@
 package tytoo.weave.effects.implementations;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.*;
+import org.joml.Matrix4f;
 import tytoo.weave.component.Component;
 import tytoo.weave.effects.Effect;
-import tytoo.weave.utils.render.Render2DUtils;
+import tytoo.weave.effects.shader.GaussianShadowShader;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public record GaussianShadowEffect(Color color,
                                    float offsetX,
@@ -18,8 +18,6 @@ public record GaussianShadowEffect(Color color,
                                    float spread,
                                    float cornerRadius) implements Effect {
 
-    private static final Map<Integer, LayerProfile> PROFILE_CACHE = new ConcurrentHashMap<>();
-
     public GaussianShadowEffect {
         blurRadius = Math.max(0f, blurRadius);
         spread = Math.max(0f, spread);
@@ -27,97 +25,79 @@ public record GaussianShadowEffect(Color color,
 
     @Override
     public void beforeDraw(DrawContext context, Component<?> component) {
-        float left = component.getLeft();
-        float top = component.getTop();
-        float width = component.getWidth();
-        float height = component.getHeight();
-
-        if (blurRadius <= 0.0001f) {
-            float swell = spread;
-            Render2DUtils.drawRoundedRect(
-                    context,
-                    left + offsetX - swell,
-                    top + offsetY - swell,
-                    width + swell * 2,
-                    height + swell * 2,
-                    cornerRadius + swell,
-                    color
-            );
+        float componentWidth = component.getWidth();
+        float componentHeight = component.getHeight();
+        if (componentWidth <= 0f || componentHeight <= 0f) {
             return;
         }
-
-        LayerProfile profile = resolveProfile(blurRadius);
-
-        float baseAlpha = color.getAlpha() / 255f;
-        int red = color.getRed();
-        int green = color.getGreen();
-        int blue = color.getBlue();
-
-        float[] offsets = profile.offsets();
-        float[] weights = profile.weights();
-        for (int i = offsets.length - 1; i >= 0; i--) {
-            float alpha = baseAlpha * weights[i];
-            if (alpha <= 0.003f) continue;
-            float swell = spread + offsets[i];
-            int a = Math.max(0, Math.min(255, Math.round(alpha * 255f)));
-            if (a == 0) continue;
-            Color layerColor = new Color(red, green, blue, a);
-
-            Render2DUtils.drawRoundedRect(
-                    context,
-                    left + offsetX - swell,
-                    top + offsetY - swell,
-                    width + swell * 2,
-                    height + swell * 2,
-                    cornerRadius + swell,
-                    layerColor
-            );
+        float alpha = color.getAlpha() / 255f;
+        if (alpha <= 0f) {
+            return;
         }
-    }
-
-    private static LayerProfile resolveProfile(float blurRadius) {
-        int key = Math.max(0, Math.round(blurRadius * 100f));
-        LayerProfile cached = PROFILE_CACHE.get(key);
-        if (cached != null) {
-            return cached;
+        float baseWidth = componentWidth + spread * 2f;
+        float baseHeight = componentHeight + spread * 2f;
+        if (baseWidth <= 0f || baseHeight <= 0f) {
+            return;
         }
-
-        int layers = Math.min(32, Math.max(8, Math.round(blurRadius * 1.5f)));
-        float sigma = Math.max(0.001f, blurRadius * 0.5f);
-
-        List<Float> offsetList = new ArrayList<>(layers);
-        List<Float> weightList = new ArrayList<>(layers);
-        float total = 0f;
-        for (int i = 0; i < layers; i++) {
-            float t = i / (float) (layers - 1);
-            float distance = t * blurRadius;
-            float weight = (float) Math.exp(-(distance * distance) / (2f * sigma * sigma));
-            if (weight <= 1e-5f) continue;
-            offsetList.add(distance);
-            weightList.add(weight);
-            total += weight;
+        float blurExtent = blurRadius * 1.5f;
+        float outerPadding = spread + blurExtent;
+        float outerWidth = componentWidth + outerPadding * 2f;
+        float outerHeight = componentHeight + outerPadding * 2f;
+        if (outerWidth <= 0f || outerHeight <= 0f) {
+            return;
         }
-
-        if (offsetList.isEmpty()) {
-            offsetList.add(0f);
-            weightList.add(1f);
-            total = 1f;
+        float x0 = component.getLeft() + offsetX - outerPadding;
+        float y0 = component.getTop() + offsetY - outerPadding;
+        float corner = cornerRadius + spread;
+        float maxCorner = Math.min(baseWidth, baseHeight) * 0.5f;
+        if (corner > maxCorner) {
+            corner = maxCorner;
         }
-
-        float[] offsets = new float[offsetList.size()];
-        float[] weights = new float[weightList.size()];
-        for (int i = 0; i < offsets.length; i++) {
-            offsets[i] = offsetList.get(i);
-            weights[i] = weightList.get(i) / total;
+        if (corner < 0f) {
+            corner = 0f;
         }
-
-        LayerProfile profile = new LayerProfile(blurRadius, offsets, weights);
-        PROFILE_CACHE.put(key, profile);
-        return profile;
-    }
-
-    private record LayerProfile(float blurRadius, float[] offsets, float[] weights) {
+        float sigma = blurRadius > 0f ? Math.max(0.0001f, blurRadius / 3f) : 0f;
+        float invTwoSigmaSq = sigma > 0f ? 1f / (2f * sigma * sigma) : 0f;
+        float red = color.getRed() / 255f;
+        float green = color.getGreen() / 255f;
+        float blue = color.getBlue() / 255f;
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        RenderSystem.enableBlend();
+        ShaderProgram shader = GaussianShadowShader.bind();
+        if (shader == null) {
+            RenderSystem.disableBlend();
+            return;
+        }
+        shader.bind();
+        boolean uploaded = GaussianShadowShader.uploadUniforms(
+                shader,
+                outerWidth,
+                outerHeight,
+                baseWidth,
+                baseHeight,
+                corner,
+                blurRadius,
+                invTwoSigmaSq,
+                red,
+                green,
+                blue,
+                alpha
+        );
+        if (!uploaded) {
+            RenderSystem.disableBlend();
+            return;
+        }
+        float x1 = x0 + outerWidth;
+        float y1 = y0 + outerHeight;
+        BufferBuilder buffer = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        buffer.vertex(matrix, x0, y1, 0f).color(255, 255, 255, 255).texture(0f, 1f);
+        buffer.vertex(matrix, x1, y1, 0f).color(255, 255, 255, 255).texture(1f, 1f);
+        buffer.vertex(matrix, x1, y0, 0f).color(255, 255, 255, 255).texture(1f, 0f);
+        buffer.vertex(matrix, x0, y0, 0f).color(255, 255, 255, 255).texture(0f, 0f);
+        BuiltBuffer builtBuffer = buffer.end();
+        if (builtBuffer != null) {
+            BufferRenderer.drawWithGlobalProgram(builtBuffer);
+        }
+        RenderSystem.disableBlend();
     }
 }
-
-

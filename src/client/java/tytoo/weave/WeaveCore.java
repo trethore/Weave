@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tytoo.weave.command.WeaveCommands;
+import tytoo.weave.effects.shader.GaussianShadowShader;
 import tytoo.weave.style.contract.StyleContracts;
 import tytoo.weave.ui.CursorManager;
 import tytoo.weave.utils.FontManager;
@@ -27,6 +28,7 @@ public final class WeaveCore {
      */
     public static void init() {
         StyleContracts.bootstrap();
+        ClientLifecycleEvents.CLIENT_STARTED.register(GaussianShadowShader::preload);
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             registerDevCommands();
         }

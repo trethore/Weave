@@ -1,5 +1,6 @@
 package tytoo.weave.component.components.display;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.MutableText;
@@ -7,6 +8,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
+import tytoo.weave.effects.Effect;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleState;
@@ -16,6 +18,7 @@ import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.UIManager;
 import tytoo.weave.utils.render.RenderTextUtils;
 
 import java.awt.*;
@@ -120,9 +123,18 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
             return;
         }
 
+        Object profilerToken = UIManager.beginComponentDraw(this);
+        float[] lastColor = RenderSystem.getShaderColor().clone();
+        RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3] * getRenderState().opacity.get());
+
         context.getMatrices().push();
         try {
             applyTransformations(context);
+
+            List<Effect> effects = getEffectiveEffects();
+            for (Effect effect : effects) {
+                effect.beforeDraw(context, this);
+            }
 
             ComponentRenderer renderer = getStyle().getRenderer(this);
             if (renderer != null) renderer.render(context, this);
@@ -157,8 +169,14 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
             if (pushed) {
                 context.getMatrices().pop();
             }
+
+            for (int i = effects.size() - 1; i >= 0; i--) {
+                effects.get(i).afterDraw(context, this);
+            }
         } finally {
             context.getMatrices().pop();
+            RenderSystem.setShaderColor(lastColor[0], lastColor[1], lastColor[2], lastColor[3]);
+            UIManager.endComponentDraw(this, profilerToken);
         }
     }
 

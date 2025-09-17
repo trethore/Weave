@@ -53,9 +53,9 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     private float[] heightCache = new float[0];
     private boolean[] measuredFlags = new boolean[0];
     private FenwickTree fenwick = new FenwickTree(0);
-    private final ObservableList.ChangeListener<T> changeListener = c -> invalidateAll();
     private float lastContentHeight = Float.NaN;
     private boolean contentHeightDirty = true;
+    private final ObservableList.ChangeListener<T> changeListener = c -> invalidateAll();
 
     public ListView() {
         this.scrollPanel = new ScrollPanel();
@@ -75,6 +75,27 @@ public class ListView<T> extends BasePanel<ListView<T>> {
 
     public static <T> ListView<T> create() {
         return new ListView<>();
+    }
+
+    private static boolean applyPixelY(Component<?> component, float value) {
+        if (component.getConstraints().getYConstraint() instanceof PixelConstraint(float value1)) {
+            if (Math.abs(value1 - value) <= PIXEL_EPSILON) {
+                return false;
+            }
+        }
+        component.setY(Constraints.pixels(value));
+        return true;
+    }
+
+    private static boolean applyPixelHeight(Component<?> component, float value) {
+        float clamped = Math.max(0f, value);
+        if (component.getConstraints().getHeightConstraint() instanceof PixelConstraint(float value1)) {
+            if (Math.abs(value1 - clamped) <= PIXEL_EPSILON) {
+                return false;
+            }
+        }
+        component.setHeight(Constraints.pixels(clamped));
+        return true;
     }
 
     public ListView<T> setItems(ObservableList<T> items) {
@@ -668,28 +689,6 @@ public class ListView<T> extends BasePanel<ListView<T>> {
     public enum HeightMode {FIXED, MEASURE_ONCE, VARIABLE}
 
     public enum SelectionMode {SINGLE, MULTIPLE}
-
-    private static boolean applyPixelY(Component<?> component, float value) {
-        float clamped = value;
-        if (component.getConstraints().getYConstraint() instanceof PixelConstraint pixel) {
-            if (Math.abs(pixel.value() - clamped) <= PIXEL_EPSILON) {
-                return false;
-            }
-        }
-        component.setY(Constraints.pixels(clamped));
-        return true;
-    }
-
-    private static boolean applyPixelHeight(Component<?> component, float value) {
-        float clamped = Math.max(0f, value);
-        if (component.getConstraints().getHeightConstraint() instanceof PixelConstraint pixel) {
-            if (Math.abs(pixel.value() - clamped) <= PIXEL_EPSILON) {
-                return false;
-            }
-        }
-        component.setHeight(Constraints.pixels(clamped));
-        return true;
-    }
 
     private static final class ItemHolder {
         int index;

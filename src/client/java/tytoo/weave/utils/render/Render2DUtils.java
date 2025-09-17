@@ -124,20 +124,26 @@ public final class Render2DUtils {
         }
         if (inside) {
             if (sides.top()) drawHLine(context, snappedX, snappedY, snappedWidth, snappedLineWidth, color);
-            if (sides.bottom()) drawHLine(context, snappedX, snappedY + snappedHeight - snappedLineWidth, snappedWidth, snappedLineWidth, color);
+            if (sides.bottom())
+                drawHLine(context, snappedX, snappedY + snappedHeight - snappedLineWidth, snappedWidth, snappedLineWidth, color);
 
             float topOffset = sides.top() ? snappedLineWidth : 0f;
             float bottomOffset = sides.bottom() ? snappedLineWidth : 0f;
             float vertLen = snappedHeight - (topOffset + bottomOffset);
             if (vertLen > 0f) {
                 if (sides.left()) drawVLine(context, snappedX, snappedY + topOffset, snappedLineWidth, vertLen, color);
-                if (sides.right()) drawVLine(context, snappedX + snappedWidth - snappedLineWidth, snappedY + topOffset, snappedLineWidth, vertLen, color);
+                if (sides.right())
+                    drawVLine(context, snappedX + snappedWidth - snappedLineWidth, snappedY + topOffset, snappedLineWidth, vertLen, color);
             }
         } else {
-            if (sides.top()) drawHLine(context, snappedX - snappedLineWidth, snappedY - snappedLineWidth, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
-            if (sides.bottom()) drawHLine(context, snappedX - snappedLineWidth, snappedY + snappedHeight, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
-            if (sides.left()) drawVLine(context, snappedX - snappedLineWidth, snappedY, snappedLineWidth, snappedHeight, color);
-            if (sides.right()) drawVLine(context, snappedX + snappedWidth, snappedY, snappedLineWidth, snappedHeight, color);
+            if (sides.top())
+                drawHLine(context, snappedX - snappedLineWidth, snappedY - snappedLineWidth, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
+            if (sides.bottom())
+                drawHLine(context, snappedX - snappedLineWidth, snappedY + snappedHeight, snappedWidth + 2 * snappedLineWidth, snappedLineWidth, color);
+            if (sides.left())
+                drawVLine(context, snappedX - snappedLineWidth, snappedY, snappedLineWidth, snappedHeight, color);
+            if (sides.right())
+                drawVLine(context, snappedX + snappedWidth, snappedY, snappedLineWidth, snappedHeight, color);
         }
     }
 

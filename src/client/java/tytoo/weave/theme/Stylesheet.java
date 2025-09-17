@@ -150,7 +150,7 @@ public class Stylesheet {
         }
         if (!slot.valueType().isInstance(resolved)) {
             Object fallback = resolveValue(component, contract.defaultValue(slot, component));
-            if (fallback != null && slot.valueType().isInstance(fallback)) {
+            if (slot.valueType().isInstance(fallback)) {
                 return fallback;
             }
             return null;

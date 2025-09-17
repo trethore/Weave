@@ -22,7 +22,7 @@ import tytoo.weave.style.*;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +73,7 @@ public class DemoWeaveScreen extends WeaveScreen {
 
         List<Color> outline = Arrays.asList(start, end);
         window.addEffect(Effects.gradientOutline(outline, 1.5f, true, GradientOutlineEffect.Direction.BOTTOM_LEFT_TO_TOP_RIGHT));
-        window.addEffect(Effects.shadow(new Color(0, 0, 0, 130), 0f, 2.5f, 10f, 0f));
+        window.addEffect(Effects.shadow(new Color(0, 0, 0, 130), 0f, 0f, 10f, 0f));
     }
 
     private void playIntroAnimation() {

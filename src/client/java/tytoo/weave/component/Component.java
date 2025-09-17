@@ -21,7 +21,6 @@ import tytoo.weave.constraint.constraints.ChildBasedSizeConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.constraint.constraints.SumOfChildrenHeightConstraint;
 import tytoo.weave.effects.Effect;
-import tytoo.weave.profile.FrameProfiler.EffectPhase;
 import tytoo.weave.event.Event;
 import tytoo.weave.event.EventType;
 import tytoo.weave.event.focus.FocusGainedEvent;
@@ -30,6 +29,7 @@ import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.*;
 import tytoo.weave.layout.Layout;
+import tytoo.weave.profile.FrameProfiler.EffectPhase;
 import tytoo.weave.state.State;
 import tytoo.weave.style.*;
 import tytoo.weave.style.contract.StyleSlot;
@@ -55,6 +55,7 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public abstract class Component<T extends Component<T>> implements Cloneable {
+    private static final Object NULL_STYLE_SENTINEL = new Object();
     protected final LayoutState layoutState;
     protected final RenderState renderState;
     protected final EventState eventState;
@@ -62,6 +63,8 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private final Set<StyleState> activeStyleStates = EnumSet.noneOf(StyleState.class);
     private final List<StyleRule> localStyleRules = new ArrayList<>();
     private final Map<String, Object> styleVariables = new HashMap<>();
+    private final Map<Long, Map<StyleSlot, Object>> cachedStyleValues = new HashMap<>();
+    private final Map<Long, List<Effect>> styledEffectsCache = new HashMap<>();
     protected Component<?> parent;
     protected List<Component<?>> children = new LinkedList<>();
     @Nullable
@@ -87,10 +90,6 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private EdgeInsets animatedPadding;
     @Nullable
     private TooltipAttachment tooltipAttachment;
-    private final Map<Long, Map<StyleSlot, Object>> cachedStyleValues = new HashMap<>();
-    private final Map<Long, List<Effect>> styledEffectsCache = new HashMap<>();
-
-    private static final Object NULL_STYLE_SENTINEL = new Object();
 
     public Component() {
         this.layoutState = new LayoutState(this);
@@ -205,7 +204,7 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         }
     }
 
-    private List<Effect> getEffectiveEffects() {
+    protected List<Effect> getEffectiveEffects() {
         long stateKey = getCurrentStyleStateKey();
         List<Effect> styled = this.styledEffectsCache.get(stateKey);
         if (styled == null) {

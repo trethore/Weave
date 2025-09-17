@@ -11,6 +11,7 @@ import java.awt.*;
 
 public class DefaultSelectionRenderer implements SelectionRenderer {
     private static final Color DEFAULT_SELECTION_COLOR = new Color(50, 100, 200, 128);
+
     @Override
     public void render(DrawContext context, BaseTextInput<?> textInput) {
         int selectionStart = Math.min(textInput.getCursorPos(), textInput.getSelectionAnchor());
