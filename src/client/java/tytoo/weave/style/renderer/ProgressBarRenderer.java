@@ -3,6 +3,7 @@ package tytoo.weave.style.renderer;
 import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.display.ProgressBar;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
@@ -15,8 +16,8 @@ public class ProgressBarRenderer implements ComponentRenderer, CloneableRenderer
     public void render(DrawContext context, Component<?> component) {
         if (!(component instanceof ProgressBar bar)) return;
 
-        Color bg = bar.getCachedStyleValue(ProgressBar.StyleProps.BACKGROUND_COLOR, DEFAULT_BACKGROUND);
-        Color fg = bar.getCachedStyleValue(ProgressBar.StyleProps.VALUE_COLOR, DEFAULT_FOREGROUND);
+        Color bg = bar.getCachedStyleValue(ComponentStyleProperties.ProgressBarStyles.BACKGROUND_COLOR, DEFAULT_BACKGROUND);
+        Color fg = bar.getCachedStyleValue(ComponentStyleProperties.ProgressBarStyles.VALUE_COLOR, DEFAULT_FOREGROUND);
 
         float x = bar.getLeft();
         float y = bar.getTop();

@@ -5,11 +5,9 @@ import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
-
-import java.awt.*;
 
 public class Separator extends BasePanel<Separator> {
     private final Orientation orientation;
@@ -32,8 +30,8 @@ public class Separator extends BasePanel<Separator> {
         this.orientation = orientation;
 
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        this.thickness = stylesheet.get(this, StyleProps.THICKNESS, 1f);
-        this.labelGap = stylesheet.get(this, StyleProps.LABEL_GAP, 6f);
+        this.thickness = stylesheet.get(this, ComponentStyleProperties.SeparatorStyles.THICKNESS, 1f);
+        this.labelGap = stylesheet.get(this, ComponentStyleProperties.SeparatorStyles.LABEL_GAP, 6f);
 
         if (orientation == Orientation.HORIZONTAL) {
             this.setHeight(Constraints.pixels(thickness));
@@ -64,7 +62,7 @@ public class Separator extends BasePanel<Separator> {
 
         ensureLabelStructure();
         this.label.setText(text);
-        Float labelScale = ThemeManager.getStylesheet().get(this, StyleProps.LABEL_TEXT_SCALE, 1.0f);
+        Float labelScale = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.SeparatorStyles.LABEL_TEXT_SCALE, 1.0f);
         if (labelScale != null) {
             this.label.setScale(labelScale);
         }
@@ -107,7 +105,7 @@ public class Separator extends BasePanel<Separator> {
         this.label.setHittable(false);
 
         Stylesheet ss = ThemeManager.getStylesheet();
-        Float labelScale = ss.get(this, StyleProps.LABEL_TEXT_SCALE, 1.0f);
+        Float labelScale = ss.get(this, ComponentStyleProperties.SeparatorStyles.LABEL_TEXT_SCALE, 1.0f);
         if (labelScale != null) {
             this.label.setScale(labelScale);
         }
@@ -140,7 +138,7 @@ public class Separator extends BasePanel<Separator> {
     private void updateForAlignment() {
         if (this.label == null || this.leftLine == null || this.rightLine == null) return;
 
-        float smallRatio = ThemeManager.getStylesheet().get(this, StyleProps.SMALL_LINE_RATIO, 0.15f);
+        float smallRatio = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.SeparatorStyles.SMALL_LINE_RATIO, 0.15f);
         if (Float.isNaN(smallRatio) || smallRatio < 0f) smallRatio = 0f;
 
         switch (this.labelAlignment) {
@@ -189,14 +187,4 @@ public class Separator extends BasePanel<Separator> {
         RIGHT_WITH_LINE
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot THICKNESS = StyleSlot.of("separator.thickness", Separator.class, Float.class);
-        public static final StyleSlot LABEL_GAP = StyleSlot.of("separator.label-gap", Separator.class, Float.class);
-        public static final StyleSlot LABEL_TEXT_SCALE = StyleSlot.of("separator.label-text-scale", Separator.class, Float.class);
-        public static final StyleSlot COLOR = StyleSlot.of("separator.color", Separator.class, Color.class);
-        public static final StyleSlot SMALL_LINE_RATIO = StyleSlot.of("separator.small-line-ratio", Separator.class, Float.class);
-
-        private StyleProps() {
-        }
-    }
 }

@@ -7,6 +7,7 @@ import tytoo.weave.component.components.display.BaseImage;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.ComponentStyle;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.style.renderer.CompositeRenderer;
@@ -78,7 +79,7 @@ public class AnimationBuilder<C extends Component<C>> {
             State<Color> colorState = textComponent.getColorOverrideState();
             if (colorState.get() == null) {
                 Stylesheet ss = ThemeManager.getStylesheet();
-                Color currentColor = ss.get(textComponent, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+                Color currentColor = ss.get(textComponent, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, Color.WHITE);
                 colorState.set(currentColor);
             }
             return animateProperty(colorState, to, Interpolators.COLOR, null, "color");

@@ -3,7 +3,6 @@ package tytoo.weave.component.components.interactive;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Easings;
 import tytoo.weave.animation.Interpolators;
-import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -11,7 +10,7 @@ import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -51,11 +50,11 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
 
         this.thumb = Panel.create().addStyleState(StyleState.NORMAL);
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        this.trackPadding = stylesheet.get(this, StyleProps.TRACK_PADDING, 4f);
+        this.trackPadding = stylesheet.get(this, ComponentStyleProperties.SliderStyles.TRACK_PADDING, 4f);
 
-        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
-        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
-        float thumbSize = stylesheet.get(this, StyleProps.THUMB_SIZE, 8f);
+        float defaultWidth = stylesheet.get(this, ComponentStyleProperties.SliderStyles.DEFAULT_WIDTH, 150f);
+        float defaultHeight = stylesheet.get(this, ComponentStyleProperties.SliderStyles.DEFAULT_HEIGHT, 20f);
+        float thumbSize = stylesheet.get(this, ComponentStyleProperties.SliderStyles.THUMB_SIZE, 8f);
 
         if (orientation == Orientation.HORIZONTAL) {
             this.setHeight(Constraints.pixels(defaultHeight));
@@ -346,16 +345,4 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         HORIZONTAL, VERTICAL
     }
 
-    public static final class StyleProps {
-        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(Slider.class);
-
-        public static final StyleSlot TRACK_PADDING = StyleSlot.of("slider.track.padding", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("slider.default-width", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("slider.default-height", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot THUMB_SIZE = StyleSlot.of("slider.thumb.size", COMPONENT_CLASS, Float.class);
-
-
-        private StyleProps() {
-        }
-    }
 }

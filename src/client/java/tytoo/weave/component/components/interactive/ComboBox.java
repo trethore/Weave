@@ -7,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
-import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
@@ -17,7 +16,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
@@ -45,6 +44,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     private final State<T> valueState;
     private final List<Option<T>> options = new ArrayList<>();
     private final OutlineEffect outlineEffect;
+    private final List<ShortcutRegistry.Registration> dropdownShortcutRegistrations = new ArrayList<>();
     private boolean isUpdatingFromState = false;
     @Nullable
     private String placeholder;
@@ -60,15 +60,14 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     private ScrollPanel dropdownScrollPanel;
     private float savedDropdownScrollY = 0f;
     private int dropdownHoverIndex = -1;
-    private final List<ShortcutRegistry.Registration> dropdownShortcutRegistrations = new ArrayList<>();
 
     public ComboBox(State<T> valueState) {
         this.valueState = valueState;
         this.valueState.addListener(v -> updateSelectedLabel());
 
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
-        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
+        float defaultWidth = stylesheet.get(this, ComponentStyleProperties.ComboBoxStyles.DEFAULT_WIDTH, 150f);
+        float defaultHeight = stylesheet.get(this, ComponentStyleProperties.ComboBoxStyles.DEFAULT_HEIGHT, 20f);
 
         this.setWidth(Constraints.pixels(defaultWidth));
         this.setHeight(Constraints.pixels(defaultHeight));
@@ -117,11 +116,11 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     private Color resolveBorderColor() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         if (isFocused() || expanded) {
-            return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+            return stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
         } else if (hasStyleState(StyleState.HOVERED)) {
-            return stylesheet.get(this, StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
+            return stylesheet.get(this, ComponentStyleProperties.ComboBoxStyles.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
         } else {
-            return stylesheet.get(this, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+            return stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
         }
     }
 
@@ -150,7 +149,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
         float dropdownMaxHeight = this.dropdownMaxHeightOverride != null
                 ? this.dropdownMaxHeightOverride
-                : stylesheet.get(this, StyleProps.DROPDOWN_MAX_HEIGHT, 100f);
+                : stylesheet.get(this, ComponentStyleProperties.ComboBoxStyles.DROPDOWN_MAX_HEIGHT, 100f);
 
         this.dropdownContent = Panel.create()
                 .setWidth(Constraints.pixels(this.getWidth()))
@@ -179,7 +178,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             }
 
             TextRenderer textRenderer = getEffectiveTextRenderer();
-            float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+            float padding = ThemeManager.getStylesheet().get(optionButton, ComponentStyleProperties.ButtonStyles.PADDING, 5f);
             float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
             optionButton.setHeight(Constraints.pixels(rowHeight));
 
@@ -210,7 +209,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             }
 
             TextRenderer textRenderer = getEffectiveTextRenderer();
-            float padding = ThemeManager.getStylesheet().get(optionButton, Button.StyleProps.PADDING, 5f);
+            float padding = ThemeManager.getStylesheet().get(optionButton, ComponentStyleProperties.ButtonStyles.PADDING, 5f);
             float rowHeight = (textRenderer.fontHeight + 1) + padding * 2f;
             optionButton.setHeight(Constraints.pixels(rowHeight));
 
@@ -355,7 +354,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             }
             if (rowH <= 0) {
                 TextRenderer tr = getEffectiveTextRenderer();
-                float padding = ThemeManager.getStylesheet().get(b, Button.StyleProps.PADDING, 5f);
+                float padding = ThemeManager.getStylesheet().get(b, ComponentStyleProperties.ButtonStyles.PADDING, 5f);
                 rowH = (tr.fontHeight + 1) + padding * 2f;
             }
             top += rowH;
@@ -647,14 +646,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     public record Option<T>(String label, T value) {
     }
 
-    public static final class StyleProps {
-        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(ComboBox.class);
-
-        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("combo-box.default-width", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("combo-box.default-height", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DROPDOWN_MAX_HEIGHT = StyleSlot.of("combo-box.dropdown-max-height", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot BORDER_COLOR_HOVERED = StyleSlot.of("combo-box.borderColor.hovered", COMPONENT_CLASS, Color.class);
-    }
 
     private static class ArrowIcon extends Component<ArrowIcon> {
         private final ComboBox<?> comboBox;
@@ -713,7 +704,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             }
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Color color = stylesheet.get(this.comboBox, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+            Color color = stylesheet.get(this.comboBox, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, Color.WHITE);
             int colorRgb = color != null ? color.getRGB() : -1;
             context.drawText(textRenderer, toDraw, (int) x, (int) y, colorRgb, true);
         }
@@ -750,7 +741,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
             }
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Color color = stylesheet.get(this.styleContext, TextComponent.StyleProps.TEXT_COLOR, Color.WHITE);
+            Color color = stylesheet.get(this.styleContext, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, Color.WHITE);
             int colorRgb = color != null ? color.getRGB() : -1;
             context.drawText(textRenderer, toDraw, (int) x, (int) y, colorRgb, true);
         }

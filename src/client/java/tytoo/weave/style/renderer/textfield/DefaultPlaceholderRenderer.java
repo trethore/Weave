@@ -7,6 +7,7 @@ import net.minecraft.text.Text;
 import tytoo.weave.component.components.interactive.BaseTextInput;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 
 import java.awt.*;
 
@@ -20,7 +21,7 @@ public class DefaultPlaceholderRenderer implements PlaceholderRenderer {
         }
 
         TextRenderer textRenderer = textInput.getEffectiveTextRenderer();
-        Color placeholderColor = textInput.getCachedStyleValue(BaseTextInput.StyleProps.PLACEHOLDER_COLOR, DEFAULT_PLACEHOLDER_COLOR);
+        Color placeholderColor = textInput.getCachedStyleValue(ComponentStyleProperties.BaseTextInputStyles.PLACEHOLDER_COLOR, DEFAULT_PLACEHOLDER_COLOR);
 
         if (placeholderColor == null) return;
 

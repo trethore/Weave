@@ -1,11 +1,21 @@
 package tytoo.weave.style;
 
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.component.Component;
+import tytoo.weave.style.contract.ComponentStyleRegistry;
+import tytoo.weave.style.contract.StyleProperty;
 
 import java.util.List;
 
 public final class EffectStyleProperties {
-    public static final StyleSlot EFFECTS = StyleSlot.forRoot("effects", List.class);
+    public static final StyleProperty<List<?>> EFFECTS;
+
+    static {
+        ComponentStyleRegistry.Builder<Component<?>> builder = ComponentStyleRegistry.root("effects");
+        @SuppressWarnings("unchecked")
+        StyleProperty<List<?>> effects = (StyleProperty<List<?>>) (StyleProperty<?>) builder.optionalId("effects", List.class);
+        EFFECTS = effects;
+        builder.register();
+    }
 
     private EffectStyleProperties() {
     }

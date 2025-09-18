@@ -4,7 +4,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import tytoo.weave.component.Component;
 import tytoo.weave.effects.ColorableEffect;
 import tytoo.weave.effects.Effect;
 import tytoo.weave.effects.Effects;
@@ -13,7 +12,7 @@ import tytoo.weave.event.keyboard.CharTypeEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -269,7 +268,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
     protected int registerClickAndGetCount() {
         long now = System.currentTimeMillis();
-        long interval = ThemeManager.getStylesheet().get(this, StyleProps.MULTI_CLICK_INTERVAL, 300L);
+        long interval = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.BaseTextInputStyles.MULTI_CLICK_INTERVAL, 300L);
         if (now - lastClickTime <= interval) {
             consecutiveClicks++;
         } else {
@@ -535,27 +534,5 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
     }
 
     private record HistoryState(String text, int cursorPos, int selectionAnchor) {
-    }
-
-    public static final class StyleProps {
-        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(BaseTextInput.class);
-
-        public static final StyleSlot CURSOR_BLINK_INTERVAL = StyleSlot.of("cursor.blink-interval", COMPONENT_CLASS, Long.class);
-        public static final StyleSlot MULTI_CLICK_INTERVAL = StyleSlot.of("click.multi-interval", COMPONENT_CLASS, Long.class);
-        public static final StyleSlot SELECTION_COLOR = StyleSlot.of("selectionColor", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BORDER_COLOR_VALID = StyleSlot.of("borderColor.valid", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BORDER_COLOR_INVALID = StyleSlot.of("borderColor.invalid", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BORDER_COLOR_FOCUSED = StyleSlot.of("borderColor.focused", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BORDER_COLOR_HOVERED = StyleSlot.of("borderColor.hovered", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BORDER_COLOR_UNFOCUSED = StyleSlot.of("borderColor.unfocused", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot PLACEHOLDER_COLOR = StyleSlot.of("placeholderColor", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot CURSOR_COLOR = StyleSlot.of("cursorColor", COMPONENT_CLASS, Color.class);
-
-        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("text-input.default-width", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DEFAULT_HEIGHT = StyleSlot.of("text-input.default-height", COMPONENT_CLASS, Float.class);
-
-        public static final StyleSlot OUTLINE_WIDTH = StyleSlot.of("outline.width", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot OUTLINE_INSIDE = StyleSlot.of("outline.inside", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot OUTLINE_SIDES = StyleSlot.of("outline.sides", COMPONENT_CLASS, OutlineSides.class);
     }
 }

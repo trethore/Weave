@@ -4,10 +4,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.style.ComponentStyle;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.ResolvedComponentContract;
-import tytoo.weave.style.contract.SlotRequirement;
-import tytoo.weave.style.contract.StyleContractRegistry;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.*;
 import tytoo.weave.style.renderer.CloneableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.style.value.StyleValue;
@@ -137,6 +134,10 @@ public class Stylesheet {
             return defaultValue;
         }
         return (T) resolved;
+    }
+
+    public <T> T get(Component<?> component, StyleProperty<T> property, T defaultValue) {
+        return get(component, property.slot(), defaultValue);
     }
 
     private Object resolveSlot(Component<?> component, StyleSlot slot, ResolvedComponentContract contract, Map<StyleSlot, Object> values) {

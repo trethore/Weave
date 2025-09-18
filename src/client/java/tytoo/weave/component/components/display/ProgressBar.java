@@ -8,10 +8,8 @@ import tytoo.weave.component.Component;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.ThemeManager;
-
-import java.awt.*;
 
 public class ProgressBar extends Component<ProgressBar> {
     private final State<Float> valueState;
@@ -25,9 +23,9 @@ public class ProgressBar extends Component<ProgressBar> {
         this.addStyleState(StyleState.NORMAL);
         this.setHittable(true);
 
-        float defaultWidth = ThemeManager.getStylesheet().get(this, StyleProps.DEFAULT_WIDTH, 150f);
+        float defaultWidth = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ProgressBarStyles.DEFAULT_WIDTH, 150f);
         this.setWidth(Constraints.pixels(defaultWidth));
-        this.setHeight((component, parentHeight) -> ThemeManager.getStylesheet().get(this, StyleProps.THICKNESS, 8f));
+        this.setHeight((component, parentHeight) -> ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ProgressBarStyles.THICKNESS, 8f));
 
         this.onMouseEnter(e -> setStyleState(StyleState.HOVERED, true));
         this.onMouseLeave(e -> setStyleState(StyleState.HOVERED, false));
@@ -61,7 +59,7 @@ public class ProgressBar extends Component<ProgressBar> {
     }
 
     private void animateToProgress(float targetProgress) {
-        long duration = ThemeManager.getStylesheet().get(this, StyleProps.ANIMATION_DURATION, 200L);
+        long duration = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ProgressBarStyles.ANIMATION_DURATION, 200L);
         if (duration < 0L) duration = 0L;
         this.animate().duration(duration).easing(Easings.EASE_OUT_SINE)
                 .animateProperty(this.visualProgressState, targetProgress, Interpolators.FLOAT, null, "progress_value");
@@ -127,7 +125,7 @@ public class ProgressBar extends Component<ProgressBar> {
     }
 
     public FillPolicy getFillPolicy() {
-        FillPolicy policy = ThemeManager.getStylesheet().get(this, StyleProps.FILL_POLICY, FillPolicy.LEFT_TO_RIGHT);
+        FillPolicy policy = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ProgressBarStyles.FILL_POLICY, FillPolicy.LEFT_TO_RIGHT);
         return policy != null ? policy : FillPolicy.LEFT_TO_RIGHT;
     }
 
@@ -142,15 +140,4 @@ public class ProgressBar extends Component<ProgressBar> {
         CENTER_OUT
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot THICKNESS = StyleSlot.of("progress.thickness", ProgressBar.class, Float.class);
-        public static final StyleSlot DEFAULT_WIDTH = StyleSlot.of("progress.default-width", ProgressBar.class, Float.class);
-        public static final StyleSlot VALUE_COLOR = StyleSlot.of("progress.value.color", ProgressBar.class, Color.class);
-        public static final StyleSlot BACKGROUND_COLOR = StyleSlot.of("progress.background.color", ProgressBar.class, Color.class);
-        public static final StyleSlot ANIMATION_DURATION = StyleSlot.of("progress.animation-duration", ProgressBar.class, Long.class);
-        public static final StyleSlot FILL_POLICY = StyleSlot.of("progress.fill-policy", ProgressBar.class, FillPolicy.class);
-
-        private StyleProps() {
-        }
-    }
 }

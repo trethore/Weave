@@ -9,6 +9,7 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.LayoutStyleProperties;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.ColorableRenderer;
 import tytoo.weave.style.renderer.ComponentRenderer;
@@ -28,33 +29,33 @@ public final class StyleTransitionRegistry {
     private static final Class<Component<?>> ROOT_COMPONENT_CLASS = (Class<Component<?>>) (Class<?>) Component.class;
 
     static {
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.PADDING, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.PADDING.slot(), null,
                 Interpolators.EDGE_INSETS,
                 Component::setAnimatedPadding,
                 Component::commitAnimatedPadding);
 
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_WIDTH, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_WIDTH.slot(), 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedBorderWidth,
                 Component::commitAnimatedBorderWidth);
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_COLOR, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_COLOR.slot(), null,
                 Interpolators.COLOR,
                 Component::setAnimatedBorderColor,
                 Component::commitAnimatedBorderColor);
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_RADIUS, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.BORDER_RADIUS.slot(), 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedBorderRadius,
                 Component::commitAnimatedBorderRadius);
 
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_WIDTH, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_WIDTH.slot(), 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedOverlayBorderWidth,
                 Component::commitAnimatedOverlayBorderWidth);
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_COLOR, null,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_COLOR.slot(), null,
                 Interpolators.COLOR,
                 Component::setAnimatedOverlayBorderColor,
                 Component::commitAnimatedOverlayBorderColor);
-        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_RADIUS, 0.0f,
+        registerStyleProperty(ROOT_COMPONENT_CLASS, LayoutStyleProperties.OVERLAY_BORDER_RADIUS.slot(), 0.0f,
                 Interpolators.FLOAT,
                 Component::setAnimatedOverlayBorderRadius,
                 Component::commitAnimatedOverlayBorderRadius);
@@ -85,7 +86,7 @@ public final class StyleTransitionRegistry {
                 },
                 null);
 
-        registerStyleProperty(TextComponent.class, TextComponent.StyleProps.TEXT_COLOR, null,
+        registerStyleProperty(TextComponent.class, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR.slot(), null,
                 Interpolators.COLOR,
                 TextComponent::applyAnimatedTextColor,
                 TextComponent::clearAnimatedTextColor);
@@ -93,11 +94,11 @@ public final class StyleTransitionRegistry {
         registerComputed(ComboBox.class, Keys.COMBOBOX_OUTLINE_COLOR,
                 (ss, c) -> {
                     if (c.isFocused() || c.hasStyleState(StyleState.ACTIVE)) {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
                     } else if (c.hasStyleState(StyleState.HOVERED)) {
-                        return ss.get(c, ComboBox.StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
+                        return ss.get(c, ComponentStyleProperties.ComboBoxStyles.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
                     } else {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
                     }
                 },
                 Interpolators.COLOR,
@@ -108,32 +109,32 @@ public final class StyleTransitionRegistry {
                 (ss, c) -> {
                     BaseTextInput.ValidationState vState = c.getValidationState();
                     if (vState == BaseTextInput.ValidationState.VALID) {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_VALID, new Color(0, 180, 0));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_VALID, new Color(0, 180, 0));
                     } else if (vState == BaseTextInput.ValidationState.INVALID) {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_INVALID, new Color(180, 0, 0));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_INVALID, new Color(180, 0, 0));
                     } else if (c.isFocused()) {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_FOCUSED, new Color(160, 160, 160));
                     } else if (c.hasStyleState(StyleState.HOVERED)) {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_HOVERED, new Color(120, 120, 120));
                     } else {
-                        return ss.get(c, BaseTextInput.StyleProps.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
+                        return ss.get(c, ComponentStyleProperties.BaseTextInputStyles.BORDER_COLOR_UNFOCUSED, new Color(80, 80, 80));
                     }
                 },
                 Interpolators.COLOR,
                 BaseTextInput::applyOutlineColor,
                 null);
 
-        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_WIDTH, 1.0f,
+        registerStyleProperty(BaseTextInput.class, ComponentStyleProperties.BaseTextInputStyles.OUTLINE_WIDTH.slot(), 1.0f,
                 Interpolators.FLOAT,
                 BaseTextInput::applyOutlineWidth,
                 null);
 
-        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_INSIDE, Boolean.TRUE,
+        registerStyleProperty(BaseTextInput.class, ComponentStyleProperties.BaseTextInputStyles.OUTLINE_INSIDE.slot(), Boolean.TRUE,
                 (start, end, progress) -> progress < 1.0 ? start : end,
                 BaseTextInput::applyOutlineInside,
                 null);
 
-        registerStyleProperty(BaseTextInput.class, BaseTextInput.StyleProps.OUTLINE_SIDES, OutlineSides.all(),
+        registerStyleProperty(BaseTextInput.class, ComponentStyleProperties.BaseTextInputStyles.OUTLINE_SIDES.slot(), OutlineSides.all(),
                 (start, end, progress) -> progress < 1.0 ? start : end,
                 BaseTextInput::applyOutlineSides,
                 null);

@@ -18,21 +18,21 @@ Weave uses a powerful styling system inspired by CSS to separate a UI's appearan
 
 1.  **Theme:** The active `Theme` provides a global `Stylesheet`. `ThemeManager` controls which theme is active.
 2.  **Stylesheet:** A collection of `StyleRule` objects.
-3.  **StyleRule:** A rule connects a `StyleSelector` to a map of `StyleSlot` values.
+3.  **StyleRule:** A rule connects a `StyleSelector` to a map of style keys and values.
 4.  **Selector:** A query that determines which components a rule applies to (e.g., "all buttons with the class `primary` that are currently hovered").
-5.  **Style Slot:** A typed key for a visual attribute (e.g., `LayoutStyleProperties.BORDER_COLOR`). Slots belong to component/theme contracts so themes know exactly which visuals they can supply.
+5.  **Style Property:** A typed key for a visual attribute (for example `ComponentStyleProperties.ButtonStyles.PADDING`). Properties belong to component/theme contracts so themes know exactly which visuals they can supply, and expose their underlying `StyleSlot` via `property.slot()` when needed.
 6.  **Cascade:** Styles are resolved by collecting all matching rules from the global theme and any local stylesheets on the component or its ancestors. Rules with more specific selectors override those with less specific ones.
 
 ## Stylesheets and Rules
 
 The `Stylesheet` is the central repository for your UI's visual language. You add rules to define how components should look.
 
-### Contracts & Slots
+### Contracts & Properties
 
-Every component declares a `ComponentThemeContract` listing the style slots it understands. Slots are typed (`StyleSlot`) and
+Every component declares a `ComponentThemeContract` listing the style properties it understands. Properties are typed wrappers around `StyleSlot` instances and
 scoped to specific component types, so supplying a value that does not match a component's contract will be ignored (or
 warned about if the slot is required). You can introspect contracts at runtime via `StyleContractRegistry.resolve(Button.class)`
-to drive editors or validations, and custom components should register their own contracts during initialization.
+to drive editors or validations, and custom components should register their own properties during initialization through `ComponentStyleRegistry`.
 
 ```java
 // Get the active stylesheet
@@ -50,7 +50,7 @@ StyleRule rule = new StyleRule(
     // The slots define the visual styles
     Map.of(
         ComponentStyle.Slots.HOVERED_RENDERER, new SolidColorRenderer(new Color(100, 150, 255)),
-        TextComponent.StyleProps.TEXT_COLOR, Color.WHITE
+        ComponentStyleProperties.TextComponentStyles.TEXT_COLOR.slot(), Color.WHITE
     )
 );
 
@@ -66,7 +66,7 @@ For one-off styling needs, you can add rules directly to a component instance. T
 Panel warningBox = Panel.create()
     .addLocalStyleRule(new StyleRule(
         new StyleSelector(Panel.class, null, null, null),
-        Map.of(LayoutStyleProperties.BORDER_COLOR, new Color(220, 50, 50))
+        Map.of(LayoutStyleProperties.BORDER_COLOR.slot(), new Color(220, 50, 50))
     ));
 ```
 

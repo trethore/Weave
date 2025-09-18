@@ -2,7 +2,7 @@ package tytoo.weave.layout;
 
 import tytoo.weave.WeaveCore;
 import tytoo.weave.component.Component;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -36,9 +36,9 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
     @Override
     public void arrangeChildren(Component<?> parent) {
         Stylesheet ss = ThemeManager.getStylesheet();
-        Integer colsStyle = ss.get(parent, StyleProps.COLUMNS, null);
-        Float hGapStyle = ss.get(parent, StyleProps.H_GAP, null);
-        Float vGapStyle = ss.get(parent, StyleProps.V_GAP, null);
+        Integer colsStyle = ss.get(parent, ComponentStyleProperties.GridLayoutStyles.COLUMNS, null);
+        Float hGapStyle = ss.get(parent, ComponentStyleProperties.GridLayoutStyles.H_GAP, null);
+        Float vGapStyle = ss.get(parent, ComponentStyleProperties.GridLayoutStyles.V_GAP, null);
         int effColumns = Math.max(1, colsStyle != null ? colsStyle : columns);
         float effHGap = hGapStyle != null ? hGapStyle : horizontalGap;
         float effVGap = vGapStyle != null ? vGapStyle : verticalGap;
@@ -72,8 +72,8 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
             if (layoutData instanceof GridData data) {
                 gridDataMap.put(child, data);
             } else {
-                Integer col = ss.get(child, StyleProps.COL_SPAN, null);
-                Integer row = ss.get(child, StyleProps.ROW_SPAN, null);
+                Integer col = ss.get(child, ComponentStyleProperties.GridLayoutStyles.COL_SPAN, null);
+                Integer row = ss.get(child, ComponentStyleProperties.GridLayoutStyles.ROW_SPAN, null);
                 gridDataMap.put(child, new GridData(col != null ? col : 1, row != null ? row : 1));
             }
         }
@@ -198,14 +198,4 @@ public record GridLayout(int columns, float horizontalGap, float verticalGap) im
         }
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot COLUMNS = StyleSlot.forRoot("grid.columns", Integer.class);
-        public static final StyleSlot H_GAP = StyleSlot.forRoot("grid.h-gap", Float.class);
-        public static final StyleSlot V_GAP = StyleSlot.forRoot("grid.v-gap", Float.class);
-        public static final StyleSlot COL_SPAN = StyleSlot.forRoot("grid.col-span", Integer.class);
-        public static final StyleSlot ROW_SPAN = StyleSlot.forRoot("grid.row-span", Integer.class);
-
-        private StyleProps() {
-        }
-    }
 }

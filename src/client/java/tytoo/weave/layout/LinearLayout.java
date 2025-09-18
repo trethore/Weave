@@ -5,7 +5,7 @@ import tytoo.weave.component.Component;
 import tytoo.weave.constraint.HeightConstraint;
 import tytoo.weave.constraint.WidthConstraint;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -37,7 +37,7 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
             return (Data) layoutData;
         }
         Stylesheet ss = ThemeManager.getStylesheet();
-        Float grow = ss.get(component, StyleProps.FLEX_GROW, null);
+        Float grow = ss.get(component, ComponentStyleProperties.LinearLayoutStyles.FLEX_GROW, null);
         return new Data(Math.max(0f, grow != null ? grow : 0f));
     }
 
@@ -74,10 +74,10 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
 
     private void applyHorizontalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
         Stylesheet ss = ThemeManager.getStylesheet();
-        Float gapStyle = ss.get(parent, StyleProps.GAP, null);
+        Float gapStyle = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.GAP, null);
         float effGap = gapStyle != null ? gapStyle : gap;
-        Alignment effAlign = ss.get(parent, StyleProps.ALIGN, alignment);
-        CrossAxisAlignment effCross = ss.get(parent, StyleProps.CROSS_ALIGN, crossAxisAlignment);
+        Alignment effAlign = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.ALIGN, alignment);
+        CrossAxisAlignment effCross = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.CROSS_ALIGN, crossAxisAlignment);
         float totalGrow = 0;
         float fixedWidth = 0;
 
@@ -160,10 +160,10 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
 
     private void applyVerticalLayout(Component<?> parent, List<Component<?>> visibleChildren) {
         Stylesheet ss = ThemeManager.getStylesheet();
-        Float gapStyle = ss.get(parent, StyleProps.GAP, null);
+        Float gapStyle = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.GAP, null);
         float effGap = gapStyle != null ? gapStyle : gap;
-        Alignment effAlign = ss.get(parent, StyleProps.ALIGN, alignment);
-        CrossAxisAlignment effCross = ss.get(parent, StyleProps.CROSS_ALIGN, crossAxisAlignment);
+        Alignment effAlign = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.ALIGN, alignment);
+        CrossAxisAlignment effCross = ss.get(parent, ComponentStyleProperties.LinearLayoutStyles.CROSS_ALIGN, crossAxisAlignment);
         float totalGrow = 0;
         float fixedHeight = 0;
         for (Component<?> child : visibleChildren) {
@@ -275,13 +275,4 @@ public record LinearLayout(Orientation orientation, Alignment alignment, CrossAx
         }
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot GAP = StyleSlot.forRoot("linear.gap", Float.class);
-        public static final StyleSlot ALIGN = StyleSlot.forRoot("linear.align", Alignment.class);
-        public static final StyleSlot CROSS_ALIGN = StyleSlot.forRoot("linear.cross-align", CrossAxisAlignment.class);
-        public static final StyleSlot FLEX_GROW = StyleSlot.forRoot("linear.grow", Float.class);
-
-        private StyleProps() {
-        }
-    }
 }

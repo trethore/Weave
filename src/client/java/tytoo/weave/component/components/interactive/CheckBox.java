@@ -14,7 +14,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.Auto;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.utils.render.Render2DUtils;
@@ -38,8 +38,8 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
 
     protected CheckBox() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float boxSize = stylesheet.get(this, StyleProps.BOX_SIZE, 12f);
-        float gap = stylesheet.get(this, StyleProps.GAP, 4f);
+        float boxSize = stylesheet.get(this, ComponentStyleProperties.CheckBoxStyles.BOX_SIZE, 12f);
+        float gap = stylesheet.get(this, ComponentStyleProperties.CheckBoxStyles.GAP, 4f);
 
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, gap));
         this.setHeight(Constraints.childBased());
@@ -84,7 +84,7 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
     @Override
     protected void updateVisualState() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        long duration = stylesheet.get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
+        long duration = stylesheet.get(this, ComponentStyleProperties.InteractiveStyles.ANIMATION_DURATION, 150L);
         updateVisualState(duration);
     }
 
@@ -182,16 +182,6 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
         return this;
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot CHECK_COLOR = StyleSlot.of("checkbox.check.color", CheckBox.class, Color.class);
-        public static final StyleSlot BOX_SIZE = StyleSlot.of("checkbox.box.size", CheckBox.class, Float.class);
-        public static final StyleSlot GAP = StyleSlot.of("checkbox.gap", CheckBox.class, Float.class);
-        public static final StyleSlot CHECK_THICKNESS = StyleSlot.of("checkbox.check.thickness", CheckBox.class, Float.class);
-
-        private StyleProps() {
-        }
-    }
-
     private static class CheckMark extends Component<CheckMark> {
         private final CheckBox checkBox;
 
@@ -209,8 +199,8 @@ public class CheckBox extends InteractiveComponent<CheckBox> {
             float h = getHeight();
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Color checkColor = stylesheet.get(this.checkBox, StyleProps.CHECK_COLOR, Color.WHITE);
-            float thickness = stylesheet.get(this.checkBox, StyleProps.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
+            Color checkColor = stylesheet.get(this.checkBox, ComponentStyleProperties.CheckBoxStyles.CHECK_COLOR, Color.WHITE);
+            float thickness = stylesheet.get(this.checkBox, ComponentStyleProperties.CheckBoxStyles.CHECK_THICKNESS, Math.max(1f, w * 0.2f));
 
             float padding = w * 0.25f;
             Vector2f p1 = new Vector2f(x + padding, y + padding);

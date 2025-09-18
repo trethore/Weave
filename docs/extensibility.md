@@ -69,19 +69,23 @@ stylesheet.addRule(new StyleRule(
 ));
 ```
 
-Don't forget to register the contract so themes and tools can discover your slots:
+Don't forget to register your properties so themes and tools can discover them:
 
 ```java
-import tytoo.weave.style.contract.ComponentThemeContract;
-import tytoo.weave.style.contract.SlotRequirement;
-import tytoo.weave.style.contract.StyleContractRegistry;
+import tytoo.weave.style.contract.ComponentStyleRegistry;
+import tytoo.weave.style.contract.StyleProperty;
 
-StyleContractRegistry.register(
-    ComponentThemeContract.builder(Badge.class)
-        .slot(Badge.StyleSlots.BADGE_COLOR, SlotRequirement.REQUIRED)
-        .slot(Badge.StyleSlots.CORNER_RADIUS, SlotRequirement.OPTIONAL)
-        .build()
-);
+public final class Badge {
+    public static final StyleProperty<Color> BADGE_COLOR;
+    public static final StyleProperty<Float> CORNER_RADIUS;
+
+    static {
+        ComponentStyleRegistry.Builder<Badge> builder = ComponentStyleRegistry.component(Badge.class, "badge");
+        BADGE_COLOR = builder.required("color", Color.class);
+        CORNER_RADIUS = builder.optional("corner-radius", Float.class);
+        builder.register();
+    }
+}
 ```
 
 ## Creating a Custom Renderer
@@ -96,8 +100,8 @@ public final class SolidBadgeRenderer implements ComponentRenderer {
 
         // Get style values from the stylesheet at render time.
         Stylesheet ss = ThemeManager.getStylesheet();
-        Color color = ss.get(badge, Badge.StyleSlots.BADGE_COLOR, Color.RED);
-        float radius = ss.get(badge, Badge.StyleSlots.CORNER_RADIUS, 0f);
+        Color color = ss.get(badge, Badge.BADGE_COLOR, Color.RED);
+        float radius = ss.get(badge, Badge.CORNER_RADIUS, 0f);
 
         // Use your rendering logic.
         Render2DUtils.drawRoundedRect(

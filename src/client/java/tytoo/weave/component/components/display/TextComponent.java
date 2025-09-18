@@ -14,7 +14,7 @@ import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.StyleState;
 import tytoo.weave.style.Styling;
 import tytoo.weave.style.TextSegment;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
@@ -41,16 +41,16 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
         this.getConstraints().setWidth((component, parentWidth) -> {
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
-            Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
+            Float textScale = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_SCALE, 1.0f);
+            Float letterSpacing = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.LETTER_SPACING, null);
             float baseWidth = RenderTextUtils.getStyledTextWidth(getEffectiveTextRenderer(), getDrawableText(), letterSpacing);
             return baseWidth * (textScale != null ? textScale : 1.0f);
         });
         this.getConstraints().setHeight((component, parentHeight) -> {
             TextRenderer textRenderer = getEffectiveTextRenderer();
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            Float lineHeightMultiplier = stylesheet.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, 1.0f);
-            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
+            Float lineHeightMultiplier = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.LINE_HEIGHT_MULTIPLIER, 1.0f);
+            Float textScale = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_SCALE, 1.0f);
             float scale = textScale != null ? textScale : 1.0f;
             return (float) textRenderer.fontHeight * (lineHeightMultiplier != null ? lineHeightMultiplier : 1.0f) * scale;
         });
@@ -90,7 +90,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
             }
 
             if (this.hasStyleState(StyleState.DISABLED)) {
-                Color disabledColor = ThemeManager.getStylesheet().get(this, StyleProps.TEXT_COLOR, null);
+                Color disabledColor = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, null);
                 if (disabledColor != null) {
                     finalStyle = finalStyle.color(disabledColor);
                 }
@@ -140,8 +140,8 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
             if (renderer != null) renderer.render(context, this);
 
             Stylesheet stylesheet = ThemeManager.getStylesheet();
-            ColorWave colorWave = stylesheet.get(this, StyleProps.COLOR_WAVE, null);
-            Float textScale = stylesheet.get(this, StyleProps.TEXT_SCALE, 1.0f);
+            ColorWave colorWave = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.COLOR_WAVE, null);
+            Float textScale = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_SCALE, 1.0f);
             float scale = textScale != null ? textScale : 1.0f;
 
             boolean pushed = false;
@@ -158,7 +158,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
                 for (TextSegment segment : segments) {
                     sb.append(segment.getText());
                 }
-                Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
+                Float letterSpacing = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.LETTER_SPACING, null);
                 float widthForWave = getWidth() / scale;
                 drawWaveText(context, sb.toString(), hasShadow(), colorWave, letterSpacing, getOpacity(), widthForWave);
             } else {
@@ -183,7 +183,7 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     @Override
     public TextRenderer getEffectiveTextRenderer() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        TextRenderer customFont = stylesheet.get(this, StyleProps.FONT, null);
+        TextRenderer customFont = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.FONT, null);
         if (customFont != null) return customFont;
 
         return super.getEffectiveTextRenderer();
@@ -192,19 +192,19 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
     private int getStyleSignature() {
         Stylesheet ss = ThemeManager.getStylesheet();
         return Objects.hash(
-                ss.get(this, StyleProps.TEXT_COLOR, null),
-                ss.get(this, StyleProps.BOLD, null),
-                ss.get(this, StyleProps.ITALIC, null),
-                ss.get(this, StyleProps.UNDERLINE, null),
-                ss.get(this, StyleProps.STRIKETHROUGH, null),
-                ss.get(this, StyleProps.OBFUSCATED, null),
-                ss.get(this, StyleProps.SHADOW, null),
-                ss.get(this, StyleProps.SHADOW_COLOR, null),
-                ss.get(this, StyleProps.COLOR_WAVE, null),
-                ss.get(this, StyleProps.FONT, null),
-                ss.get(this, StyleProps.LETTER_SPACING, null),
-                ss.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, null),
-                ss.get(this, StyleProps.TEXT_SCALE, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.BOLD, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.ITALIC, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.UNDERLINE, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.STRIKETHROUGH, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.OBFUSCATED, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.SHADOW, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.SHADOW_COLOR, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.COLOR_WAVE, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.FONT, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.LETTER_SPACING, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.LINE_HEIGHT_MULTIPLIER, null),
+                ss.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_SCALE, null),
                 colorOverride.get(),
                 animatedTextColor,
                 getOpacity()
@@ -218,23 +218,23 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     private Styling getBaseStylingFromStylesheet() {
         Stylesheet ss = ThemeManager.getStylesheet();
-        Color baseColor = ss.get(this, StyleProps.TEXT_COLOR, null);
+        Color baseColor = ss.get(this, ComponentStyleProperties.TextComponentStyles.TEXT_COLOR, null);
         if (this.animatedTextColor != null && this.colorOverride.get() == null) {
             baseColor = this.animatedTextColor;
         }
         return Styling.create()
                 .color(baseColor)
-                .bold(ss.get(this, StyleProps.BOLD, null))
-                .italic(ss.get(this, StyleProps.ITALIC, null))
-                .underline(ss.get(this, StyleProps.UNDERLINE, null))
-                .strikethrough(ss.get(this, StyleProps.STRIKETHROUGH, null))
-                .obfuscated(ss.get(this, StyleProps.OBFUSCATED, null))
-                .shadow(ss.get(this, StyleProps.SHADOW, null))
-                .shadowColor(ss.get(this, StyleProps.SHADOW_COLOR, null))
-                .colorWave(ss.get(this, StyleProps.COLOR_WAVE, null))
-                .font(ss.get(this, StyleProps.FONT, null))
-                .letterSpacing(ss.get(this, StyleProps.LETTER_SPACING, null))
-                .lineHeightMultiplier(ss.get(this, StyleProps.LINE_HEIGHT_MULTIPLIER, null));
+                .bold(ss.get(this, ComponentStyleProperties.TextComponentStyles.BOLD, null))
+                .italic(ss.get(this, ComponentStyleProperties.TextComponentStyles.ITALIC, null))
+                .underline(ss.get(this, ComponentStyleProperties.TextComponentStyles.UNDERLINE, null))
+                .strikethrough(ss.get(this, ComponentStyleProperties.TextComponentStyles.STRIKETHROUGH, null))
+                .obfuscated(ss.get(this, ComponentStyleProperties.TextComponentStyles.OBFUSCATED, null))
+                .shadow(ss.get(this, ComponentStyleProperties.TextComponentStyles.SHADOW, null))
+                .shadowColor(ss.get(this, ComponentStyleProperties.TextComponentStyles.SHADOW_COLOR, null))
+                .colorWave(ss.get(this, ComponentStyleProperties.TextComponentStyles.COLOR_WAVE, null))
+                .font(ss.get(this, ComponentStyleProperties.TextComponentStyles.FONT, null))
+                .letterSpacing(ss.get(this, ComponentStyleProperties.TextComponentStyles.LETTER_SPACING, null))
+                .lineHeightMultiplier(ss.get(this, ComponentStyleProperties.TextComponentStyles.LINE_HEIGHT_MULTIPLIER, null));
     }
 
     public void applyAnimatedTextColor(Color color) {
@@ -253,13 +253,13 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
 
     protected boolean hasShadow() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        return stylesheet.get(this, StyleProps.SHADOW, false);
+        return stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.SHADOW, false);
     }
 
     protected void drawScaledContent(DrawContext context, Text text, boolean shadow) {
         TextRenderer textRenderer = getEffectiveTextRenderer();
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        Float letterSpacing = stylesheet.get(this, StyleProps.LETTER_SPACING, null);
+        Float letterSpacing = stylesheet.get(this, ComponentStyleProperties.TextComponentStyles.LETTER_SPACING, null);
         RenderTextUtils.drawText(context, textRenderer, text, getLeft(), getTop(), shadow, letterSpacing);
     }
 
@@ -314,24 +314,4 @@ public class TextComponent<T extends TextComponent<T>> extends Component<T> {
         return this.colorOverride;
     }
 
-    public static final class StyleProps {
-        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(TextComponent.class);
-
-        public static final StyleSlot TEXT_COLOR = StyleSlot.of("text-color", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot BOLD = StyleSlot.of("bold", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot ITALIC = StyleSlot.of("italic", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot UNDERLINE = StyleSlot.of("underline", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot STRIKETHROUGH = StyleSlot.of("strikethrough", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot OBFUSCATED = StyleSlot.of("obfuscated", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot SHADOW = StyleSlot.of("shadow", COMPONENT_CLASS, Boolean.class);
-        public static final StyleSlot SHADOW_COLOR = StyleSlot.of("shadow-color", COMPONENT_CLASS, Color.class);
-        public static final StyleSlot COLOR_WAVE = StyleSlot.of("color-wave", COMPONENT_CLASS, ColorWave.class);
-        public static final StyleSlot FONT = StyleSlot.of("font", COMPONENT_CLASS, TextRenderer.class);
-        public static final StyleSlot LETTER_SPACING = StyleSlot.of("letter-spacing", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot LINE_HEIGHT_MULTIPLIER = StyleSlot.of("line-height-multiplier", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot TEXT_SCALE = StyleSlot.of("text-scale", COMPONENT_CLASS, Float.class);
-
-        private StyleProps() {
-        }
-    }
 }

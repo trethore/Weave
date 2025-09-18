@@ -15,6 +15,7 @@ import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleRule;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.selector.StyleSelector;
 
 import java.awt.*;
@@ -44,7 +45,7 @@ public class TestGui extends WeaveScreen {
         titleText.addLocalStyleRule(new StyleRule(
                 new StyleSelector(TextComponent.class, null, Set.of("test-gui-title"), null),
                 Map.ofEntries(
-                        Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2f))
+                        Map.entry(ComponentStyleProperties.TextComponentStyles.COLOR_WAVE.slot(), new ColorWave(ColorWave.createRainbow(36), 2f))
                 )
         ));
 

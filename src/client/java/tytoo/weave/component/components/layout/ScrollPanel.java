@@ -11,7 +11,7 @@ import tytoo.weave.event.mouse.MouseReleaseEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.CommonStyleProperties;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.McUtils;
@@ -200,12 +200,12 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
             float thumbW = geom[6];
             float thumbH = geom[7];
 
-            Color trackColor = ThemeManager.getStylesheet().get(this, StyleProps.TRACK_COLOR, this.scrollbarTrackColor);
+            Color trackColor = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.TRACK_COLOR, this.scrollbarTrackColor);
 
             boolean thumbHovered = isMouseOverScrollbarThumb();
-            Color thumbBase = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_COLOR, this.scrollbarThumbColor);
-            Color thumbHover = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_COLOR_HOVERED, this.scrollbarThumbHoverColor);
-            Color thumbActive = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_COLOR_ACTIVE, this.scrollbarThumbActiveColor);
+            Color thumbBase = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.THUMB_COLOR, this.scrollbarThumbColor);
+            Color thumbHover = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.THUMB_COLOR_HOVERED, this.scrollbarThumbHoverColor);
+            Color thumbActive = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.THUMB_COLOR_ACTIVE, this.scrollbarThumbActiveColor);
             Color thumbColor = this.draggingScrollbarThumb ? thumbActive : (thumbHovered ? thumbHover : thumbBase);
 
             Render2DUtils.drawRect(context, trackX, trackY, trackW, trackH, trackColor);
@@ -226,11 +226,11 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         float viewWidth = this.getInnerWidth();
         float viewHeight = getScrollableViewHeight();
         float contentHeight = getScrollableContentHeight();
-        float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, StyleProps.WIDTH, this.scrollbarWidth);
+        float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.WIDTH, this.scrollbarWidth);
         float trackX = viewLeft + viewWidth - effectiveScrollbarWidth;
 
         float visibleRatio = Math.max(0f, Math.min(1f, viewHeight / Math.max(1f, contentHeight)));
-        float thumbMinH = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_MIN_HEIGHT, this.scrollbarThumbMinHeight);
+        float thumbMinH = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.THUMB_MIN_HEIGHT, this.scrollbarThumbMinHeight);
         float thumbH = Math.max(thumbMinH, viewHeight * visibleRatio);
         if (thumbH > viewHeight) thumbH = viewHeight;
 
@@ -280,7 +280,7 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         if (contentHeight <= viewHeight || viewHeight <= 0) return;
 
         float visibleRatio = Math.max(0f, Math.min(1f, viewHeight / Math.max(1f, contentHeight)));
-        float thumbMinH = ThemeManager.getStylesheet().get(this, StyleProps.THUMB_MIN_HEIGHT, this.scrollbarThumbMinHeight);
+        float thumbMinH = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.THUMB_MIN_HEIGHT, this.scrollbarThumbMinHeight);
         float thumbH = Math.max(thumbMinH, viewHeight * visibleRatio);
         if (thumbH > viewHeight) thumbH = viewHeight;
 
@@ -458,21 +458,12 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         boolean needsScrollbar = contentMeasuredHeight > viewHeight && viewHeight > 0;
 
         if (needsScrollbar) {
-            float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, StyleProps.WIDTH, this.scrollbarWidth);
-            float effectiveGap = ThemeManager.getStylesheet().get(this, StyleProps.GAP, this.scrollbarGap);
+            float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.WIDTH, this.scrollbarWidth);
+            float effectiveGap = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.ScrollPanelStyles.GAP, this.scrollbarGap);
             float reserved = effectiveScrollbarWidth + effectiveGap;
             if (viewWidth - reserved < 0) reserved = Math.max(0, viewWidth);
             this.contentPanel.measure(viewWidth - reserved, viewHeight);
         }
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot WIDTH = StyleSlot.of("scroll-panel.scrollbar.width", ScrollPanel.class, Float.class);
-        public static final StyleSlot GAP = StyleSlot.of("scroll-panel.scrollbar.gap", ScrollPanel.class, Float.class);
-        public static final StyleSlot THUMB_MIN_HEIGHT = StyleSlot.of("scroll-panel.scrollbar.thumbMinHeight", ScrollPanel.class, Float.class);
-        public static final StyleSlot TRACK_COLOR = StyleSlot.of("scroll-panel.scrollbar.trackColor", ScrollPanel.class, Color.class);
-        public static final StyleSlot THUMB_COLOR = StyleSlot.of("scroll-panel.scrollbar.thumbColor", ScrollPanel.class, Color.class);
-        public static final StyleSlot THUMB_COLOR_HOVERED = StyleSlot.of("scroll-panel.scrollbar.thumbColor.hovered", ScrollPanel.class, Color.class);
-        public static final StyleSlot THUMB_COLOR_ACTIVE = StyleSlot.of("scroll-panel.scrollbar.thumbColor.active", ScrollPanel.class, Color.class);
-    }
 }

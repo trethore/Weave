@@ -9,7 +9,7 @@ import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 
@@ -21,8 +21,8 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
 
     protected ImageButton() {
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float padding = stylesheet.get(this, StyleProps.IMAGE_BUTTON_PADDING, 5f);
-        float gap = stylesheet.get(this, StyleProps.IMAGE_BUTTON_GAP, 4f);
+        float padding = stylesheet.get(this, ComponentStyleProperties.ImageButtonStyles.PADDING, 5f);
+        float gap = stylesheet.get(this, ComponentStyleProperties.ImageButtonStyles.GAP, 4f);
         this.setPadding(padding);
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, LinearLayout.CrossAxisAlignment.CENTER, gap));
         this.addStyleState(StyleState.NORMAL);
@@ -119,11 +119,4 @@ public class ImageButton extends InteractiveComponent<ImageButton> {
         return this;
     }
 
-    public static final class StyleProps {
-        public static final StyleSlot IMAGE_BUTTON_PADDING = StyleSlot.of("imageButton.padding", ImageButton.class, Float.class);
-        public static final StyleSlot IMAGE_BUTTON_GAP = StyleSlot.of("imageButton.gap", ImageButton.class, Float.class);
-
-        private StyleProps() {
-        }
-    }
 }

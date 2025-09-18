@@ -8,6 +8,7 @@ import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseScrollEvent;
 import tytoo.weave.style.CommonStyleProperties;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -24,8 +25,8 @@ public class TextArea extends BaseTextInput<TextArea> {
     protected TextArea() {
         super();
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 200f);
-        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 100f);
+        float defaultWidth = stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.DEFAULT_WIDTH, 200f);
+        float defaultHeight = stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.DEFAULT_HEIGHT, 100f);
 
         this.setWidth(Constraints.pixels(defaultWidth));
         this.setHeight(Constraints.pixels(defaultHeight));

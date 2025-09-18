@@ -7,6 +7,7 @@ import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
@@ -20,8 +21,8 @@ public class TextField extends BaseTextInput<TextField> {
     protected TextField() {
         super();
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float defaultWidth = stylesheet.get(this, StyleProps.DEFAULT_WIDTH, 150f);
-        float defaultHeight = stylesheet.get(this, StyleProps.DEFAULT_HEIGHT, 20f);
+        float defaultWidth = stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.DEFAULT_WIDTH, 150f);
+        float defaultHeight = stylesheet.get(this, ComponentStyleProperties.BaseTextInputStyles.DEFAULT_HEIGHT, 20f);
 
         this.setWidth(Constraints.pixels(defaultWidth));
         this.setHeight(Constraints.pixels(defaultHeight));

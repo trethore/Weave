@@ -19,6 +19,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
 import tytoo.weave.state.State;
 import tytoo.weave.style.*;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.style.renderer.SolidColorRenderer;
 import tytoo.weave.style.selector.StyleSelector;
 
@@ -63,11 +64,11 @@ public class DemoWeaveScreen extends WeaveScreen {
                 new StyleSelector(Window.class, null, null, null),
                 Map.ofEntries(
                         Map.entry(ComponentStyle.Slots.BASE_RENDERER, new SolidColorRenderer(Color.decode("#222222"))),
-                        Map.entry(LayoutStyleProperties.BORDER_RADIUS, 0f),
-                        Map.entry(LayoutStyleProperties.BORDER_WIDTH, 1.5f),
-                        Map.entry(LayoutStyleProperties.BORDER_COLOR, new Color(30, 30, 30, 160)),
-                        Map.entry(CommonStyleProperties.TRANSITION_DURATION, 180L),
-                        Map.entry(CommonStyleProperties.TRANSITION_EASING, Easings.EASE_OUT_QUAD)
+                        Map.entry(LayoutStyleProperties.BORDER_RADIUS.slot(), 0f),
+                        Map.entry(LayoutStyleProperties.BORDER_WIDTH.slot(), 1.5f),
+                        Map.entry(LayoutStyleProperties.BORDER_COLOR.slot(), new Color(30, 30, 30, 160)),
+                        Map.entry(CommonStyleProperties.TRANSITION_DURATION.slot(), 180L),
+                        Map.entry(CommonStyleProperties.TRANSITION_EASING.slot(), Easings.EASE_OUT_QUAD)
                 )
         ));
 
@@ -96,7 +97,7 @@ public class DemoWeaveScreen extends WeaveScreen {
         title.addLocalStyleRule(new StyleRule(
                 new StyleSelector(TextComponent.class, null, Set.of("weave-demo-title"), null),
                 Map.ofEntries(
-                        Map.entry(TextComponent.StyleProps.COLOR_WAVE, new ColorWave(ColorWave.createRainbow(36), 2.5f))
+                        Map.entry(ComponentStyleProperties.TextComponentStyles.COLOR_WAVE.slot(), new ColorWave(ColorWave.createRainbow(36), 2.5f))
                 )
         ));
 

@@ -186,6 +186,13 @@ public final class ShortcutRegistry {
             return copy;
         }
 
+        private static boolean isKeyActive(int key, ShortcutContext ctx, int normalizedEventKey) {
+            if (InputHelper.isKeyPressed(key)) {
+                return true;
+            }
+            return normalizedEventKey == key;
+        }
+
         public KeyChord withKey(int key) {
             Builder builder = toBuilder();
             builder.requireKey(key);
@@ -255,13 +262,6 @@ public final class ShortcutRegistry {
                 }
             }
             return true;
-        }
-
-        private static boolean isKeyActive(int key, ShortcutContext ctx, int normalizedEventKey) {
-            if (InputHelper.isKeyPressed(key)) {
-                return true;
-            }
-            return normalizedEventKey == key;
         }
 
         public List<Integer> keys() {

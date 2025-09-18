@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tytoo.weave.command.WeaveCommands;
 import tytoo.weave.effects.shader.GaussianShadowShader;
-import tytoo.weave.style.contract.StyleContracts;
+import tytoo.weave.style.contract.StylePropertyRegistry;
 import tytoo.weave.ui.CursorManager;
 import tytoo.weave.utils.FontManager;
 import tytoo.weave.utils.ImageManager;
@@ -27,7 +27,7 @@ public final class WeaveCore {
      * Call this method in your mod's client initializer.
      */
     public static void init() {
-        StyleContracts.bootstrap();
+        StylePropertyRegistry.bootstrap();
         ClientLifecycleEvents.CLIENT_STARTED.register(GaussianShadowShader::preload);
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
             registerDevCommands();

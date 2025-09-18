@@ -5,6 +5,7 @@ import net.minecraft.client.gui.DrawContext;
 import tytoo.weave.component.components.interactive.BaseTextInput;
 import tytoo.weave.component.components.interactive.TextArea;
 import tytoo.weave.component.components.interactive.TextField;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.utils.render.Render2DUtils;
 
 import java.awt.*;
@@ -14,7 +15,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
     public void render(DrawContext context, BaseTextInput<?> textInput) {
         if (!textInput.isFocused()) return;
 
-        long cursorBlinkInterval = textInput.getCachedStyleValue(BaseTextInput.StyleProps.CURSOR_BLINK_INTERVAL, 500L);
+        long cursorBlinkInterval = textInput.getCachedStyleValue(ComponentStyleProperties.BaseTextInputStyles.CURSOR_BLINK_INTERVAL, 500L);
         if (textInput.getSelectionAnchor() != textInput.getCursorPos()) return;
 
         long timeSinceLastAction = System.currentTimeMillis() - textInput.getLastActionTime();
@@ -41,7 +42,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
         float cursorX = textField.getInnerLeft() + textRenderer.getWidth(textBeforeCursor);
         float cursorY = textY - 2;
         float cursorHeight = textRenderer.fontHeight + 1;
-        Color cursorColor = textField.getCachedStyleValue(BaseTextInput.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+        Color cursorColor = textField.getCachedStyleValue(ComponentStyleProperties.BaseTextInputStyles.CURSOR_COLOR, Color.LIGHT_GRAY);
 
         if (cursorColor != null) {
             Render2DUtils.drawRect(context, cursorX, cursorY, 1, cursorHeight, cursorColor);
@@ -61,7 +62,7 @@ public class DefaultCursorRenderer implements CursorRenderer {
             int safeCol = Math.max(0, Math.min(pos2d.x, visualLine.length()));
             String lineToCursor = visualLine.substring(0, safeCol);
             float cursorX = textArea.getInnerLeft() + textRenderer.getWidth(lineToCursor);
-            Color cursorColor = textArea.getCachedStyleValue(BaseTextInput.StyleProps.CURSOR_COLOR, Color.LIGHT_GRAY);
+            Color cursorColor = textArea.getCachedStyleValue(ComponentStyleProperties.BaseTextInputStyles.CURSOR_COLOR, Color.LIGHT_GRAY);
             Render2DUtils.drawRect(context, cursorX, lineY, 1, lineHeight, cursorColor);
         }
     }

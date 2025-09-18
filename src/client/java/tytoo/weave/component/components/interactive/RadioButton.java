@@ -11,7 +11,7 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.style.StyleState;
-import tytoo.weave.style.contract.StyleSlot;
+import tytoo.weave.style.contract.ComponentStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
@@ -38,9 +38,9 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         this.value = value;
 
         Stylesheet stylesheet = ThemeManager.getStylesheet();
-        float gap = stylesheet.get(this, StyleProps.GAP, 5f);
-        float outlineSize = stylesheet.get(this, StyleProps.OUTLINE_SIZE, 12f);
-        float dotSize = stylesheet.get(this, StyleProps.DOT_SIZE, 6f);
+        float gap = stylesheet.get(this, ComponentStyleProperties.RadioButtonStyles.GAP, 5f);
+        float outlineSize = stylesheet.get(this, ComponentStyleProperties.RadioButtonStyles.OUTLINE_SIZE, 12f);
+        float dotSize = stylesheet.get(this, ComponentStyleProperties.RadioButtonStyles.DOT_SIZE, 6f);
 
         this.setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.CENTER, gap));
         this.setHeight(Constraints.childBased());
@@ -162,7 +162,7 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         float targetOpacity = selected ? 1.0f : 0.0f;
         float targetScale = selected ? 1.0f : 0.0f;
 
-        long duration = ThemeManager.getStylesheet().get(this, InteractiveComponent.StyleProps.ANIMATION_DURATION, 150L);
+        long duration = ThemeManager.getStylesheet().get(this, ComponentStyleProperties.InteractiveStyles.ANIMATION_DURATION, 150L);
         this.dot.animate().duration(duration).easing(Easings.EASE_OUT_QUAD).opacity(targetOpacity);
         this.dot.animate().duration(duration).easing(Easings.EASE_OUT_BACK).scale(targetScale);
     }
@@ -174,16 +174,5 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
         this.background.setStyleState(StyleState.DISABLED, !enabled);
         this.label.setStyleState(StyleState.DISABLED, !enabled);
         return self();
-    }
-
-    public static final class StyleProps {
-        private static final Class<? extends Component<?>> COMPONENT_CLASS = StyleSlot.componentType(RadioButton.class);
-
-        public static final StyleSlot GAP = StyleSlot.of("radio.gap", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot OUTLINE_SIZE = StyleSlot.of("radio.outline.size", COMPONENT_CLASS, Float.class);
-        public static final StyleSlot DOT_SIZE = StyleSlot.of("radio.dot.size", COMPONENT_CLASS, Float.class);
-
-        private StyleProps() {
-        }
     }
 }
