@@ -4,12 +4,14 @@ import org.jetbrains.annotations.Nullable;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.ui.popup.PopupEntry;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class UIState {
     private final List<PopupEntry> popups = new ArrayList<>();
+    private final List<ShortcutRegistry.Registration> shortcutRegistrations = new ArrayList<>();
     @Nullable
     private Component<?> root;
     @Nullable
@@ -24,6 +26,7 @@ public class UIState {
     private Component<?> focusedComponent;
     @Nullable
     private Component<?> activeComponent;
+    private boolean shortcutsInitialized;
 
     @Nullable
     public Component<?> getRoot() {
@@ -90,5 +93,25 @@ public class UIState {
 
     public List<PopupEntry> getPopups() {
         return popups;
+    }
+
+    public List<ShortcutRegistry.Registration> getShortcutRegistrations() {
+        return shortcutRegistrations;
+    }
+
+    public boolean isShortcutsInitialized() {
+        return shortcutsInitialized;
+    }
+
+    public void setShortcutsInitialized(boolean shortcutsInitialized) {
+        this.shortcutsInitialized = shortcutsInitialized;
+    }
+
+    public void clearShortcutRegistrations() {
+        for (ShortcutRegistry.Registration registration : shortcutRegistrations) {
+            registration.unregister();
+        }
+        shortcutRegistrations.clear();
+        shortcutsInitialized = false;
     }
 }

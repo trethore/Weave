@@ -11,27 +11,24 @@ import java.util.*;
 
 public final class ShortcutRegistry {
     private static final List<RegisteredShortcut> REGISTRY = new ArrayList<>();
+    private static final Comparator<RegisteredShortcut> SHORTCUT_ORDER = Comparator
+            .comparingInt((RegisteredShortcut r) -> r.shortcut().priority()).reversed()
+            .thenComparingLong(RegisteredShortcut::order).reversed();
     private static long orderCounter = 0;
 
     private ShortcutRegistry() {
     }
 
     public static Registration registerGlobal(Shortcut shortcut) {
-        RegisteredShortcut reg = new RegisteredShortcut(ShortcutScope.GLOBAL, null, null, shortcut, nextOrder());
-        REGISTRY.add(reg);
-        return reg;
+        return register(ShortcutScope.GLOBAL, null, null, shortcut);
     }
 
     public static Registration registerForScreen(Screen screen, Shortcut shortcut) {
-        RegisteredShortcut reg = new RegisteredShortcut(ShortcutScope.SCREEN, new WeakReference<>(screen), null, shortcut, nextOrder());
-        REGISTRY.add(reg);
-        return reg;
+        return register(ShortcutScope.SCREEN, screen, null, shortcut);
     }
 
     public static Registration registerForComponent(Component<?> root, Shortcut shortcut) {
-        RegisteredShortcut reg = new RegisteredShortcut(ShortcutScope.COMPONENT_TREE, null, new WeakReference<>(root), shortcut, nextOrder());
-        REGISTRY.add(reg);
-        return reg;
+        return register(ShortcutScope.COMPONENT_TREE, null, root, shortcut);
     }
 
     public static boolean dispatch(Screen screen, UIState state, int keyCode, int modifiers) {
@@ -40,22 +37,13 @@ public final class ShortcutRegistry {
 
         ShortcutContext ctx = new ShortcutContext(screen, state, focused, keyCode, modifiers);
 
-        List<RegisteredShortcut> candidates = new ArrayList<>();
-        for (RegisteredShortcut rs : REGISTRY) {
-            if (!rs.appliesTo(ctx)) continue;
-            if (!rs.shortcut().enabledPredicate().test(ctx)) continue;
-            if (!rs.shortcut().chord().matches()) continue;
-            candidates.add(rs);
-        }
-
+        List<RegisteredShortcut> candidates = collectCandidates(ctx);
         if (candidates.isEmpty()) return false;
 
-        candidates.sort(Comparator
-                .comparingInt((RegisteredShortcut r) -> r.shortcut().priority()).reversed()
-                .thenComparingLong(RegisteredShortcut::order).reversed());
+        candidates.sort(SHORTCUT_ORDER);
 
-        for (RegisteredShortcut rs : candidates) {
-            if (rs.shortcut().handler().handle(ctx)) {
+        for (RegisteredShortcut candidate : candidates) {
+            if (candidate.shortcut().handler().handle(ctx)) {
                 return true;
             }
         }
@@ -63,18 +51,39 @@ public final class ShortcutRegistry {
     }
 
     private static void purgeStale() {
-        Iterator<RegisteredShortcut> it = REGISTRY.iterator();
-        while (it.hasNext()) {
-            RegisteredShortcut rs = it.next();
-            if (rs.scope() == ShortcutScope.GLOBAL) continue;
-            if (rs.scope() == ShortcutScope.SCREEN && (rs.screenRef() == null || rs.screenRef().get() == null)) {
-                it.remove();
-                continue;
-            }
-            if (rs.scope() == ShortcutScope.COMPONENT_TREE && (rs.componentRef() == null || rs.componentRef().get() == null)) {
-                it.remove();
-            }
+        REGISTRY.removeIf(RegisteredShortcut::isStale);
+    }
+
+    private static List<RegisteredShortcut> collectCandidates(ShortcutContext ctx) {
+        List<RegisteredShortcut> candidates = new ArrayList<>();
+        for (RegisteredShortcut shortcut : REGISTRY) {
+            if (!shortcut.isApplicableTo(ctx)) continue;
+            if (!shortcut.shortcut().enabledPredicate().test(ctx)) continue;
+            if (!shortcut.shortcut().chord().matches(ctx)) continue;
+            candidates.add(shortcut);
         }
+        return candidates;
+    }
+
+    private static Registration register(ShortcutScope scope,
+                                         @Nullable Screen screen,
+                                         @Nullable Component<?> component,
+                                         Shortcut shortcut) {
+        if (scope == ShortcutScope.SCREEN && screen == null) {
+            throw new IllegalArgumentException("Screen scope requires screen reference");
+        }
+        if (scope == ShortcutScope.COMPONENT_TREE && component == null) {
+            throw new IllegalArgumentException("Component scope requires component reference");
+        }
+        WeakReference<Screen> screenRef = scope == ShortcutScope.SCREEN
+                ? new WeakReference<>(screen)
+                : null;
+        WeakReference<Component<?>> componentRef = scope == ShortcutScope.COMPONENT_TREE
+                ? new WeakReference<>(component)
+                : null;
+        RegisteredShortcut reg = new RegisteredShortcut(scope, screenRef, componentRef, shortcut, nextOrder());
+        REGISTRY.add(reg);
+        return reg;
     }
 
     private static long nextOrder() {
@@ -115,36 +124,237 @@ public final class ShortcutRegistry {
         }
     }
 
-    public record KeyChord(int key, boolean requireCtrl, boolean requireShift, boolean requireAlt,
-                           boolean requireMeta) {
+    public static final class KeyChord {
+        private final List<Integer> keys;
+        private final EnumSet<Modifier> requiredModifiers;
+        private final EnumSet<Modifier> optionalModifiers;
+        private final boolean requireEventKeyMatch;
+
+        private KeyChord(List<Integer> keys,
+                         EnumSet<Modifier> requiredModifiers,
+                         EnumSet<Modifier> optionalModifiers,
+                         boolean requireEventKeyMatch) {
+            this.keys = List.copyOf(keys);
+            this.requiredModifiers = copyModifiers(requiredModifiers);
+            this.optionalModifiers = copyModifiers(optionalModifiers);
+            this.requireEventKeyMatch = requireEventKeyMatch;
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
         public static KeyChord of(int key) {
-            return new KeyChord(key, false, false, false, false);
+            return builder().requireKey(key).build();
+        }
+
+        public static KeyChord of(int key, int... additionalKeys) {
+            Builder builder = builder().requireKey(key);
+            builder.requireKeys(additionalKeys);
+            return builder.build();
         }
 
         public static KeyChord ctrl(int key) {
-            return new KeyChord(key, true, false, false, false);
+            return builder().requireModifier(Modifier.CONTROL).requireKey(key).build();
         }
 
         public static KeyChord ctrlShift(int key) {
-            return new KeyChord(key, true, true, false, false);
+            return builder().requireModifiers(Modifier.CONTROL, Modifier.SHIFT).requireKey(key).build();
         }
 
         public static KeyChord ctrlAlt(int key) {
-            return new KeyChord(key, true, false, true, false);
+            return builder().requireModifiers(Modifier.CONTROL, Modifier.ALT).requireKey(key).build();
         }
 
         public static KeyChord meta(int key) {
-            return new KeyChord(key, false, false, false, true);
+            return builder().requireModifier(Modifier.SUPER).requireKey(key).build();
         }
 
-        public boolean matches() {
-            if (!InputHelper.isKeyPressed(key)) return false;
-            if (requireCtrl && !InputHelper.isControlDown()) return false;
-            if (!requireCtrl && InputHelper.isControlDown()) return false;
-            if (requireShift && !InputHelper.isShiftDown()) return false;
-            if (!requireShift && InputHelper.isShiftDown()) return false;
-            if (requireAlt && !InputHelper.isAltDown()) return false;
-            return requireAlt || !InputHelper.isAltDown();
+        private static EnumSet<Modifier> currentModifiersDown() {
+            EnumSet<Modifier> down = EnumSet.noneOf(Modifier.class);
+            for (Modifier modifier : Modifier.values()) {
+                if (modifier.isDown()) {
+                    down.add(modifier);
+                }
+            }
+            return down;
+        }
+
+        private static EnumSet<Modifier> copyModifiers(Set<Modifier> source) {
+            EnumSet<Modifier> copy = EnumSet.noneOf(Modifier.class);
+            copy.addAll(source);
+            return copy;
+        }
+
+        public KeyChord withKey(int key) {
+            Builder builder = toBuilder();
+            builder.requireKey(key);
+            return builder.build();
+        }
+
+        public KeyChord withModifiers(Modifier... modifiers) {
+            Builder builder = toBuilder();
+            builder.requireModifiers(modifiers);
+            return builder.build();
+        }
+
+        public KeyChord allowingModifiers(Modifier... modifiers) {
+            Builder builder = toBuilder();
+            builder.allowModifiers(modifiers);
+            return builder.build();
+        }
+
+        public KeyChord allowingAnyAdditionalModifiers() {
+            Builder builder = toBuilder();
+            builder.allowAnyAdditionalModifiers();
+            return builder.build();
+        }
+
+        public KeyChord triggerOnAnyKey() {
+            Builder builder = toBuilder();
+            builder.triggerOnAnyKey();
+            return builder.build();
+        }
+
+        public boolean matches(ShortcutContext ctx) {
+            int normalizedEventKey = InputHelper.toQwerty(ctx.keyCode());
+            if (!matchesEventKey(normalizedEventKey)) {
+                return false;
+            }
+            if (!areRequiredKeysActive(ctx, normalizedEventKey)) {
+                return false;
+            }
+            EnumSet<Modifier> pressedModifiers = currentModifiersDown();
+            if (!pressedModifiers.containsAll(requiredModifiers)) {
+                return false;
+            }
+            EnumSet<Modifier> allowedModifiers = copyModifiers(requiredModifiers);
+            allowedModifiers.addAll(optionalModifiers);
+            for (Modifier modifier : pressedModifiers) {
+                if (!allowedModifiers.contains(modifier)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private boolean matchesEventKey(int normalizedEventKey) {
+            if (!requireEventKeyMatch) {
+                return true;
+            }
+            if (keys.isEmpty()) {
+                return true;
+            }
+            return keys.contains(normalizedEventKey);
+        }
+
+        private boolean areRequiredKeysActive(ShortcutContext ctx, int normalizedEventKey) {
+            for (int key : keys) {
+                if (!isKeyActive(key, ctx, normalizedEventKey)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static boolean isKeyActive(int key, ShortcutContext ctx, int normalizedEventKey) {
+            if (InputHelper.isKeyPressed(key)) {
+                return true;
+            }
+            return normalizedEventKey == key;
+        }
+
+        public List<Integer> keys() {
+            return keys;
+        }
+
+        public Set<Modifier> requiredModifiers() {
+            return Set.copyOf(requiredModifiers);
+        }
+
+        public Set<Modifier> optionalModifiers() {
+            return Set.copyOf(optionalModifiers);
+        }
+
+        private Builder toBuilder() {
+            Builder builder = new Builder();
+            builder.keys.addAll(this.keys);
+            builder.required.addAll(this.requiredModifiers);
+            builder.optional.addAll(this.optionalModifiers);
+            builder.requireEventKeyMatch = this.requireEventKeyMatch;
+            return builder;
+        }
+
+        public enum Modifier {
+            CONTROL,
+            SHIFT,
+            ALT,
+            SUPER;
+
+            boolean isDown() {
+                return switch (this) {
+                    case CONTROL -> InputHelper.isControlDown();
+                    case SHIFT -> InputHelper.isShiftDown();
+                    case ALT -> InputHelper.isAltDown();
+                    case SUPER -> InputHelper.isMetaDown();
+                };
+            }
+        }
+
+        public static final class Builder {
+            private final LinkedHashSet<Integer> keys = new LinkedHashSet<>();
+            private final EnumSet<Modifier> required = EnumSet.noneOf(Modifier.class);
+            private final EnumSet<Modifier> optional = EnumSet.noneOf(Modifier.class);
+            private boolean requireEventKeyMatch = true;
+
+            public Builder requireKey(int key) {
+                keys.add(key);
+                return this;
+            }
+
+            public Builder requireKeys(int... keyCodes) {
+                for (int keyCode : keyCodes) {
+                    keys.add(keyCode);
+                }
+                return this;
+            }
+
+            public Builder requireModifier(Modifier modifier) {
+                required.add(modifier);
+                return this;
+            }
+
+            public Builder requireModifiers(Modifier... modifiers) {
+                Collections.addAll(required, modifiers);
+                return this;
+            }
+
+            public Builder allowModifiers(Modifier... modifiers) {
+                for (Modifier modifier : modifiers) {
+                    if (!required.contains(modifier)) {
+                        optional.add(modifier);
+                    }
+                }
+                return this;
+            }
+
+            public Builder allowAnyAdditionalModifiers() {
+                for (Modifier modifier : Modifier.values()) {
+                    if (!required.contains(modifier)) {
+                        optional.add(modifier);
+                    }
+                }
+                return this;
+            }
+
+            public Builder triggerOnAnyKey() {
+                this.requireEventKeyMatch = false;
+                return this;
+            }
+
+            public KeyChord build() {
+                return new KeyChord(new ArrayList<>(keys), required, optional, requireEventKeyMatch);
+            }
         }
     }
 
@@ -165,12 +375,20 @@ public final class ShortcutRegistry {
             return false;
         }
 
-        private boolean appliesTo(ShortcutContext ctx) {
+        private boolean isApplicableTo(ShortcutContext ctx) {
             return switch (scope) {
                 case GLOBAL -> true;
                 case SCREEN -> screenRef != null && screenRef.get() == ctx.screen();
                 case COMPONENT_TREE ->
                         componentRef != null && isFocusedInComponentTree(ctx.focused(), componentRef.get());
+            };
+        }
+
+        private boolean isStale() {
+            return switch (scope) {
+                case GLOBAL -> false;
+                case SCREEN -> screenRef == null || screenRef.get() == null;
+                case COMPONENT_TREE -> componentRef == null || componentRef.get() == null;
             };
         }
 

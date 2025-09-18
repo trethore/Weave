@@ -4,21 +4,18 @@ import net.minecraft.text.Text;
 import tytoo.weave.component.components.display.SimpleTextComponent;
 import tytoo.weave.component.components.display.TextComponent;
 import tytoo.weave.component.components.interactive.Button;
-import tytoo.weave.component.components.interactive.ListView;
+import tytoo.weave.component.components.layout.BasePanel;
 import tytoo.weave.component.components.layout.Panel;
+import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.GradientOutlineEffect;
-import tytoo.weave.layout.GridLayout;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.screen.WeaveScreen;
-import tytoo.weave.state.ObservableList;
 import tytoo.weave.style.ColorWave;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleRule;
 import tytoo.weave.style.selector.StyleSelector;
-import tytoo.weave.ui.toast.ToastManager;
-import tytoo.weave.ui.toast.ToastOptions;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -61,38 +58,67 @@ public class TestGui extends WeaveScreen {
                 .setHeight(Constraints.relative(1.0f))
                 .setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.START, 10));
 
-        final int totalButtons = 1000;
-        final int columns = 5;
-        ObservableList<List<Integer>> rows = new ObservableList<>();
-        for (int i = 0; i < totalButtons; i += columns) {
-            int end = Math.min(totalButtons, i + columns);
-            List<Integer> row = new ArrayList<>();
-            for (int j = i; j < end; j++) row.add(j);
-            rows.add(row);
-        }
+        Panel controls = Panel.create()
+                .setWidth(Constraints.relative(1.0f))
+                .setHeight(Constraints.pixels(30))
+                .setLayout(LinearLayout.of(LinearLayout.Orientation.HORIZONTAL, LinearLayout.Alignment.START, LinearLayout.CrossAxisAlignment.CENTER, 8));
 
-        ListView<List<Integer>> gridView = ListView.<List<Integer>>create()
+        ScrollPanel scrollPanel = new ScrollPanel()
+                .setLayoutData(LinearLayout.Data.grow(1))
                 .setWidth(Constraints.relative(1.0f))
                 .setHeight(Constraints.relative(1.0f))
-                .setItems(rows)
-                .setGap(4f)
-                .setHeightMode(ListView.HeightMode.MEASURE_ONCE)
-                .setSelectionMode(ListView.SelectionMode.SINGLE)
-                .setItemFactory(row -> {
-                    Panel rowPanel = Panel.create()
-                            .setManagedByLayout(true)
-                            .setWidth(Constraints.relative(1.0f))
-                            .setLayout(GridLayout.of(columns, 6f));
-                    for (Integer idx : row) {
-                        int label = idx + 1;
-                        Button b = Button.of("button#" + label).setWidth(Constraints.relative(1.0f));
-                        b.onClick(e -> ToastManager.show("You clicked that button !", new ToastOptions().setDurationMs(2000).setPosition(ToastOptions.Position.BOTTOM_LEFT)));
-                        rowPanel.addChild(b);
+                .setGap(6f)
+                .setVerticalScrollbar(true);
+
+        BasePanel<?> contentPanel = scrollPanel.getContentPanel();
+        contentPanel.setLayout(LinearLayout.of(LinearLayout.Orientation.VERTICAL, LinearLayout.Alignment.START, 6f));
+
+        List<Integer> entries = new ArrayList<>();
+
+        Runnable renderEntries = () -> {
+            contentPanel.removeAllChildren();
+            for (Integer value : entries) {
+                Button entryButton = Button.of("Scrollable entry #" + value)
+                        .setWidth(Constraints.relative(1.0f));
+                contentPanel.addChild(entryButton);
+            }
+        };
+
+        Runnable populateEntries = () -> {
+            entries.clear();
+            for (int i = 1; i <= 40; i++) {
+                entries.add(i);
+            }
+            renderEntries.run();
+        };
+
+        Button addEntriesButton = Button.of("Add 20 entries")
+                .onClick(event -> {
+                    int start = entries.isEmpty() ? 1 : entries.getLast() + 1;
+                    for (int i = 0; i < 20; i++) {
+                        entries.add(start + i);
                     }
-                    return rowPanel;
+                    renderEntries.run();
                 });
 
-        testPanel.addChildren(gridView);
+        Button shrinkEntriesButton = Button.of("Shrink to 8 entries")
+                .onClick(event -> {
+                    if (entries.size() <= 8) return;
+                    entries.subList(8, entries.size()).clear();
+                    renderEntries.run();
+                });
+
+        Button resetEntriesButton = Button.of("Reset content")
+                .onClick(event -> {
+                    populateEntries.run();
+                    scrollPanel.setScrollY(0f);
+                });
+
+        controls.addChildren(addEntriesButton, shrinkEntriesButton, resetEntriesButton);
+
+        populateEntries.run();
+
+        testPanel.addChildren(controls, scrollPanel);
 
         window.addChildren(titlePanel, testPanel);
     }

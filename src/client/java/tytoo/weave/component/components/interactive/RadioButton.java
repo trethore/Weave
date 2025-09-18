@@ -1,6 +1,7 @@
 package tytoo.weave.component.components.interactive;
 
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Easings;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.NamedPart;
@@ -13,6 +14,12 @@ import tytoo.weave.style.StyleState;
 import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.UIManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
+import tytoo.weave.utils.McUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
 
@@ -93,6 +100,22 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
             this.background.removeStyleState(StyleState.FOCUSED);
             this.background.removeStyleState(StyleState.HOVERED);
         });
+
+        registerComponentShortcut(button -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT),
+                ctx -> button.focusAdjacent(-1)));
+
+        registerComponentShortcut(button -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP),
+                ctx -> button.focusAdjacent(-1)));
+
+        registerComponentShortcut(button -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT),
+                ctx -> button.focusAdjacent(1)));
+
+        registerComponentShortcut(button -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN),
+                ctx -> button.focusAdjacent(1)));
     }
 
     public static <V> RadioButton<V> of(V value, String labelText) {
@@ -105,6 +128,29 @@ public class RadioButton<V> extends InteractiveComponent<RadioButton<V>> {
 
     void setGroup(@Nullable RadioButtonGroup<V> group) {
         this.group = group;
+    }
+
+    private boolean focusAdjacent(int direction) {
+        if (this.group == null) return false;
+        List<Component<?>> children = this.group.getChildren();
+        List<RadioButton<V>> radios = new ArrayList<>();
+        for (Component<?> child : children) {
+            if (child instanceof RadioButton<?>) {
+                @SuppressWarnings("unchecked")
+                RadioButton<V> rb = (RadioButton<V>) child;
+                radios.add(rb);
+            }
+        }
+        if (radios.isEmpty()) return false;
+        int index = radios.indexOf(this);
+        if (index == -1) return false;
+        int next = (index + direction + radios.size()) % radios.size();
+        RadioButton<V> target = radios.get(next);
+        if (target == this) return true;
+        return McUtils.getMc()
+                .map(mc -> mc.currentScreen)
+                .map(screen -> UIManager.requestFocus(screen, target))
+                .orElse(false);
     }
 
     void updateSelected(boolean selected) {

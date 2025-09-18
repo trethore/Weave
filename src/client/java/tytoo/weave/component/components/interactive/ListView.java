@@ -10,10 +10,10 @@ import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.constraint.constraints.PixelConstraint;
-import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.ObservableList;
 import tytoo.weave.state.State;
 import tytoo.weave.style.StyleState;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.InputHelper;
 
 import java.util.*;
@@ -70,7 +70,42 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         this.addChild(this.scrollPanel);
 
         this.setFocusable(true);
-        this.onEvent(KeyPressEvent.TYPE, this::handleKey);
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP).allowingAnyAdditionalModifiers(),
+                ctx -> view.handleArrowShortcut(-1)));
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> view.handleArrowShortcut(1)));
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    view.setFocusToEdge(true);
+                    return true;
+                }));
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    view.setFocusToEdge(false);
+                    return true;
+                }));
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_PAGE_UP).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    view.pageMove(-1);
+                    return true;
+                }));
+
+        registerComponentShortcut(view -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_PAGE_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    view.pageMove(1);
+                    return true;
+                }));
     }
 
     public static <T> ListView<T> create() {
@@ -475,25 +510,10 @@ public class ListView<T> extends BasePanel<ListView<T>> {
         notifySelectionChanged();
     }
 
-    private void handleKey(KeyPressEvent event) {
-        switch (event.getKeyCode()) {
-            case GLFW.GLFW_KEY_UP -> {
-                int steps = computeArrowSteps();
-                moveFocus(-steps);
-            }
-            case GLFW.GLFW_KEY_DOWN -> {
-                int steps = computeArrowSteps();
-                moveFocus(steps);
-            }
-            case GLFW.GLFW_KEY_HOME -> setFocusToEdge(true);
-            case GLFW.GLFW_KEY_END -> setFocusToEdge(false);
-            case GLFW.GLFW_KEY_PAGE_UP -> pageMove(-1);
-            case GLFW.GLFW_KEY_PAGE_DOWN -> pageMove(1);
-            default -> {
-                return;
-            }
-        }
-        event.cancel();
+    private boolean handleArrowShortcut(int direction) {
+        int steps = computeArrowSteps();
+        moveFocus(direction * steps);
+        return true;
     }
 
     private void moveFocus(int delta) {

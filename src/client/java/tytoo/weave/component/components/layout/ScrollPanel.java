@@ -1,6 +1,7 @@
 package tytoo.weave.component.components.layout;
 
 import net.minecraft.client.gui.DrawContext;
+import org.lwjgl.glfw.GLFW;
 import tytoo.weave.component.Component;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
@@ -12,6 +13,7 @@ import tytoo.weave.state.State;
 import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -31,6 +33,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
     private boolean verticalScrollbarEnabled = false;
     private boolean draggingScrollbarThumb = false;
     private float scrollbarGap = 3f;
+    private long lastArrowKeyTimeNs = 0L;
+    private int arrowKeyStreak = 0;
 
     public ScrollPanel() {
         this(createDefaultContentPanel());
@@ -43,6 +47,7 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         this.setHeight(Constraints.relative(1.0f));
 
         this.addEffect(Effects.scissor());
+        this.setFocusable(true);
 
         this.contentPanel = contentPanel;
         this.contentPanel
@@ -53,21 +58,43 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         this.contentPanel.setY((c, parentHeight, componentHeight) -> this.scrollY.get());
 
         this.onMouseScroll(event -> {
-            float contentHeight = this.contentPanel.getFinalHeight();
-            float viewHeight = this.getInnerHeight();
+            float contentHeight = getScrollableContentHeight();
+            float viewHeight = getScrollableViewHeight();
 
             if (contentHeight <= viewHeight) return;
 
             float amount = ThemeManager.getStylesheet().get(this, CommonStyleProperties.SCROLL_AMOUNT, this.scrollSpeed);
-            float newScroll = scrollY.get() + (float) (event.getScrollY() * amount);
-            float maxScroll = Math.min(0, -(contentHeight - viewHeight));
-            scrollY.set(Math.max(maxScroll, Math.min(0, newScroll)));
-            arrangeContent();
+            float newScroll = this.scrollY.get() + (float) (event.getScrollY() * amount);
+            setScrollY(newScroll);
         });
 
         this.onMouseClick(this::handleMouseClick);
         this.onMouseDrag(this::handleMouseDrag);
         this.onMouseRelease(this::handleMouseRelease);
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handleArrowShortcut(1)));
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handleArrowShortcut(-1)));
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_PAGE_UP).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handlePageShortcut(true)));
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_PAGE_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handlePageShortcut(false)));
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handleHomeShortcut()));
+
+        registerComponentShortcut(panel -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END).allowingAnyAdditionalModifiers(),
+                ctx -> panel.handleEndShortcut()));
     }
 
     private static Panel createDefaultContentPanel() {
@@ -83,7 +110,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
     }
 
     public ScrollPanel setScrollY(float value) {
-        this.scrollY.set(value);
+        float clamped = clampScrollValue(value);
+        this.scrollY.set(clamped);
         arrangeContent();
         return this;
     }
@@ -149,6 +177,7 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     private void arrangeContent() {
         if (this.contentPanel == null) return;
+        clampScroll();
         float childWidthWithMargin = this.contentPanel.getMeasuredWidth() + this.contentPanel.getMargin().left() + this.contentPanel.getMargin().right();
         float childX = this.contentPanel.getConstraints().getXConstraint().calculateX(this.contentPanel, this.getInnerWidth(), childWidthWithMargin);
         float childY = this.scrollY.get();
@@ -186,8 +215,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     private boolean shouldShowVerticalScrollbar() {
         if (!this.verticalScrollbarEnabled) return false;
-        float contentHeight = this.contentPanel.getFinalHeight();
-        float viewHeight = this.getInnerHeight();
+        float contentHeight = getScrollableContentHeight();
+        float viewHeight = getScrollableViewHeight();
         return contentHeight > viewHeight && viewHeight > 0;
     }
 
@@ -195,8 +224,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         float viewLeft = this.getInnerLeft();
         float viewTop = this.getInnerTop();
         float viewWidth = this.getInnerWidth();
-        float viewHeight = this.getInnerHeight();
-        float contentHeight = this.contentPanel.getFinalHeight();
+        float viewHeight = getScrollableViewHeight();
+        float contentHeight = getScrollableContentHeight();
         float effectiveScrollbarWidth = ThemeManager.getStylesheet().get(this, StyleProps.WIDTH, this.scrollbarWidth);
         float trackX = viewLeft + viewWidth - effectiveScrollbarWidth;
 
@@ -246,8 +275,8 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
 
     private void updateScrollFromMouseY(float mouseY) {
         float viewTop = this.getInnerTop();
-        float viewHeight = this.getInnerHeight();
-        float contentHeight = this.contentPanel.getFinalHeight();
+        float viewHeight = getScrollableViewHeight();
+        float contentHeight = getScrollableContentHeight();
         if (contentHeight <= viewHeight || viewHeight <= 0) return;
 
         float visibleRatio = Math.max(0f, Math.min(1f, viewHeight / Math.max(1f, contentHeight)));
@@ -269,6 +298,51 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
         setScrollY(newScroll);
     }
 
+    private float getScrollableContentHeight() {
+        float finalHeight = this.contentPanel.getFinalHeight();
+        if (finalHeight > 0f) {
+            return finalHeight;
+        }
+        float measuredHeight = this.contentPanel.getMeasuredHeight();
+        float topMargin = this.contentPanel.getMargin().top();
+        float bottomMargin = this.contentPanel.getMargin().bottom();
+        return Math.max(0f, measuredHeight + topMargin + bottomMargin);
+    }
+
+    private float getScrollableViewHeight() {
+        float innerHeight = this.getInnerHeight();
+        if (innerHeight > 0f) {
+            return innerHeight;
+        }
+        float measuredHeight = this.getLayoutState().getMeasuredHeight();
+        float paddingTop = this.getLayoutState().getPadding().top();
+        float paddingBottom = this.getLayoutState().getPadding().bottom();
+        return Math.max(0f, measuredHeight - paddingTop - paddingBottom);
+    }
+
+    private float clampScrollValue(float target) {
+        float viewHeight = getScrollableViewHeight();
+        float contentHeight = getScrollableContentHeight();
+        if (viewHeight <= 0f || contentHeight <= viewHeight) {
+            return 0f;
+        }
+        float maxScroll = -(contentHeight - viewHeight);
+        if (target < maxScroll) {
+            return maxScroll;
+        }
+        if (target > 0f) {
+            return 0f;
+        }
+        return target;
+    }
+
+    private void clampScroll() {
+        float clamped = clampScrollValue(this.scrollY.get());
+        if (clamped != this.scrollY.get()) {
+            this.scrollY.set(clamped);
+        }
+    }
+
     private boolean isMouseOverScrollbarThumb() {
         if (!shouldShowVerticalScrollbar()) return false;
         return McUtils.getMc().map(mc -> {
@@ -276,6 +350,96 @@ public class ScrollPanel extends BasePanel<ScrollPanel> {
             double my = mc.mouse.getY() / mc.getWindow().getScaleFactor();
             return isPointInsideScrollbarThumb((float) mx, (float) my);
         }).orElse(false);
+    }
+
+    private float computeKeyboardStepMagnitude() {
+        int steps = computeArrowSteps();
+        float base = computeBaseKeyboardStep();
+        return base * steps;
+    }
+
+    private float computeBaseKeyboardStep() {
+        float base = ThemeManager.getStylesheet().get(this, CommonStyleProperties.SCROLL_AMOUNT, this.scrollSpeed);
+        if (base <= 0f) {
+            base = this.scrollSpeed > 0f ? this.scrollSpeed : 10f;
+        }
+        return base;
+    }
+
+    private boolean scrollByKeyboard(float delta) {
+        if (delta == 0f) return false;
+        float newScroll = this.scrollY.get() + delta;
+        float clamped = clampScrollValue(newScroll);
+        if (clamped == this.scrollY.get()) return false;
+        this.scrollY.set(clamped);
+        arrangeContent();
+        return true;
+    }
+
+    private int computeArrowSteps() {
+        long now = System.nanoTime();
+        long deltaNs = now - this.lastArrowKeyTimeNs;
+        if (deltaNs <= 300_000_000L) {
+            if (this.arrowKeyStreak < 30) {
+                this.arrowKeyStreak++;
+            }
+        } else {
+            this.arrowKeyStreak = 0;
+        }
+        this.lastArrowKeyTimeNs = now;
+
+        int tier = this.arrowKeyStreak / 3;
+        if (tier <= 0) return 1;
+        return 1 << Math.min(tier, 6);
+    }
+
+    private void resetArrowKeyAcceleration() {
+        this.arrowKeyStreak = 0;
+        this.lastArrowKeyTimeNs = 0L;
+    }
+
+    private boolean canScroll() {
+        if (!this.verticalScrollbarEnabled) return false;
+        float contentHeight = getScrollableContentHeight();
+        float viewHeight = getScrollableViewHeight();
+        return contentHeight > viewHeight;
+    }
+
+    private boolean handleArrowShortcut(int direction) {
+        if (!canScroll()) return false;
+        float delta = computeKeyboardStepMagnitude() * direction;
+        return scrollByKeyboard(delta);
+    }
+
+    private boolean handlePageShortcut(boolean upwards) {
+        if (!canScroll()) return false;
+        resetArrowKeyAcceleration();
+        float viewHeight = getScrollableViewHeight();
+        float step = Math.max(viewHeight * 0.9f, computeBaseKeyboardStep());
+        return scrollByKeyboard(upwards ? step : -step);
+    }
+
+    private boolean handleHomeShortcut() {
+        if (!canScroll()) return false;
+        resetArrowKeyAcceleration();
+        if (this.scrollY.get() == 0f) {
+            return false;
+        }
+        setScrollY(0f);
+        return true;
+    }
+
+    private boolean handleEndShortcut() {
+        if (!canScroll()) return false;
+        resetArrowKeyAcceleration();
+        float contentHeight = getScrollableContentHeight();
+        float viewHeight = getScrollableViewHeight();
+        float maxScroll = -(contentHeight - viewHeight);
+        if (this.scrollY.get() == maxScroll) {
+            return false;
+        }
+        setScrollY(maxScroll);
+        return true;
     }
 
     @Override

@@ -18,6 +18,10 @@ public final class InputHelper {
         return handle != -1L && GLFW.glfwGetKey(handle, targetFinalKeyCode) == GLFW.GLFW_PRESS;
     }
 
+    public static int toQwerty(int keyCode) {
+        return remapToQWERTY(keyCode);
+    }
+
     private static int remapToQWERTY(int localKeyCode) {
         if (localKeyCode == GLFW.GLFW_KEY_UNKNOWN) {
             return GLFW.GLFW_KEY_UNKNOWN;
@@ -104,5 +108,9 @@ public final class InputHelper {
 
     public static boolean isAltDown() {
         return isKeyPressed(GLFW.GLFW_KEY_LEFT_ALT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT);
+    }
+
+    public static boolean isMetaDown() {
+        return isKeyPressed(GLFW.GLFW_KEY_LEFT_SUPER) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_SUPER);
     }
 }

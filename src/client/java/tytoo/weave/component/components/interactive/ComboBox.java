@@ -13,7 +13,6 @@ import tytoo.weave.component.components.layout.ScrollPanel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.OutlineEffect;
-import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
@@ -25,6 +24,7 @@ import tytoo.weave.ui.UIManager;
 import tytoo.weave.ui.UIState;
 import tytoo.weave.ui.popup.Anchor;
 import tytoo.weave.ui.popup.PopupOptions;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.McUtils;
 import tytoo.weave.utils.render.Render2DUtils;
 
@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
@@ -61,6 +60,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     private ScrollPanel dropdownScrollPanel;
     private float savedDropdownScrollY = 0f;
     private int dropdownHoverIndex = -1;
+    private final List<ShortcutRegistry.Registration> dropdownShortcutRegistrations = new ArrayList<>();
 
     public ComboBox(State<T> valueState) {
         this.valueState = valueState;
@@ -264,6 +264,7 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         if (!this.expanded) return;
         this.expanded = false;
         removeStyleState(StyleState.ACTIVE);
+        clearDropdownShortcuts();
 
         if (this.dropdownContent != null) {
             if (this.dropdownScrollPanel != null) {
@@ -379,38 +380,76 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
     private void attachDropdownKeyNavigation() {
         if (this.dropdownContent == null) return;
-        Consumer<KeyPressEvent> handler = e -> {
-            int key = e.getKeyCode();
-            if (key == GLFW.GLFW_KEY_UP) {
-                moveDropdownHover(-1);
-                e.cancel();
-                return;
-            }
-            if (key == GLFW.GLFW_KEY_DOWN) {
-                moveDropdownHover(1);
-                e.cancel();
-                return;
-            }
-            if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER || key == GLFW.GLFW_KEY_SPACE) {
-                Optional<UIState> st = McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState);
-                Component<?> focused = st.map(UIState::getFocusedComponent).orElse(null);
-                if (focused instanceof Button && getDropdownOptionButtons().contains(focused)) {
-                    return;
-                }
-                activateHoveredOption();
-                e.cancel();
-                return;
-            }
-            if (key == GLFW.GLFW_KEY_ESCAPE) {
-                closeDropdown(false);
-                McUtils.getMc().map(mc -> mc.currentScreen).ifPresent(screen -> UIManager.requestFocus(screen, this));
-                e.cancel();
-            }
-        };
-        this.dropdownContent.onEvent(KeyPressEvent.TYPE, handler);
-        if (this.dropdownContent.getParent() != null) {
-            this.dropdownContent.getParent().onEvent(KeyPressEvent.TYPE, handler);
+        clearDropdownShortcuts();
+        registerDropdownShortcuts(this.dropdownContent);
+        Component<?> parent = this.dropdownContent.getParent();
+        if (parent != null) {
+            registerDropdownShortcuts(parent);
         }
+    }
+
+    private void registerDropdownShortcuts(Component<?> target) {
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_UP)));
+
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_DOWN)));
+
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_ENTER).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_ENTER)));
+
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_KP_ENTER).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_KP_ENTER)));
+
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_SPACE).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_SPACE)));
+
+        registerDropdownShortcut(target, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_ESCAPE).allowingAnyAdditionalModifiers(),
+                ctx -> handleDropdownKey(GLFW.GLFW_KEY_ESCAPE)));
+    }
+
+    private boolean handleDropdownKey(int key) {
+        if (key == GLFW.GLFW_KEY_UP) {
+            moveDropdownHover(-1);
+            return true;
+        }
+        if (key == GLFW.GLFW_KEY_DOWN) {
+            moveDropdownHover(1);
+            return true;
+        }
+        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER || key == GLFW.GLFW_KEY_SPACE) {
+            Optional<UIState> st = McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState);
+            Component<?> focused = st.map(UIState::getFocusedComponent).orElse(null);
+            if (focused instanceof Button && getDropdownOptionButtons().contains(focused)) {
+                return false;
+            }
+            activateHoveredOption();
+            return true;
+        }
+        if (key == GLFW.GLFW_KEY_ESCAPE) {
+            closeDropdown(false);
+            McUtils.getMc().map(mc -> mc.currentScreen).ifPresent(screen -> UIManager.requestFocus(screen, this));
+            return true;
+        }
+        return false;
+    }
+
+    private void registerDropdownShortcut(Component<?> target, ShortcutRegistry.Shortcut shortcut) {
+        dropdownShortcutRegistrations.add(ShortcutRegistry.registerForComponent(target, shortcut));
+    }
+
+    private void clearDropdownShortcuts() {
+        if (dropdownShortcutRegistrations.isEmpty()) return;
+        for (ShortcutRegistry.Registration registration : dropdownShortcutRegistrations) {
+            registration.unregister();
+        }
+        dropdownShortcutRegistrations.clear();
     }
 
     private void moveDropdownHover(int delta) {

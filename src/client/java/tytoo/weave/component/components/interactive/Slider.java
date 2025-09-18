@@ -1,5 +1,6 @@
 package tytoo.weave.component.components.interactive;
 
+import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Easings;
 import tytoo.weave.animation.Interpolators;
 import tytoo.weave.component.Component;
@@ -13,6 +14,7 @@ import tytoo.weave.style.StyleState;
 import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -92,6 +94,30 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         this.visualProgressState.addListener(p -> updateThumbPosition());
         this.visualProgressState.set((float) calculateProgressForValue(valueState.get()));
         this.updateThumbPosition();
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT).allowingAnyAdditionalModifiers(),
+                ctx -> slider.nudgeValue(-1)));
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT).allowingAnyAdditionalModifiers(),
+                ctx -> slider.nudgeValue(1)));
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP).allowingAnyAdditionalModifiers(),
+                ctx -> slider.nudgeValue(1)));
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN).allowingAnyAdditionalModifiers(),
+                ctx -> slider.nudgeValue(-1)));
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME).allowingAnyAdditionalModifiers(),
+                ctx -> slider.jumpToEdge(true)));
+
+        registerComponentShortcut(slider -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END).allowingAnyAdditionalModifiers(),
+                ctx -> slider.jumpToEdge(false)));
     }
 
     public static Slider<Integer> integerSlider(Orientation orientation, int min, int max, int initialValue) {
@@ -211,6 +237,24 @@ public class Slider<N extends Number & Comparable<N>> extends InteractiveCompone
         if (value.compareTo(min) < 0) return min;
         if (value.compareTo(max) > 0) return max;
         return value;
+    }
+
+    private boolean nudgeValue(int direction) {
+        double current = getValue().doubleValue();
+        double minVal = min.doubleValue();
+        double maxVal = max.doubleValue();
+        double stepSize = (step != null && step.doubleValue() > 0)
+                ? step.doubleValue()
+                : Math.max(1e-6, (maxVal - minVal) / 20.0);
+        double next = current + direction * stepSize;
+        next = Math.max(minVal, Math.min(maxVal, next));
+        setValue(fromDouble.apply(next));
+        return true;
+    }
+
+    private boolean jumpToEdge(boolean toMin) {
+        setValue(toMin ? min : max);
+        return true;
     }
 
     public State<N> getValueState() {

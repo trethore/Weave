@@ -4,13 +4,13 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.event.mouse.MouseScrollEvent;
 import tytoo.weave.style.CommonStyleProperties;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
@@ -167,57 +167,112 @@ public class TextArea extends BaseTextInput<TextArea> {
     }
 
     @Override
-    protected boolean handleNavigation(KeyPressEvent event) {
-        boolean shift = InputHelper.isShiftDown();
-        switch (event.getKeyCode()) {
-            case GLFW.GLFW_KEY_UP: {
-                Point pos2d = getCursorPos2D(getCursorPos());
-                if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
-                setCursorPos(getPosFrom2D(pos2d.y - 1, this.lastDesiredCol), shift);
-                return true;
-            }
-            case GLFW.GLFW_KEY_DOWN: {
-                Point pos2d = getCursorPos2D(getCursorPos());
-                if (this.lastDesiredCol == -1) this.lastDesiredCol = pos2d.x;
-                setCursorPos(getPosFrom2D(pos2d.y + 1, this.lastDesiredCol), shift);
-                return true;
-            }
-            case GLFW.GLFW_KEY_LEFT:
-                if (InputHelper.isControlDown()) {
-                    setCursorPos(getWordSkipPosition(-1), shift);
-                } else {
-                    setCursorPos(getCursorPos() - 1, shift);
-                }
-                this.lastDesiredCol = -1;
-                return true;
-            case GLFW.GLFW_KEY_RIGHT:
-                if (InputHelper.isControlDown()) {
-                    setCursorPos(getWordSkipPosition(1), shift);
-                } else {
-                    setCursorPos(getCursorPos() + 1, shift);
-                }
-                this.lastDesiredCol = -1;
-                return true;
-            case GLFW.GLFW_KEY_HOME: {
-                Point pos2d = getCursorPos2D(getCursorPos());
-                setCursorPos(getPosFrom2D(pos2d.y, 0), shift);
-                this.lastDesiredCol = -1;
-                return true;
-            }
-            case GLFW.GLFW_KEY_END: {
-                Point pos2d = getCursorPos2D(getCursorPos());
-                String line = getVisualLineText(pos2d.y);
-                setCursorPos(getPosFrom2D(pos2d.y, line.length()), shift);
-                this.lastDesiredCol = -1;
-                return true;
-            }
-            case GLFW.GLFW_KEY_ENTER:
-            case GLFW.GLFW_KEY_KP_ENTER:
-                write("\n");
-                this.lastDesiredCol = -1;
-                return true;
+    protected void registerNavigationShortcuts() {
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP),
+                ctx -> input.moveVertical(-1, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_UP).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveVertical(-1, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN),
+                ctx -> input.moveVertical(1, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DOWN).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveVertical(1, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT),
+                ctx -> input.moveHorizontal(-1, false, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveHorizontal(-1, false, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT).withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL),
+                ctx -> input.moveHorizontal(-1, true, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT)
+                        .withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL, ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveHorizontal(-1, true, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT),
+                ctx -> input.moveHorizontal(1, false, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveHorizontal(1, false, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT).withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL),
+                ctx -> input.moveHorizontal(1, true, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT)
+                        .withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL, ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveHorizontal(1, true, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME),
+                ctx -> input.moveLineBoundary(true, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveLineBoundary(true, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END),
+                ctx -> input.moveLineBoundary(false, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveLineBoundary(false, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_ENTER).allowingAnyAdditionalModifiers(),
+                ctx -> input.insertNewLine()));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_KP_ENTER).allowingAnyAdditionalModifiers(),
+                ctx -> input.insertNewLine()));
+    }
+
+    private boolean moveVertical(int direction, boolean extendSelection) {
+        Point pos2d = getCursorPos2D(getCursorPos());
+        if (this.lastDesiredCol == -1) {
+            this.lastDesiredCol = pos2d.x;
         }
-        return false;
+        int targetLine = pos2d.y + direction;
+        setCursorPos(getPosFrom2D(targetLine, this.lastDesiredCol), extendSelection);
+        clampScroll();
+        return true;
+    }
+
+    private boolean moveHorizontal(int direction, boolean byWord, boolean extendSelection) {
+        int target = byWord ? getWordSkipPosition(direction) : getCursorPos() + direction;
+        setCursorPos(target, extendSelection);
+        this.lastDesiredCol = -1;
+        return true;
+    }
+
+    private boolean moveLineBoundary(boolean toStart, boolean extendSelection) {
+        Point pos2d = getCursorPos2D(getCursorPos());
+        int col = toStart ? 0 : getVisualLineText(pos2d.y).length();
+        setCursorPos(getPosFrom2D(pos2d.y, col), extendSelection);
+        this.lastDesiredCol = -1;
+        return true;
+    }
+
+    private boolean insertNewLine() {
+        write("\n");
+        this.lastDesiredCol = -1;
+        return true;
     }
 
     private void onMouseClick(MouseClickEvent event) {

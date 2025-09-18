@@ -39,6 +39,7 @@ import tytoo.weave.style.renderer.ComponentRenderer;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.ui.tooltip.TooltipManager;
 import tytoo.weave.ui.tooltip.TooltipManager.TooltipAttachment;
 import tytoo.weave.ui.tooltip.TooltipOptions;
@@ -51,6 +52,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 @SuppressWarnings("unused")
@@ -90,11 +92,13 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     private EdgeInsets animatedPadding;
     @Nullable
     private TooltipAttachment tooltipAttachment;
+    private final List<ShortcutBinding<T>> shortcutBindings;
 
     public Component() {
         this.layoutState = new LayoutState(this);
         this.renderState = new RenderState(this);
         this.eventState = new EventState();
+        this.shortcutBindings = new ArrayList<>();
     }
 
     private static void updateNamedParts(Component<?> clone, Component<?> original, Map<Component<?>, Component<?>> originalToCloneMap) {
@@ -478,6 +482,34 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
         return onEvent(CharTypeEvent.TYPE, listener);
     }
 
+    protected final ShortcutHandle registerComponentShortcut(Function<T, ShortcutRegistry.Shortcut> factory) {
+        Objects.requireNonNull(factory, "factory");
+        ShortcutBinding<T> binding = new ShortcutBinding<>(factory);
+        binding.bind(self());
+        shortcutBindings.add(binding);
+        return new ShortcutHandle(binding);
+    }
+
+    protected final void refreshComponentShortcuts() {
+        for (ShortcutBinding<T> binding : shortcutBindings) {
+            binding.unbind();
+            binding.bind(self());
+        }
+    }
+
+    protected final void unregisterAllComponentShortcuts() {
+        Iterator<ShortcutBinding<T>> iterator = shortcutBindings.iterator();
+        while (iterator.hasNext()) {
+            ShortcutBinding<T> binding = iterator.next();
+            binding.unbind();
+            iterator.remove();
+        }
+    }
+
+    protected void copyShortcutBindingFrom(ShortcutBinding<T> binding) {
+        shortcutBindings.add(binding.copy(self()));
+    }
+
     public T onFocusGained(Consumer<FocusGainedEvent> listener) {
         return onEvent(FocusGainedEvent.TYPE, listener);
     }
@@ -493,6 +525,34 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
     public <E extends Event> T onEvent(EventType<E> type, Consumer<E> listener) {
         this.eventState.getEventListeners().computeIfAbsent(type, k -> new ArrayList<>()).add(listener);
         return self();
+    }
+
+    protected final class ShortcutHandle {
+        private final ShortcutBinding<T> binding;
+        private boolean removed;
+
+        private ShortcutHandle(ShortcutBinding<T> binding) {
+            this.binding = binding;
+        }
+
+        public void unregister() {
+            if (removed) return;
+            binding.unbind();
+            shortcutBindings.remove(binding);
+            removed = true;
+        }
+
+        public void rebind() {
+            if (removed) {
+                throw new IllegalStateException("Shortcut already unregistered");
+            }
+            binding.unbind();
+            binding.bind(self());
+        }
+
+        public boolean isActive() {
+            return !removed;
+        }
     }
 
     public @Nullable Layout getLayout() {
@@ -899,11 +959,42 @@ public abstract class Component<T extends Component<T>> implements Cloneable {
             clonedComponent.setStyle(this.style != null ? this.style.clone() : null);
             clonedComponent.id = this.id;
             clonedComponent.styleClasses.addAll(this.styleClasses);
+            clonedComponent.unregisterAllComponentShortcuts();
+            for (ShortcutBinding<T> binding : this.shortcutBindings) {
+                clonedComponent.copyShortcutBindingFrom(binding);
+            }
             updateNamedParts(clonedComponent, this, originalToCloneMap);
 
             return clonedComponent;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError("Component is Cloneable but clone() failed", e);
+        }
+    }
+
+    private static final class ShortcutBinding<U extends Component<U>> {
+        private final Function<U, ShortcutRegistry.Shortcut> factory;
+        private ShortcutRegistry.Registration registration;
+
+        private ShortcutBinding(Function<U, ShortcutRegistry.Shortcut> factory) {
+            this.factory = factory;
+        }
+
+        private void bind(U owner) {
+            ShortcutRegistry.Shortcut shortcut = factory.apply(owner);
+            registration = ShortcutRegistry.registerForComponent(owner, shortcut);
+        }
+
+        private void unbind() {
+            if (registration != null) {
+                registration.unregister();
+                registration = null;
+            }
+        }
+
+        private ShortcutBinding<U> copy(U owner) {
+            ShortcutBinding<U> binding = new ShortcutBinding<>(factory);
+            binding.bind(owner);
+            return binding;
         }
     }
 

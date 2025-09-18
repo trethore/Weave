@@ -10,7 +10,6 @@ import tytoo.weave.effects.Effect;
 import tytoo.weave.effects.Effects;
 import tytoo.weave.effects.implementations.OutlineEffect;
 import tytoo.weave.event.keyboard.CharTypeEvent;
-import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.state.State;
 import tytoo.weave.style.OutlineSides;
 import tytoo.weave.style.StyleState;
@@ -18,7 +17,6 @@ import tytoo.weave.style.contract.StyleSlot;
 import tytoo.weave.style.renderer.textfield.*;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
-import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -63,7 +61,6 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         this.addStyleState(StyleState.NORMAL);
 
         this.onCharTyped(this::onCharTyped);
-        this.onKeyPress(this::onKeyPressed);
 
         this.onFocusGained(e -> {
             this.setLastActionTime(System.currentTimeMillis());
@@ -73,34 +70,8 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
 
         updateVisualState(0L);
 
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Z), ctx -> {
-            undo();
-            return true;
-        }));
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Y), ctx -> {
-            redo();
-            return true;
-        }));
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_A), ctx -> {
-            setSelectionAnchor(0);
-            setCursorPos(getText().length(), true);
-            setLastActionTime(System.currentTimeMillis());
-            ensureCursorVisible();
-            return true;
-        }));
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_C), ctx -> {
-            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
-            return true;
-        }));
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_V), ctx -> {
-            this.write(MinecraftClient.getInstance().keyboard.getClipboard());
-            return true;
-        }));
-        ShortcutRegistry.registerForComponent(this, ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_X), ctx -> {
-            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
-            this.write("");
-            return true;
-        }));
+        registerDefaultShortcuts();
+        registerNavigationShortcuts();
     }
 
     @Override
@@ -108,7 +79,7 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         super.updateVisualState(duration);
     }
 
-    protected abstract boolean handleNavigation(KeyPressEvent event);
+    protected abstract void registerNavigationShortcuts();
 
     protected abstract void ensureCursorVisible();
 
@@ -116,77 +87,85 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         write(Character.toString(event.getCharacter()));
     }
 
-    private void onKeyPressed(KeyPressEvent event) {
-        if (handleKeyboardInput(event)) {
-            event.cancel();
+    protected boolean deleteWithKey(int keyCode) {
+        if (keyCode != GLFW.GLFW_KEY_BACKSPACE && keyCode != GLFW.GLFW_KEY_DELETE) {
+            return false;
         }
-    }
-
-    protected boolean handleKeyboardInput(KeyPressEvent event) {
-        if (handleDeletion(event)) return true;
-        if (event.getKeyCode() == GLFW.GLFW_KEY_TAB && !InputHelper.isShiftDown()) {
+        if (getCursorPos() != getSelectionAnchor()) {
+            write("");
             return true;
         }
-        return handleNavigation(event);
-    }
-
-    private boolean handleUndoRedo() {
-        if (InputHelper.isUndo()) {
-            undo();
+        if (keyCode == GLFW.GLFW_KEY_BACKSPACE && getCursorPos() > 0) {
+            setSelectionAnchor(getCursorPos() - 1);
+            write("");
             return true;
         }
-
-        if (InputHelper.isRedo()) {
-            redo();
+        if (keyCode == GLFW.GLFW_KEY_DELETE && getCursorPos() < getText().length()) {
+            setSelectionAnchor(getCursorPos() + 1);
+            write("");
             return true;
         }
         return false;
     }
 
-    private boolean handleClipboard() {
-        if (InputHelper.isCopy()) {
-            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
-            return true;
-        }
+    private void registerDefaultShortcuts() {
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Z),
+                ctx -> {
+                    input.undo();
+                    return true;
+                }));
 
-        if (InputHelper.isPaste()) {
-            this.write(MinecraftClient.getInstance().keyboard.getClipboard());
-            return true;
-        }
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_Y),
+                ctx -> {
+                    input.redo();
+                    return true;
+                }));
 
-        if (InputHelper.isCut()) {
-            MinecraftClient.getInstance().keyboard.setClipboard(this.getSelectedText());
-            this.write("");
-            return true;
-        }
-        return false;
-    }
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_A),
+                ctx -> {
+                    input.setSelectionAnchor(0);
+                    input.setCursorPos(input.getText().length(), true);
+                    input.setLastActionTime(System.currentTimeMillis());
+                    input.ensureCursorVisible();
+                    return true;
+                }));
 
-    private boolean handleSelection() {
-        if (InputHelper.isSelectAll()) {
-            setSelectionAnchor(0);
-            setCursorPos(getText().length(), true);
-            setLastActionTime(System.currentTimeMillis());
-            ensureCursorVisible();
-            return true;
-        }
-        return false;
-    }
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_C),
+                ctx -> {
+                    MinecraftClient.getInstance().keyboard.setClipboard(input.getSelectedText());
+                    return true;
+                }));
 
-    private boolean handleDeletion(KeyPressEvent event) {
-        if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE || event.getKeyCode() == GLFW.GLFW_KEY_DELETE) {
-            if (getCursorPos() != getSelectionAnchor()) {
-                write("");
-            } else if (event.getKeyCode() == GLFW.GLFW_KEY_BACKSPACE && getCursorPos() > 0) {
-                setSelectionAnchor(getCursorPos() - 1);
-                this.write("");
-            } else if (event.getKeyCode() == GLFW.GLFW_KEY_DELETE && getCursorPos() < getText().length()) {
-                setSelectionAnchor(getCursorPos() + 1);
-                this.write("");
-            }
-            return true;
-        }
-        return false;
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_V),
+                ctx -> {
+                    input.write(MinecraftClient.getInstance().keyboard.getClipboard());
+                    return true;
+                }));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.ctrl(GLFW.GLFW_KEY_X),
+                ctx -> {
+                    MinecraftClient.getInstance().keyboard.setClipboard(input.getSelectedText());
+                    input.write("");
+                    return true;
+                }));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_TAB),
+                ctx -> true).withPriority(50));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_BACKSPACE).allowingAnyAdditionalModifiers(),
+                ctx -> input.deleteWithKey(GLFW.GLFW_KEY_BACKSPACE)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_DELETE).allowingAnyAdditionalModifiers(),
+                ctx -> input.deleteWithKey(GLFW.GLFW_KEY_DELETE)));
     }
 
     protected void beforeWriteAction() {
@@ -213,14 +192,14 @@ public abstract class BaseTextInput<T extends BaseTextInput<T>> extends Interact
         setLastActionTime(System.currentTimeMillis());
     }
 
-    private void undo() {
+    protected void undo() {
         if (undoStack.isEmpty()) return;
         redoStack.add(new HistoryState(getText(), getCursorPos(), getSelectionAnchor()));
         HistoryState stateToApply = undoStack.removeLast();
         applyHistoryState(stateToApply);
     }
 
-    private void redo() {
+    protected void redo() {
         if (redoStack.isEmpty()) return;
         undoStack.add(new HistoryState(getText(), getCursorPos(), getSelectionAnchor()));
         HistoryState stateToApply = redoStack.removeLast();

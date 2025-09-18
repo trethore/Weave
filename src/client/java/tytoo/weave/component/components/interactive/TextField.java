@@ -5,11 +5,11 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 import tytoo.weave.constraint.constraints.Constraints;
-import tytoo.weave.event.keyboard.KeyPressEvent;
 import tytoo.weave.event.mouse.MouseClickEvent;
 import tytoo.weave.event.mouse.MouseDragEvent;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.InputHelper;
 
 import java.awt.*;
@@ -127,35 +127,74 @@ public class TextField extends BaseTextInput<TextField> {
     }
 
     @Override
-    protected boolean handleNavigation(KeyPressEvent event) {
-        boolean shift = InputHelper.isShiftDown();
-        switch (event.getKeyCode()) {
-            case GLFW.GLFW_KEY_LEFT -> {
-                if (InputHelper.isControlDown()) {
-                    setCursorPos(super.getWordSkipPosition(-1), shift);
-                } else {
-                    setCursorPos(getCursorPos() - 1, shift);
-                }
-                return true;
-            }
-            case GLFW.GLFW_KEY_RIGHT -> {
-                if (InputHelper.isControlDown()) {
-                    setCursorPos(super.getWordSkipPosition(1), shift);
-                } else {
-                    setCursorPos(getCursorPos() + 1, shift);
-                }
-                return true;
-            }
-            case GLFW.GLFW_KEY_HOME -> {
-                setCursorPos(0, shift);
-                return true;
-            }
-            case GLFW.GLFW_KEY_END -> {
-                setCursorPos(getText().length(), shift);
-                return true;
-            }
-        }
-        return false;
+    protected void registerNavigationShortcuts() {
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT),
+                ctx -> input.moveCursorHorizontal(-1, false, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveCursorHorizontal(-1, false, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT).withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL),
+                ctx -> input.moveCursorHorizontal(-1, true, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_LEFT)
+                        .withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL, ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveCursorHorizontal(-1, true, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT),
+                ctx -> input.moveCursorHorizontal(1, false, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveCursorHorizontal(1, false, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT).withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL),
+                ctx -> input.moveCursorHorizontal(1, true, false)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_RIGHT)
+                        .withModifiers(ShortcutRegistry.KeyChord.Modifier.CONTROL, ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> input.moveCursorHorizontal(1, true, true)));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME),
+                ctx -> {
+                    input.setCursorPos(0, false);
+                    return true;
+                }));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_HOME).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> {
+                    input.setCursorPos(0, true);
+                    return true;
+                }));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END),
+                ctx -> {
+                    input.setCursorPos(input.getText().length(), false);
+                    return true;
+                }));
+
+        registerComponentShortcut(input -> ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_END).withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                ctx -> {
+                    input.setCursorPos(input.getText().length(), true);
+                    return true;
+                }));
+    }
+
+    private boolean moveCursorHorizontal(int direction, boolean byWord, boolean extendSelection) {
+        int target = byWord ? super.getWordSkipPosition(direction) : getCursorPos() + direction;
+        setCursorPos(target, extendSelection);
+        return true;
     }
 
 }

@@ -7,7 +7,10 @@ import org.lwjgl.glfw.GLFW;
 import tytoo.weave.animation.Animator;
 import tytoo.weave.component.Component;
 import tytoo.weave.component.RenderStage;
-import tytoo.weave.component.components.interactive.*;
+import tytoo.weave.component.components.interactive.Button;
+import tytoo.weave.component.components.interactive.CheckBox;
+import tytoo.weave.component.components.interactive.ComboBox;
+import tytoo.weave.component.components.interactive.RadioButton;
 import tytoo.weave.component.components.layout.Panel;
 import tytoo.weave.constraint.constraints.Constraints;
 import tytoo.weave.effects.Effect;
@@ -30,7 +33,6 @@ import tytoo.weave.ui.popup.PopupStyleProperties;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.ui.toast.ToastManager;
 import tytoo.weave.ui.tooltip.TooltipManager;
-import tytoo.weave.utils.InputHelper;
 import tytoo.weave.utils.McUtils;
 
 import java.util.*;
@@ -68,6 +70,7 @@ public class UIManager {
 
     public static void setRoot(Screen screen, Component<?> root) {
         UIState state = getOrCreateState(screen);
+        ensureScreenShortcuts(screen, state);
         state.setRoot(root);
         ensureOverlayRoot(state);
     }
@@ -272,65 +275,16 @@ public class UIManager {
     public static boolean onKeyPressed(Screen screen, int keyCode, int scanCode, int modifiers) {
         Optional<UIState> stateOpt = getState(screen);
         if (stateOpt.isEmpty()) return false;
-        Component<?> focused = stateOpt.get().getFocusedComponent();
+        UIState state = stateOpt.get();
+        ensureScreenShortcuts(screen, state);
+        Component<?> focused = state.getFocusedComponent();
         if (focused != null) {
             KeyPressEvent event = new KeyPressEvent(keyCode, scanCode, modifiers);
             bubbleEvent(focused, event, Component::fireEvent);
             if (event.isCancelled()) return true;
         }
 
-        if (keyCode == GLFW.GLFW_KEY_TAB) {
-            boolean backwards = InputHelper.isShiftDown();
-            return moveFocus(screen, backwards);
-        }
-
-        if (focused == null) {
-            return ShortcutRegistry.dispatch(screen, stateOpt.get(), keyCode, modifiers);
-        }
-
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
-            return defaultActivate(focused);
-        }
-
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if (tryCloseTopmostOnEsc(screen, stateOpt.get())) {
-                return true;
-            }
-            handleEscape(stateOpt.get());
-            TooltipManager.onFocusChanged(screen, null);
-            return false;
-        }
-
-        if (focused instanceof RadioButton<?> rb) {
-            if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_UP) {
-                return navigateRadio(rb, -1);
-            }
-            if (keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_DOWN) {
-                return navigateRadio(rb, 1);
-            }
-        }
-
-        if (focused instanceof Slider<?> slider) {
-            switch (keyCode) {
-                case GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_DOWN -> {
-                    return adjustSlider(slider, -1);
-                }
-                case GLFW.GLFW_KEY_RIGHT, GLFW.GLFW_KEY_UP -> {
-                    return adjustSlider(slider, 1);
-                }
-                case GLFW.GLFW_KEY_HOME -> {
-                    return setSliderToEdge(slider, true);
-                }
-                case GLFW.GLFW_KEY_END -> {
-                    return setSliderToEdge(slider, false);
-                }
-                default -> {
-                }
-            }
-        }
-
-        if (TooltipManager.onKeyPressed(screen, keyCode, modifiers)) return true;
-        return ShortcutRegistry.dispatch(screen, stateOpt.get(), keyCode, modifiers);
+        return ShortcutRegistry.dispatch(screen, state, keyCode, modifiers);
     }
 
     public static boolean onCharTyped(Screen screen, char chr, int modifiers) {
@@ -498,97 +452,66 @@ public class UIManager {
         return true;
     }
 
-    private static boolean navigateRadio(RadioButton<?> rb, int direction) {
-        Component<?> parent = rb.getParent();
-        if (!(parent instanceof RadioButtonGroup<?> group)) return false;
-        List<Component<?>> children = group.getChildren();
-        int currentIndex = -1;
-        List<RadioButton<?>> radios = new ArrayList<>();
-        for (Component<?> c : children) {
-            if (c instanceof RadioButton<?> r) {
-                radios.add(r);
-            }
-        }
-        for (int i = 0; i < radios.size(); i++) {
-            if (radios.get(i) == rb) {
-                currentIndex = i;
-                break;
-            }
-        }
-        if (currentIndex == -1) return false;
-        int next = (currentIndex + direction + radios.size()) % radios.size();
-        RadioButton<?> target = radios.get(next);
-        UIState state = findStateFor(rb);
-        if (state != null) {
-            setFocusedComponent(state, target);
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean adjustSlider(Slider<?> slider, int direction) {
-        Number cur = slider.getValue();
-        Number min = slider.getMin();
-        Number max = slider.getMax();
-        Number stepNum = slider.getStep();
-        double step = (stepNum != null ? stepNum.doubleValue() : Math.max(1e-6, (max.doubleValue() - min.doubleValue()) / 20.0));
-        double next = cur.doubleValue() + direction * step;
-        next = Math.max(min.doubleValue(), Math.min(max.doubleValue(), next));
-
-        switch (cur) {
-            case Integer ignored -> {
-                @SuppressWarnings("unchecked") Slider<Integer> s = (Slider<Integer>) slider;
-                s.setValue((int) Math.round(next));
-                return true;
-            }
-            case Float ignored -> {
-                @SuppressWarnings("unchecked") Slider<Float> s = (Slider<Float>) slider;
-                s.setValue((float) next);
-                return true;
-            }
-            case Double ignored -> {
-                @SuppressWarnings("unchecked") Slider<Double> s = (Slider<Double>) slider;
-                s.setValue(next);
-                return true;
-            }
-            default -> {
-                return false;
-            }
-        }
-    }
-
-    private static boolean setSliderToEdge(Slider<?> slider, boolean toMin) {
-        Number min = slider.getMin();
-        Number max = slider.getMax();
-        Number target = toMin ? min : max;
-        Number cur = slider.getValue();
-        switch (cur) {
-            case Integer ignored -> {
-                @SuppressWarnings("unchecked") Slider<Integer> s = (Slider<Integer>) slider;
-                s.setValue(target.intValue());
-                return true;
-            }
-            case Float ignored -> {
-                @SuppressWarnings("unchecked") Slider<Float> s = (Slider<Float>) slider;
-                s.setValue(target.floatValue());
-                return true;
-            }
-            case Double ignored -> {
-                @SuppressWarnings("unchecked") Slider<Double> s = (Slider<Double>) slider;
-                s.setValue(target.doubleValue());
-                return true;
-            }
-            default -> {
-                return false;
-            }
-        }
-    }
-
     private static void handleEscape(UIState state) {
         Component<?> focused = state.getFocusedComponent();
         Component<?> root = state.getRoot();
         if (focused == null || root == null) return;
         setFocusedComponent(state, null);
+    }
+
+    private static void ensureScreenShortcuts(Screen screen, UIState state) {
+        if (state.isShortcutsInitialized()) return;
+        state.setShortcutsInitialized(true);
+
+        List<ShortcutRegistry.Registration> registrations = state.getShortcutRegistrations();
+
+        registrations.add(ShortcutRegistry.registerForScreen(screen,
+                ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_TAB),
+                        ctx -> moveFocus(ctx.screen(), false))));
+
+        registrations.add(ShortcutRegistry.registerForScreen(screen,
+                ShortcutRegistry.Shortcut.of(ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_TAB)
+                                .withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT),
+                        ctx -> moveFocus(ctx.screen(), true))));
+
+        registerDefaultActivationShortcut(screen, state, GLFW.GLFW_KEY_ENTER);
+        registerDefaultActivationShortcut(screen, state, GLFW.GLFW_KEY_KP_ENTER);
+        registerDefaultActivationShortcut(screen, state, GLFW.GLFW_KEY_SPACE);
+
+        registerTooltipToggleShortcut(screen, state, GLFW.GLFW_KEY_LEFT_ALT);
+        registerTooltipToggleShortcut(screen, state, GLFW.GLFW_KEY_RIGHT_ALT);
+
+        ShortcutRegistry.Shortcut escapeShortcut = ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_ESCAPE).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    if (tryCloseTopmostOnEsc(ctx.screen(), ctx.state())) {
+                        return true;
+                    }
+                    handleEscape(ctx.state());
+                    TooltipManager.onFocusChanged(ctx.screen(), null);
+                    return false;
+                }).withPriority(-100);
+        registrations.add(ShortcutRegistry.registerForScreen(screen, escapeShortcut));
+    }
+
+    private static void registerDefaultActivationShortcut(Screen screen, UIState state, int keyCode) {
+        ShortcutRegistry.Shortcut shortcut = ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(keyCode).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    Component<?> focused = ctx.state().getFocusedComponent();
+                    if (focused == null) {
+                        return false;
+                    }
+                    return defaultActivate(focused);
+                }).withPriority(-100);
+        state.getShortcutRegistrations().add(ShortcutRegistry.registerForScreen(screen, shortcut));
+    }
+
+    private static void registerTooltipToggleShortcut(Screen screen, UIState state, int keyCode) {
+        ShortcutRegistry.Shortcut shortcut = ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(keyCode).allowingAnyAdditionalModifiers(),
+                ctx -> TooltipManager.onKeyPressed(ctx.screen(), ctx.keyCode(), ctx.modifiers()));
+        state.getShortcutRegistrations().add(ShortcutRegistry.registerForScreen(screen, shortcut));
     }
 
     private static <E extends Event> void bubbleEvent(Component<?> start, E event, BiConsumer<Component<?>, E> dispatcher) {
@@ -601,6 +524,7 @@ public class UIManager {
     public static void onClose(Screen screen) {
         UIState removed = screenStates.remove(screen);
         if (removed != null) {
+            removed.clearShortcutRegistrations();
             Component<?> root = removed.getRoot();
             if (root != null) {
                 Animator.getInstance().stopAll(root);

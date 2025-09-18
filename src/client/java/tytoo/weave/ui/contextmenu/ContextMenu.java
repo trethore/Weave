@@ -12,6 +12,7 @@ import tytoo.weave.layout.LinearLayout;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.ui.popup.Anchor;
 import tytoo.weave.ui.popup.PopupOptions;
+import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.McUtils;
 
 import java.util.ArrayList;
@@ -74,15 +75,29 @@ public final class ContextMenu {
             }
         });
 
-        owner.onKeyPress(event -> {
-            if (event.getKeyCode() == GLFW.GLFW_KEY_MENU || (event.getKeyCode() == GLFW.GLFW_KEY_F10 && (event.getModifiers() & GLFW.GLFW_MOD_SHIFT) != 0)) {
-                ContextMenu menu = builder.get();
-                if (menu != null) {
-                    menu.openBelow(owner);
-                    event.cancel();
-                }
-            }
-        });
+        ShortcutRegistry.registerForComponent(owner, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_MENU).allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    ContextMenu menu = builder.get();
+                    if (menu != null) {
+                        menu.openBelow(owner);
+                        return true;
+                    }
+                    return false;
+                }));
+
+        ShortcutRegistry.registerForComponent(owner, ShortcutRegistry.Shortcut.of(
+                ShortcutRegistry.KeyChord.of(GLFW.GLFW_KEY_F10)
+                        .withModifiers(ShortcutRegistry.KeyChord.Modifier.SHIFT)
+                        .allowingAnyAdditionalModifiers(),
+                ctx -> {
+                    ContextMenu menu = builder.get();
+                    if (menu != null) {
+                        menu.openBelow(owner);
+                        return true;
+                    }
+                    return false;
+                }));
     }
 
     public ContextMenu item(@NotNull String label, @NotNull Runnable action) {
