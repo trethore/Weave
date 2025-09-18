@@ -1,5 +1,9 @@
 package tytoo.weave.ui.popup;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
+
 public final class PopupOptions {
     private boolean modal = false;
     private boolean trapFocus = true;
@@ -9,6 +13,8 @@ public final class PopupOptions {
     private boolean autoFlip = true;
     private Boolean clickThroughBackdrop = null;
     private float gap = 6f;
+    @Nullable
+    private Consumer<PopupCloseEvent> onClose;
 
     public boolean isModal() {
         return modal;
@@ -82,5 +88,14 @@ public final class PopupOptions {
         this.gap = gap;
         return this;
     }
-}
 
+    @Nullable
+    public Consumer<PopupCloseEvent> getOnClose() {
+        return onClose;
+    }
+
+    public PopupOptions setOnClose(@Nullable Consumer<PopupCloseEvent> onClose) {
+        this.onClose = onClose;
+        return this;
+    }
+}

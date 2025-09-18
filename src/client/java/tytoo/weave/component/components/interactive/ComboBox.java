@@ -22,6 +22,7 @@ import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.UIManager;
 import tytoo.weave.ui.UIState;
 import tytoo.weave.ui.popup.Anchor;
+import tytoo.weave.ui.popup.PopupCloseEvent;
 import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.ui.shortcuts.ShortcutRegistry;
 import tytoo.weave.utils.McUtils;
@@ -60,6 +61,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
     private ScrollPanel dropdownScrollPanel;
     private float savedDropdownScrollY = 0f;
     private int dropdownHoverIndex = -1;
+    private boolean dropdownClosingInternally = false;
+    private boolean dropdownCloseTriggeredBySelection = false;
 
     public ComboBox(State<T> valueState) {
         this.valueState = valueState;
@@ -241,7 +244,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 .setGap(1f)
                 .setTrapFocus(true)
                 .setCloseOnFocusLoss(true)
-                .setCloseOnEsc(true);
+                .setCloseOnEsc(true)
+                .setOnClose(this::handlePopupClosed);
         this.popupHandle = UIManager.openPopup(this.dropdownContent, anchor, opts);
 
         McUtils.getMc().map(mc -> mc.currentScreen).ifPresent(screen -> UIManager.requestFocus(screen, this.dropdownContent));
@@ -261,20 +265,49 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
 
     private void closeDropdown(boolean dueToSelection) {
         if (!this.expanded) return;
-        this.expanded = false;
-        removeStyleState(StyleState.ACTIVE);
-        clearDropdownShortcuts();
-
-        if (this.dropdownContent != null) {
-            if (this.dropdownScrollPanel != null) {
-                this.savedDropdownScrollY = this.dropdownScrollPanel.getScrollY();
-            }
+        if (this.popupHandle == null) {
+            finalizeDropdownClose(dueToSelection);
+            return;
+        }
+        this.dropdownClosingInternally = true;
+        this.dropdownCloseTriggeredBySelection = dueToSelection;
+        try {
             UIManager.closePopup(this.popupHandle);
+        } finally {
+            this.dropdownClosingInternally = false;
+            if (this.expanded) {
+                finalizeDropdownClose(dueToSelection);
+            }
+        }
+    }
+
+    private void handlePopupClosed(PopupCloseEvent ignored) {
+        boolean dueToSelection = this.dropdownClosingInternally && this.dropdownCloseTriggeredBySelection;
+        finalizeDropdownClose(dueToSelection);
+    }
+
+    private void finalizeDropdownClose(boolean dueToSelection) {
+        if (!this.expanded) {
             this.popupHandle = null;
             this.dropdownContent = null;
             this.dropdownScrollPanel = null;
             this.dropdownHoverIndex = -1;
+            this.dropdownCloseTriggeredBySelection = false;
+            return;
         }
+
+        this.expanded = false;
+        removeStyleState(StyleState.ACTIVE);
+        clearDropdownShortcuts();
+
+        if (this.dropdownScrollPanel != null) {
+            this.savedDropdownScrollY = this.dropdownScrollPanel.getScrollY();
+        }
+
+        this.popupHandle = null;
+        this.dropdownContent = null;
+        this.dropdownScrollPanel = null;
+        this.dropdownHoverIndex = -1;
 
         Optional<UIState> stateOpt = McUtils.getMc().map(mc -> mc.currentScreen).flatMap(UIManager::getState);
         if (stateOpt.isPresent()) {
@@ -296,6 +329,8 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
                 }
             }
         }
+
+        this.dropdownCloseTriggeredBySelection = false;
     }
 
     private List<Button> getDropdownOptionButtons() {
@@ -636,11 +671,6 @@ public class ComboBox<T> extends InteractiveComponent<ComboBox<T>> {
         this.placeholder = placeholder;
         updateSelectedLabel();
         return this;
-    }
-
-    @Override
-    public void draw(DrawContext context) {
-        super.draw(context);
     }
 
     public record Option<T>(String label, T value) {

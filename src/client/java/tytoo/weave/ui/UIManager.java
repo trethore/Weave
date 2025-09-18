@@ -27,6 +27,7 @@ import tytoo.weave.style.StyleState;
 import tytoo.weave.theme.Stylesheet;
 import tytoo.weave.theme.ThemeManager;
 import tytoo.weave.ui.popup.Anchor;
+import tytoo.weave.ui.popup.PopupCloseEvent;
 import tytoo.weave.ui.popup.PopupEntry;
 import tytoo.weave.ui.popup.PopupOptions;
 import tytoo.weave.ui.popup.PopupStyleProperties;
@@ -37,6 +38,7 @@ import tytoo.weave.utils.McUtils;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class UIManager {
     private static final WeakHashMap<Screen, UIState> screenStates = new WeakHashMap<>();
@@ -635,6 +637,11 @@ public class UIManager {
         if (backdrop != null) overlay.removeChild(backdrop);
         overlay.removeChild(entry.mount());
         state.getPopups().remove(entry);
+
+        Consumer<PopupCloseEvent> onClose = entry.options().getOnClose();
+        if (onClose != null) {
+            onClose.accept(new PopupCloseEvent(entry.content(), entry.anchor(), entry.options()));
+        }
 
         Component<?> prior = entry.priorFocus();
         if (prior != null) {
